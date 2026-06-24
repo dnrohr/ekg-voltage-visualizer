@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -63,4 +63,33 @@ Add a synchronized 3D view that improves spatial intuition for heart position, e
 
 ## Verification Notes
 
-Record render checks, screenshots if useful, and asset license notes.
+Implemented a synchronized procedural 3D anatomy view:
+
+- Added `@ekg/cardio-render-3d` with a Three.js renderer driven directly by `SimulationState`.
+- Rendered a transparent torso shell, simplified heart chambers, electrode markers, tissue-state markers, selected-lead overlay, and net-vector arrow.
+- Added camera presets for frontal, transverse, left lateral, and heart close-up views.
+- Added cutaway mode that hides the torso shell while keeping electrodes, heart, tissue states, and lead geometry visible.
+- Integrated the 3D panel into the web app without changing the engine's deterministic state model.
+- Added `docs/ASSET_PIPELINE.md`, `references/licenses.md`, and `references/sources.md`.
+
+Asset and license notes:
+
+- No third-party anatomy meshes, textures, images, or HDRIs are bundled.
+- 3D anatomy is generated procedurally at runtime from project code and engine data.
+- Three.js is used as a rendering library dependency, not as an anatomy asset source.
+
+Verification performed:
+
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- Manual browser verification at `http://127.0.0.1:5181/` with Playwright/Chromium:
+  - Desktop viewport `1440x1100`: 3D canvas rendered at `1370x520`, nonblank screenshot output, four camera presets present, heart close-up preset worked, cutaway toggled, and no console errors.
+  - Mobile viewport `390x900`: 3D canvas rendered at `336x300`, nonblank screenshot output, four camera presets present, heart close-up preset worked, cutaway toggled, and no console errors.
+
+Known simplifications:
+
+- The torso is a transparent ellipsoid shell, not a realistic anatomical mesh.
+- The heart is a procedural chamber schematic.
+- Activation color is shown as tissue-node markers rather than a continuous volumetric myocardial color map.
+- The selected lead overlay is a geometric teaching aid; it does not imply electrical current travels along the ECG lead line.

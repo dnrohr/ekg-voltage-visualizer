@@ -11,6 +11,7 @@
   "dependencies": {
     "@ekg/cardio-engine": "0.1.0",
     "@ekg/cardio-render-2d": "0.1.0",
+    "@ekg/cardio-render-3d": "0.1.0",
     "@vitejs/plugin-react": "^6.0.3",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",

@@ -1,0 +1,19 @@
+{
+  "name": "@ekg/cardio-render-3d",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ekg/cardio-engine": "0.1.0",
+    "react": "^18.3.1",
+    "three": "^0.181.2"
+  },
+  "devDependencies": {
+    "@types/three": "^0.181.0"
+  }
+}
