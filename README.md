@@ -98,6 +98,14 @@ First success condition:
 
 The full roadmap is in \[`ROADMAP.md`](./ROADMAP.md).
 
+Foundational docs for the first implementation tasks:
+
+\* \[`docs/CONCEPTUAL_MODEL.md`](./docs/CONCEPTUAL_MODEL.md) - product thesis, teaching chain, explanation levels, and initial normal timing model
+\* \[`docs/SAFETY_AND_SCOPE.md`](./docs/SAFETY_AND_SCOPE.md) - educational scope, disclaimer language, and scientific framing rules
+\* \[`docs/GLOSSARY.md`](./docs/GLOSSARY.md) - preferred terminology for concepts, UI copy, and future code comments
+\* \[`docs/COORDINATE_SYSTEM.md`](./docs/COORDINATE_SYSTEM.md) - shared heart, torso, electrode, and lead-axis coordinate convention
+\* \[`docs/ECG_LEADS.md`](./docs/ECG_LEADS.md) - electrode roles, lead formulas, Wilson central terminal, and polarity sanity checks
+
 
 
 \---

@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -69,4 +69,28 @@ myocardial activation state
 
 ## Verification Notes
 
-Record what was created or changed, and list any unresolved conceptual questions.
+Created the initial documentation structure under `docs/`:
+
+- `docs/CONCEPTUAL_MODEL.md`
+- `docs/SAFETY_AND_SCOPE.md`
+- `docs/GLOSSARY.md`
+- `docs/COORDINATE_SYSTEM.md`
+- `docs/ECG_LEADS.md`
+
+Updated `README.md` with links to the foundation docs. Updated `TASKS.md` to mark Task 00 done and set `TASK_01.md` as the current next task.
+
+Verification performed:
+
+- Checked all local Markdown links resolve.
+- Checked the docs contain the required safety language, causal chain, explanation hierarchy, Wilson central terminal definition, and coordinate-system framing.
+
+Decisions and assumptions:
+
+- Initial normal rhythm defaults are `75 bpm` and `800 ms` per cycle.
+- Early geometry uses normalized educational coordinates, with positive `x` patient left, positive `y` anterior, and positive `z` superior.
+- Generated waveforms should be labeled synthetic teaching signals.
+
+Unresolved questions:
+
+- Exact waveform scaling and morphology calibration are deferred to the 2D electrical MVP and validation tasks.
+- Expert review is still needed before public educational release.

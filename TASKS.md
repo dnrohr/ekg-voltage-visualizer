@@ -22,7 +22,7 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 
 | Task | Status | Title | Depends on | File |
 |---|---|---|---|---|
-| 00 | Not started | Concept, safety, and scientific framing | None | `TASK_00.md` |
+| 00 | Done | Concept, safety, and scientific framing | None | `TASK_00.md` |
 | 01 | Not started | 2D electrical MVP | 00 | `TASK_01.md` |
 | 02 | Not started | Physically grounded lead/electrode model | 01 | `TASK_02.md` |
 | 03 | Not started | Better anatomical electrical model | 02 | `TASK_03.md` |
@@ -36,7 +36,7 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 
 ## Current Next Task
 
-`TASK_00.md`
+`TASK_01.md`
 
 ## Handoff Notes
 
@@ -45,3 +45,4 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 - Build the explanatory engine before visual realism.
 - Start with 2D electrical intuition; defer 3D, valves, contraction, and blood until the basic explanation works.
 - Every completed task should leave the repo in a handoff-ready state: tested, documented, committed, and pushed.
+- Task 00 completed on branch `codex/task-00-concept-safety-framing`; next task is the 2D electrical MVP.
