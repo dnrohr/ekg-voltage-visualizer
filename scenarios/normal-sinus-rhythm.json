@@ -1,0 +1,19 @@
+{
+  "id": "normal-sinus-rhythm",
+  "name": "Normal sinus rhythm",
+  "description": "One idealized 800 ms teaching beat with atrial depolarization, AV delay, ventricular depolarization, ST segment, and ventricular repolarization.",
+  "disclaimer": "Synthetic teaching signal only. This model is not diagnostic software, medical advice, or a patient-specific ECG simulation.",
+  "timing": {
+    "bpm": 75,
+    "cycleMs": 800,
+    "pStartMs": 80,
+    "pPeakMs": 130,
+    "pEndMs": 180,
+    "qrsStartMs": 300,
+    "qrsPeakMs": 340,
+    "qrsEndMs": 390,
+    "tStartMs": 520,
+    "tPeakMs": 610,
+    "tEndMs": 720
+  }
+}

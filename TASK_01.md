@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -64,4 +64,25 @@ Build the first interactive teaching prototype: one normal beat, one 2D heart sc
 
 ## Verification Notes
 
-Record commands run, screenshots/manual checks if applicable, and known limitations.
+Implemented the first interactive web prototype:
+
+- React/Vite app under `apps/web`.
+- Pure TypeScript simulation core under `packages/cardio-engine`.
+- SVG rendering components under `packages/cardio-render-2d`.
+- Normal sinus rhythm scenario data under `scenarios/normal-sinus-rhythm.json`.
+- Activation model notes in `docs/ACTIVATION_MODEL.md`.
+
+Verification performed:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit`
+- Browser smoke test at `http://127.0.0.1:5186`: confirmed the app renders the 2D heart schematic, timeline controls, 12 ECG lead cards, QRS phase state, and selected-lead explanation.
+- Browser interaction check: selecting `V1` updates the explanation heading, formula, and pressed ECG card state.
+
+Known limitations:
+
+- The MVP uses a simplified net-vector projection model, not explicit electrode potentials.
+- Displayed voltages are synthetic teaching values, not calibrated diagnostic ECG measurements.
+- Chest lead behavior is intentionally approximate until Task 02 adds the physically grounded lead/electrode model.

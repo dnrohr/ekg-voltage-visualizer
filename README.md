@@ -105,6 +105,7 @@ Foundational docs for the first implementation tasks:
 \* \[`docs/GLOSSARY.md`](./docs/GLOSSARY.md) - preferred terminology for concepts, UI copy, and future code comments
 \* \[`docs/COORDINATE_SYSTEM.md`](./docs/COORDINATE_SYSTEM.md) - shared heart, torso, electrode, and lead-axis coordinate convention
 \* \[`docs/ECG_LEADS.md`](./docs/ECG_LEADS.md) - electrode roles, lead formulas, Wilson central terminal, and polarity sanity checks
+\* \[`docs/ACTIVATION_MODEL.md`](./docs/ACTIVATION_MODEL.md) - 2D MVP timing, vector source assumptions, and known model limitations
 
 
 
@@ -626,33 +627,29 @@ Before adding third-party anatomical models, datasets, textures, or reference me
 
 
 
+\## Running the 2D MVP
+
+Install dependencies and run the local web app:
+
+```bash
+npm install
+npm run dev
+```
+
+The app lives in `apps/web` and uses a pure TypeScript simulation engine in `packages/cardio-engine`. The first screen is the simulator: a stylized 2D heart schematic, generated 12-lead ECG traces, timeline controls, lead selection, and selected-lead explanation.
+
+Useful checks:
+
+```bash
+npm test
+npm run typecheck
+npm run build
+npm audit
+```
+
 \## Current Next Step
 
 
 
-Create the first 2D prototype:
-
-
-
-```text
-
-one normal beat
-
-one stylized heart schematic
-
-one activation wave
-
-one generated 12-lead EKG panel
-
-one timeline scrubber
-
-one selected-lead explanation panel
-
-```
-
-
-
-Do not start with 3D anatomy, contraction, valves, or blood flow. Those layers will be more valuable after the basic electrical explanation is working.
-
-
+Build the physically grounded lead/electrode model from `TASK_02.md`.
 
