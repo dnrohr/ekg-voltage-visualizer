@@ -9,6 +9,7 @@ import {
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic } from "@ekg/cardio-render-2d";
+import { TorsoScene3D } from "@ekg/cardio-render-3d";
 import "./styles.css";
 
 const formatPotential = (value: number) =>
@@ -186,6 +187,17 @@ function App() {
             <span style={{ left: "76%" }}>T</span>
           </div>
         </div>
+      </section>
+
+      <section className="anatomy-panel">
+        <div className="panel-heading compact">
+          <div>
+            <p className="eyebrow">Spatial anatomy view</p>
+            <h2>Heart, electrodes, and selected lead</h2>
+          </div>
+          <p className="safety-note">Procedural anatomy, synchronized to the same teaching simulation as the 2D view.</p>
+        </div>
+        <TorsoScene3D state={state} selectedLead={selectedLead} />
       </section>
 
       <section className="ecg-panel">
