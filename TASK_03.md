@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -60,4 +60,24 @@ Move from generic wave animation to a coarse anatomical activation model that re
 
 ## Verification Notes
 
-Record model assumptions, tests, and unresolved physiology simplifications.
+Implemented a coarse authored anatomical activation model:
+
+- Added heart activation nodes with region, role, position, activation time, repolarization time, mass weighting, and source family.
+- Added a normal conduction path from SA node through atria, AV delay, His bundle, septum, apex, free walls, and basal ventricles.
+- Evaluated each node as `resting`, `depolarizing`, `active`, `repolarizing`, or `recovered` from scenario data plus cycle time.
+- Derived source strengths from tissue-node depolarization and ventricular repolarization activity.
+- Added live tissue-state rendering to the 2D heart schematic and explanatory copy for phase-specific tissue behavior.
+- Updated `docs/ACTIVATION_MODEL.md` and `scenarios/normal-sinus-rhythm.json` with the authored timing, recovery, and limitation assumptions.
+
+Verification performed:
+
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- Manual browser smoke test at `http://127.0.0.1:5180`: verified 10 tissue nodes render, 12 lead cards render, playback reaches T wave at 590 ms with 3 repolarizing tissue nodes, T-wave explanation appears, and no browser console errors were reported.
+
+Physiology simplifications:
+
+- Node timings and conduction edges are authored teaching data, not a propagation solver.
+- Repolarization uses regional recovery times and an authored polarity vector; it does not model ion channels or patient-specific action potentials.
+- Source strengths remain calibrated for educational polarity and timing rather than clinical amplitude accuracy.

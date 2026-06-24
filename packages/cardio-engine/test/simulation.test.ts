@@ -81,4 +81,28 @@ describe("cardio-engine simulation", () => {
     expect(state.phase).toBe("st-segment");
     expect(Math.abs(state.leadVoltages.II)).toBeLessThan(0.08);
   });
+
+  it("orders normal activation from atria through septum, apex, and base", () => {
+    const nodes = normalSinusRhythmScenario.activationModel.nodes;
+    const byId = Object.fromEntries(nodes.map((node) => [node.id, node]));
+
+    expect(byId["sa-node"].activationTimeMs).toBeLessThan(byId["right-atrium"].activationTimeMs);
+    expect(byId["right-atrium"].activationTimeMs).toBeLessThan(byId["left-atrium"].activationTimeMs);
+    expect(byId["av-node"].activationTimeMs).toBeLessThan(byId["his-bundle"].activationTimeMs);
+    expect(byId["his-bundle"].activationTimeMs).toBeLessThan(byId["septum-left-to-right"].activationTimeMs);
+    expect(byId["septum-left-to-right"].activationTimeMs).toBeLessThan(byId.apex.activationTimeMs);
+    expect(byId.apex.activationTimeMs).toBeLessThan(byId["basal-ventricles"].activationTimeMs);
+  });
+
+  it("models repolarization as regional recovery rather than reversed depolarization", () => {
+    const nodes = normalSinusRhythmScenario.activationModel.nodes;
+    const byId = Object.fromEntries(nodes.map((node) => [node.id, node]));
+
+    expect(byId.apex.activationTimeMs).toBeLessThan(byId["left-ventricle"].activationTimeMs);
+    expect(byId.apex.repolarizationTimeMs).toBeLessThan(byId["left-ventricle"].repolarizationTimeMs);
+
+    const tWaveState = evaluateScenario(normalSinusRhythmScenario, 580 / 800);
+    expect(tWaveState.tissueNodes.some((node) => node.state === "repolarizing")).toBe(true);
+    expect(tWaveState.phaseExplanation).toContain("not run backward");
+  });
 });

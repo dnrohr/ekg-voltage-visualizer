@@ -26,7 +26,7 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 | 00 | Done | Concept, safety, and scientific framing | None | `TASK_00.md` |
 | 01 | Done | 2D electrical MVP | 00 | `TASK_01.md` |
 | 02 | Done | Physically grounded lead/electrode model | 01 | `TASK_02.md` |
-| 03 | Not started | Better anatomical electrical model | 02 | `TASK_03.md` |
+| 03 | Done | Better anatomical electrical model | 02 | `TASK_03.md` |
 | 04 | Not started | 3D anatomy and torso visualization | 03 | `TASK_04.md` |
 | 05 | Not started | Cardiac phase, valves, and heart sounds | 03 | `TASK_05.md` |
 | 06 | Not started | Simplified contraction animation | 05 | `TASK_06.md` |
@@ -37,7 +37,7 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 
 ## Current Next Task
 
-`TASK_03.md`
+`TASK_04.md`
 
 ## Handoff Notes
 
@@ -49,3 +49,4 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 - Task 00 completed on branch `codex/task-00-concept-safety-framing`.
 - Task 01 completed on branch `codex/task-01-2d-electrical-mvp`; next task is the physically grounded lead/electrode model.
 - Task 02 completed on branch `codex/task-02-electrode-model`; next task is the better anatomical electrical model.
+- Task 03 completed on branch `codex/task-03-anatomical-activation`; next task is 3D anatomy and torso visualization.
