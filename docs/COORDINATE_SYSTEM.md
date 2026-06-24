@@ -89,4 +89,5 @@ For V1 through V6, the simplified axis points from the Wilson central terminal r
 - Torso and electrode locations are schematic.
 - Limb electrodes are placed on a torso abstraction for visual clarity.
 - Conductive tissue boundaries are not modeled.
+- Electrode potentials are in normalized model units and are labeled as synthetic teaching values.
 - The same coordinate convention should be revisited before any high-fidelity reference mode.

@@ -15,5 +15,49 @@
     "tStartMs": 520,
     "tPeakMs": 610,
     "tEndMs": 720
-  }
+  },
+  "waveVectors": {
+    "atrialDepolarization": { "x": 0.22, "y": 0.02, "z": -0.18 },
+    "septalDepolarization": { "x": -0.22, "y": 0.1, "z": 0.02 },
+    "ventricularDepolarization": { "x": 0.62, "y": 0.16, "z": -0.78 },
+    "terminalDepolarization": { "x": -0.12, "y": -0.03, "z": 0.25 },
+    "ventricularRepolarization": { "x": 0.34, "y": 0.08, "z": -0.34 }
+  },
+  "regionalSources": [
+    {
+      "id": "atrialDepolarization",
+      "label": "Atrial depolarization",
+      "region": "right-to-left atria",
+      "sourceType": "depolarization",
+      "position": { "x": -0.05, "y": 0.18, "z": 0.32 }
+    },
+    {
+      "id": "septalDepolarization",
+      "label": "Septal depolarization",
+      "region": "interventricular septum",
+      "sourceType": "depolarization",
+      "position": { "x": -0.04, "y": 0.22, "z": 0.04 }
+    },
+    {
+      "id": "ventricularDepolarization",
+      "label": "Main ventricular depolarization",
+      "region": "left ventricular free wall",
+      "sourceType": "depolarization",
+      "position": { "x": 0.07, "y": 0.18, "z": -0.16 }
+    },
+    {
+      "id": "terminalDepolarization",
+      "label": "Terminal ventricular depolarization",
+      "region": "basal ventricles",
+      "sourceType": "depolarization",
+      "position": { "x": 0.12, "y": 0.1, "z": 0.08 }
+    },
+    {
+      "id": "ventricularRepolarization",
+      "label": "Ventricular repolarization",
+      "region": "recovering ventricular muscle",
+      "sourceType": "repolarization",
+      "position": { "x": 0.1, "y": 0.2, "z": -0.12 }
+    }
+  ]
 }

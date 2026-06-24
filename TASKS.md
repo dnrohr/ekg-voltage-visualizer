@@ -25,7 +25,7 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 |---|---|---|---|---|
 | 00 | Done | Concept, safety, and scientific framing | None | `TASK_00.md` |
 | 01 | Done | 2D electrical MVP | 00 | `TASK_01.md` |
-| 02 | Not started | Physically grounded lead/electrode model | 01 | `TASK_02.md` |
+| 02 | Done | Physically grounded lead/electrode model | 01 | `TASK_02.md` |
 | 03 | Not started | Better anatomical electrical model | 02 | `TASK_03.md` |
 | 04 | Not started | 3D anatomy and torso visualization | 03 | `TASK_04.md` |
 | 05 | Not started | Cardiac phase, valves, and heart sounds | 03 | `TASK_05.md` |
@@ -37,7 +37,7 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 
 ## Current Next Task
 
-`TASK_02.md`
+`TASK_03.md`
 
 ## Handoff Notes
 
@@ -48,3 +48,4 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 - Every completed task should leave the repo in a handoff-ready state: tested, documented, committed, pushed, merged to `main`, and with the task branch retained.
 - Task 00 completed on branch `codex/task-00-concept-safety-framing`.
 - Task 01 completed on branch `codex/task-01-2d-electrical-mvp`; next task is the physically grounded lead/electrode model.
+- Task 02 completed on branch `codex/task-02-electrode-model`; next task is the better anatomical electrical model.

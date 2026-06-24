@@ -1,9 +1,17 @@
-import { computeLeadVoltages, leadDefinitions } from "./leads";
+import {
+  computeElectrodePotentials,
+  computeLeadVoltages,
+  computeSourceContribution,
+  computeWilsonCentralTerminal,
+  leadDefinitions,
+  resolveTerminalPotential
+} from "./leads";
 import type {
   CardiacPhase,
   CardiacScenario,
   LeadExplanation,
   LeadName,
+  RegionalCardiacSource,
   SimulationState,
   TraceSample,
   Vec3
@@ -71,6 +79,26 @@ function phaseLabel(phase: CardiacPhase): string {
   }
 }
 
+function activeSource(
+  id: RegionalCardiacSource["id"],
+  label: string,
+  region: string,
+  sourceType: RegionalCardiacSource["sourceType"],
+  position: Vec3,
+  moment: Vec3,
+  strength: number
+): RegionalCardiacSource {
+  return {
+    id,
+    label,
+    region,
+    sourceType,
+    position,
+    moment,
+    strength
+  };
+}
+
 export function evaluateScenario(scenario: CardiacScenario, normalizedTime: number): SimulationState {
   const normalized = normalizeCycleTime(normalizedTime);
   const timeMs = normalized * scenario.timing.cycleMs;
@@ -82,13 +110,59 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
   const terminal = gaussian(timing.qrsEndMs - 12, 10, timeMs);
   const t = windowProgress(timing.tStartMs, timing.tEndMs, timeMs);
 
-  const netVector = [
-    scale(scenario.waveVectors.atrialDepolarization, 0.34 * p),
-    scale(scenario.waveVectors.septalDepolarization, 0.45 * septal),
-    scale(scenario.waveVectors.ventricularDepolarization, 1.45 * qrs),
-    scale(scenario.waveVectors.terminalDepolarization, 0.5 * terminal),
-    scale(scenario.waveVectors.ventricularRepolarization, 0.82 * t)
-  ].reduce(add, zeroVector);
+  const cardiacSources: RegionalCardiacSource[] = [
+    activeSource(
+      "atrialDepolarization",
+      "Atrial depolarization",
+      "right-to-left atria",
+      "depolarization",
+      { x: -0.05, y: 0.18, z: 0.32 },
+      scenario.waveVectors.atrialDepolarization,
+      0.34 * p
+    ),
+    activeSource(
+      "septalDepolarization",
+      "Septal depolarization",
+      "interventricular septum",
+      "depolarization",
+      { x: -0.04, y: 0.22, z: 0.04 },
+      scenario.waveVectors.septalDepolarization,
+      0.45 * septal
+    ),
+    activeSource(
+      "ventricularDepolarization",
+      "Main ventricular depolarization",
+      "left ventricular free wall",
+      "depolarization",
+      { x: 0.07, y: 0.18, z: -0.16 },
+      scenario.waveVectors.ventricularDepolarization,
+      1.45 * qrs
+    ),
+    activeSource(
+      "terminalDepolarization",
+      "Terminal ventricular depolarization",
+      "basal ventricles",
+      "depolarization",
+      { x: 0.12, y: 0.1, z: 0.08 },
+      scenario.waveVectors.terminalDepolarization,
+      0.5 * terminal
+    ),
+    activeSource(
+      "ventricularRepolarization",
+      "Ventricular repolarization",
+      "recovering ventricular muscle",
+      "repolarization",
+      { x: 0.1, y: 0.2, z: -0.12 },
+      scenario.waveVectors.ventricularRepolarization,
+      0.82 * t
+    )
+  ];
+
+  const netVector = cardiacSources
+    .map((source) => scale(source.moment, source.strength))
+    .reduce(add, zeroVector);
+  const electrodePotentials = computeElectrodePotentials(cardiacSources);
+  const leadVoltages = computeLeadVoltages(electrodePotentials);
 
   const phase = phaseAtMs(scenario, timeMs);
 
@@ -98,7 +172,10 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
     phase,
     phaseLabel: phaseLabel(phase),
     netVector,
-    leadVoltages: computeLeadVoltages(netVector),
+    cardiacSources,
+    electrodePotentials,
+    wilsonCentralTerminal: computeWilsonCentralTerminal(electrodePotentials),
+    leadVoltages,
     phaseProgress: {
       atrialDepolarization: p,
       ventricularDepolarization: Math.max(septal, qrs, terminal),
@@ -131,6 +208,18 @@ export function explainLead(
   const definition = leadDefinitions[lead];
   const voltage = state.leadVoltages[lead];
   const alignment = dot(state.netVector, definition.axis);
+  const positivePotential = resolveTerminalPotential(
+    definition.positiveTerminal,
+    state.electrodePotentials
+  );
+  const negativePotential = resolveTerminalPotential(
+    definition.negativeTerminal,
+    state.electrodePotentials
+  );
+  const contributions = state.cardiacSources
+    .map((source) => computeSourceContribution(source, lead))
+    .filter((contribution) => Math.abs(contribution.leadVoltage) > 0.001)
+    .sort((a, b) => Math.abs(b.leadVoltage) - Math.abs(a.leadVoltage));
   const polarity =
     Math.abs(voltage) < 0.04 ? "near-flat" : voltage > 0 ? "positive" : "negative";
   const direction =
@@ -146,7 +235,10 @@ export function explainLead(
     positiveLabel: definition.positiveLabel,
     negativeLabel: definition.negativeLabel,
     voltage,
+    positivePotential,
+    negativePotential,
+    contributions,
     polarity,
-    summary: `During ${state.phaseLabel.toLowerCase()}, the simplified net source vector is ${direction}. The computed ${lead} voltage is therefore ${polarity}.`
+    summary: `During ${state.phaseLabel.toLowerCase()}, regional sources create body-surface potentials. ${lead} subtracts ${definition.negativeTerminal.label} from ${definition.positiveTerminal.label}; the current difference is ${direction}, so the trace is ${polarity}.`
   };
 }
