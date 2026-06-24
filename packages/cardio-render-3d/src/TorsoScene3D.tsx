@@ -109,6 +109,7 @@ function makeChamber(
   mesh.name = name;
   mesh.position.copy(position);
   mesh.scale.copy(scale);
+  mesh.userData.baseScale = scale.clone();
   mesh.rotation.z = rotationZ;
   return mesh;
 }
@@ -145,7 +146,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf8fafc);
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
@@ -247,6 +248,17 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
     dynamicGroup.clear();
 
     const selectedDefinition = leadDefinitions[selectedLead];
+    const heart = scene.getObjectByName("procedural heart");
+    heart?.children.forEach((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      const baseScale = child.userData.baseScale as THREE.Vector3 | undefined;
+      if (!baseScale) return;
+      const chamberScale = child.name.includes("atrium")
+        ? 1 - state.mechanical.chamber.atrialContraction * 0.08
+        : 1 - state.mechanical.chamber.ventricularContraction * 0.11;
+      child.scale.copy(baseScale).multiplyScalar(chamberScale);
+    });
+
     const positiveCenter = terminalCenter(selectedDefinition.positiveTerminal.weights);
     const negativeCenter = terminalCenter(selectedDefinition.negativeTerminal.weights);
     const leadLineGeometry = new THREE.BufferGeometry().setFromPoints([negativeCenter, positiveCenter]);
@@ -305,6 +317,39 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
       );
       tissue.position.copy(nodePosition);
       dynamicGroup.add(tissue);
+    }
+
+    const valveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x0f766e,
+      emissive: 0x0f766e,
+      emissiveIntensity: 0.1,
+      roughness: 0.45,
+      transparent: true,
+      opacity: 0.45 + Math.max(state.mechanical.valves.mitral.openFraction, state.mechanical.valves.aortic.openFraction) * 0.45
+    });
+    const avValve = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.018, 0.05), valveMaterial);
+    avValve.name = "AV valve plane";
+    avValve.position.set(0.02, 0.12, 0.18);
+    avValve.rotation.z = state.mechanical.valves.mitral.openFraction > 0.5 ? 0.42 : 0.02;
+    dynamicGroup.add(avValve);
+
+    const semilunarValve = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.018, 0.05), valveMaterial.clone());
+    semilunarValve.name = "semilunar valve plane";
+    semilunarValve.position.set(0.04, 0.28, 0.13);
+    semilunarValve.rotation.z = state.mechanical.valves.aortic.openFraction > 0.5 ? -0.5 : -0.04;
+    dynamicGroup.add(semilunarValve);
+
+    if (state.mechanical.flow.intensity > 0) {
+      const flowColor = state.mechanical.flow.region === "aortic-ejection" ? 0xdc2626 : 0x2563eb;
+      const start = state.mechanical.flow.region === "aortic-ejection"
+        ? new THREE.Vector3(0.04, 0.02, 0.18)
+        : new THREE.Vector3(-0.28, 0.44, 0.18);
+      const direction = state.mechanical.flow.region === "aortic-ejection"
+        ? new THREE.Vector3(0.18, 0.56, -0.04).normalize()
+        : new THREE.Vector3(0.34, -0.36, 0.02).normalize();
+      dynamicGroup.add(
+        new THREE.ArrowHelper(direction, start, 0.25 + state.mechanical.flow.intensity * 0.34, flowColor, 0.08, 0.05)
+      );
     }
 
     const vectorLength = Math.min(0.72, state.netVector.x ** 2 + state.netVector.y ** 2 + state.netVector.z ** 2);

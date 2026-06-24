@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -60,4 +60,6 @@ Add mechanical phase labels, valve open/closed animation, and S1/S2 timing marke
 
 ## Verification Notes
 
-Record timing assumptions, tests, and visual checks.
+Implemented `evaluateMechanicalState` with deterministic phase labels, mitral/tricuspid/aortic/pulmonary valve open fractions, qualitative pressure labels, and S1/S2 markers derived from scenario timing. Normal timing places S1 42 ms after QRS onset and S2 22 ms before T-wave onset.
+
+Verified with `npm test`, `npm run typecheck`, `npm run build`, and browser smoke checks at `http://127.0.0.1:5187`.

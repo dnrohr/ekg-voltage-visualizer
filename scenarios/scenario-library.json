@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/cardio-engine/src/scenarios.ts",
+  "disclaimer": "All scenarios are synthetic teaching examples for timing, polarity, and vector direction. They are not diagnostic templates.",
+  "scenarios": [
+    {
+      "id": "normal-sinus-rhythm",
+      "category": "baseline",
+      "summary": "75 bpm baseline with normal P-QRS-T ordering and normal teaching axis."
+    },
+    {
+      "id": "sinus-bradycardia",
+      "category": "rate",
+      "summary": "50 bpm cycle with preserved activation direction and longer quiet intervals."
+    },
+    {
+      "id": "sinus-tachycardia",
+      "category": "rate",
+      "summary": "110 bpm cycle with compressed intervals and preserved activation direction."
+    },
+    {
+      "id": "left-axis-deviation",
+      "category": "axis",
+      "summary": "Leftward-superior ventricular vector for limb-lead polarity comparison."
+    },
+    {
+      "id": "right-axis-deviation",
+      "category": "axis",
+      "summary": "Rightward-inferior ventricular vector for alternate limb-lead polarity comparison."
+    },
+    {
+      "id": "right-bundle-branch-block",
+      "category": "conduction",
+      "summary": "Delayed rightward terminal activation with widened QRS timing."
+    },
+    {
+      "id": "left-bundle-branch-block",
+      "category": "conduction",
+      "summary": "Delayed leftward terminal activation with widened QRS timing."
+    }
+  ]
+}

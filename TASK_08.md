@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -63,4 +63,6 @@ Add curated scenarios that demonstrate how changes in activation timing and dire
 
 ## Verification Notes
 
-Record scenarios added, validation results, and limitations.
+Added a typed scenario library with normal sinus rhythm, sinus bradycardia, sinus tachycardia, left/right axis deviation, and right/left bundle branch block teaching scenarios. Added scenario picker, side-by-side comparison metrics, and "What changed?" explanations.
+
+`validateScenarioSchema` covers all curated scenarios. Verified with `npm test`, `npm run typecheck`, `npm run build`, and browser interaction smoke checks for scenario switching.

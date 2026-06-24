@@ -6,6 +6,8 @@ No third-party visual assets are bundled for Task 04.
 
 The 3D torso, heart chambers, electrode markers, labels, tissue state markers, and lead overlays are generated procedurally at runtime from project code and scenario data.
 
+Task 09 reference overlays are project-authored synthetic signal envelopes. No third-party ECG dataset is bundled.
+
 ## Dependency Notes
 
 Three.js is used as a rendering library dependency. It is not an anatomical asset source.

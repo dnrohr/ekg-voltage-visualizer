@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -61,4 +61,6 @@ Add stylized blood movement through chambers and valves to show timing relations
 
 ## Verification Notes
 
-Record chosen flow style, checks, and performance notes.
+Implemented stylized SVG and 3D flow cues for venous return, AV inflow, atrial kick, and ventricular ejection. Isovolumetric contraction and relaxation explicitly return `no-flow` with zero intensity.
+
+Verified no-flow phases with `npm test`; browser smoke checks confirmed the flow cues and controls do not create horizontal overflow at desktop or mobile viewport sizes.
