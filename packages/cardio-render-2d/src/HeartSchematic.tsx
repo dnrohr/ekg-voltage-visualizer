@@ -1,13 +1,28 @@
-import type { SimulationState } from "@ekg/cardio-engine";
+import {
+  electrodeDefinitions,
+  electrodeOrder,
+  leadDefinitions,
+  type ElectrodeName,
+  type LeadName,
+  type SimulationState
+} from "@ekg/cardio-engine";
 
 type HeartSchematicProps = {
   state: SimulationState;
+  selectedLead: LeadName;
 };
 
 const lerp = (start: number, end: number, amount: number) =>
   start + (end - start) * Math.min(1, Math.max(0, amount));
 
-export function HeartSchematic({ state }: HeartSchematicProps) {
+const mapX = (x: number) => 180 + x * 118;
+const mapY = (z: number) => 172 - z * 142;
+
+function terminalWeight(lead: LeadName, terminal: "positiveTerminal" | "negativeTerminal", electrode: ElectrodeName): number {
+  return leadDefinitions[lead][terminal].weights[electrode] ?? 0;
+}
+
+export function HeartSchematic({ state, selectedLead }: HeartSchematicProps) {
   const atrialGlow = state.phaseProgress.atrialDepolarization;
   const ventricularGlow = state.phaseProgress.ventricularDepolarization;
   const recoveryGlow = state.phaseProgress.ventricularRepolarization;
@@ -17,6 +32,7 @@ export function HeartSchematic({ state }: HeartSchematicProps) {
   const vectorEndY = 186 + Math.sin(vectorAngle) * vectorLength;
   const qrsY = lerp(116, 248, ventricularGlow);
   const tY = lerp(248, 138, recoveryGlow);
+  const selectedDefinition = leadDefinitions[selectedLead];
 
   return (
     <svg className="heart-schematic" viewBox="0 0 360 340" role="img" aria-label="2D heart activation schematic">
@@ -35,6 +51,36 @@ export function HeartSchematic({ state }: HeartSchematicProps) {
 
       <rect x="22" y="18" width="316" height="298" rx="10" className="torso-panel" />
       <path className="torso-outline" d="M110 42 C78 78 64 130 68 204 C71 264 112 302 180 302 C248 302 289 264 292 204 C296 130 282 78 250 42" />
+
+      <g className="electrode-layer" aria-hidden="true">
+        {electrodeOrder.map((electrodeName) => {
+          const electrode = electrodeDefinitions[electrodeName];
+          const positiveWeight = terminalWeight(selectedLead, "positiveTerminal", electrodeName);
+          const negativeWeight = terminalWeight(selectedLead, "negativeTerminal", electrodeName);
+          const terminalClass =
+            positiveWeight > 0
+              ? "positive"
+              : negativeWeight > 0
+                ? "negative"
+                : electrode.role === "ground"
+                  ? "ground"
+                  : "";
+          const radius = positiveWeight > 0 || negativeWeight > 0 ? 8 : 5;
+
+          return (
+            <g
+              className={`electrode-marker ${terminalClass}`}
+              key={electrodeName}
+              transform={`translate(${mapX(electrode.position.x)} ${mapY(electrode.position.z)})`}
+            >
+              <circle r={radius} />
+              <text x="0" y={radius + 12}>{electrodeName}</text>
+            </g>
+          );
+        })}
+        <text className="lead-terminal-label positive" x="32" y="42">+ {selectedDefinition.positiveTerminal.label}</text>
+        <text className="lead-terminal-label negative" x="32" y="60">- {selectedDefinition.negativeTerminal.label}</text>
+      </g>
 
       <ellipse className="atrium right" cx="143" cy="112" rx="44" ry="38" />
       <ellipse className="atrium left" cx="213" cy="112" rx="44" ry="38" />

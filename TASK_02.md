@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -67,4 +67,26 @@ potential(electrode) ~= sum(source_strength * dot(source_moment, electrode_posit
 
 ## Verification Notes
 
-Record tests/manual checks and any calibration assumptions.
+Implemented the explicit educational source-to-electrode-to-lead chain:
+
+- Added schematic physical electrodes for `RA`, `LA`, `RL`, `LL`, and `V1` through `V6`.
+- Added regional cardiac sources with positions, moments, strengths, and source types.
+- Added approximate dipole-style electrode potential calculation.
+- Derived limb, augmented limb, and precordial leads from electrode potentials.
+- Added Wilson central terminal computation from `RA`, `LA`, and `LL`.
+- Updated selected-lead explanations with terminal potentials and source contribution breakdowns.
+- Updated the heart schematic to highlight selected positive/reference electrodes, including RA/LA/LL for Wilson central terminal.
+- Updated docs and the normal sinus rhythm scenario artifact with the implemented source and geometry assumptions.
+
+Verification performed:
+
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- Manual browser smoke test at `http://127.0.0.1:5180`: verified 12 lead cards render, electrode markers render, selected Lead II displays positive/reference terminals, and selecting V5 updates the formula to `V5 - Wilson central terminal` with V5 plus RA/LA/LL highlighted.
+
+Calibration assumptions:
+
+- Lead voltages are literal terminal potential differences in normalized teaching units displayed as synthetic mV-like values.
+- Source strengths are calibrated for expected educational polarity and timing, not clinical amplitude accuracy.
+- Torso conduction, tissue conductivity, body shape, and patient-specific anatomy remain out of scope.

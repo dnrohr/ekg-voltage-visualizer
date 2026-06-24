@@ -43,7 +43,7 @@ V5 = V5 electrode - Wilson central terminal
 V6 = V6 electrode - Wilson central terminal
 ```
 
-These definitions should be implemented as pure deterministic functions once code exists.
+These definitions are implemented as pure deterministic functions in the engine. The current app keeps source modeling and lead construction separate: regional cardiac sources first create electrode potentials, then each displayed lead is derived from those potentials with the formulas above.
 
 ## Electrode Potential Approximation
 
@@ -58,6 +58,18 @@ potential(electrode) ~= sum(
 ```
 
 This is a teaching approximation. It does not model realistic torso conduction, tissue conductivity, body shape, or patient-specific anatomy.
+
+The Task 02 implementation uses five regional sources for the normal teaching beat:
+
+| Source | Region | Source Type |
+|---|---|---|
+| Atrial depolarization | Right-to-left atria | Depolarization |
+| Septal depolarization | Interventricular septum | Depolarization |
+| Main ventricular depolarization | Left ventricular free wall | Depolarization |
+| Terminal ventricular depolarization | Basal ventricles | Depolarization |
+| Ventricular repolarization | Recovering ventricular muscle | Repolarization |
+
+Each source has a schematic position, a moment vector, and a time-varying strength. The app can show a selected lead's current contribution breakdown by these source regions. These values are calibrated for explanatory polarity and timing, not for clinical millivolt accuracy.
 
 ## Lead Families
 
@@ -93,3 +105,4 @@ These are educational sanity checks, not diagnostic criteria.
 - When selecting a lead, show both its formula and the current explanation.
 - Keep Wilson central terminal visible in explanations of V1 through V6.
 - Make it clear that lead axes are explanatory aids, while electrode potentials are the modeled measurements.
+- When a lead is selected, highlight its positive electrode or terminal and its negative/reference terminal. For precordial leads, show RA, LA, and LL as the Wilson central terminal contributors rather than implying a hidden physical electrode.

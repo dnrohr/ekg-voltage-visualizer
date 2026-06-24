@@ -11,6 +11,9 @@ import {
 import { EcgLeadGrid, HeartSchematic } from "@ekg/cardio-render-2d";
 import "./styles.css";
 
+const formatPotential = (value: number) =>
+  `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
+
 function App() {
   const [time, setTime] = React.useState(0.425);
   const [selectedLead, setSelectedLead] = React.useState<LeadName>("II");
@@ -58,7 +61,7 @@ function App() {
             </div>
             <p className="time-readout">{Math.round(state.timeMs)} ms</p>
           </div>
-          <HeartSchematic state={state} />
+          <HeartSchematic state={state} selectedLead={selectedLead} />
         </div>
 
         <aside className="explanation-panel" aria-label="Selected lead explanation">
@@ -95,8 +98,30 @@ function App() {
                 <dt>Current value</dt>
                 <dd>{explanation.voltage.toFixed(2)} mV, {explanation.polarity}</dd>
               </div>
+              <div>
+                <dt>Terminal potentials</dt>
+                <dd>
+                  {formatPotential(explanation.positivePotential)} / {formatPotential(explanation.negativePotential)} model units
+                </dd>
+              </div>
+              <div>
+                <dt>Wilson terminal</dt>
+                <dd>{state.wilsonCentralTerminal.toFixed(2)} model units</dd>
+              </div>
             </dl>
             <p>{explanation.summary}</p>
+            <div className="contribution-list" aria-label="Regional contribution breakdown">
+              <p className="eyebrow">Top source contributions</p>
+              {explanation.contributions.slice(0, 4).map((contribution) => (
+                <div className="contribution-row" key={contribution.sourceId}>
+                  <span>
+                    <strong>{contribution.label}</strong>
+                    <small>{contribution.region}, {contribution.sourceType}</small>
+                  </span>
+                  <span>{contribution.leadVoltage.toFixed(2)} mV</span>
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
       </section>
