@@ -1,11 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Camera, Contrast, Pause, Play, RotateCcw, Save, SkipBack, SkipForward } from "lucide-react";
 import {
   evaluateScenario,
   explainLead,
+  generateSyntheticReferenceTrace,
+  getScenarioById,
   leadOrder,
-  normalSinusRhythmScenario,
+  scenarioLibrary,
+  validateScenario,
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic } from "@ekg/cardio-render-2d";
@@ -18,17 +21,36 @@ const formatPotential = (value: number) =>
 function App() {
   const [time, setTime] = React.useState(0.425);
   const [selectedLead, setSelectedLead] = React.useState<LeadName>("II");
+  const [scenarioId, setScenarioId] = React.useState("normal-sinus-rhythm");
+  const [comparisonId, setComparisonId] = React.useState("right-bundle-branch-block");
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
+  const [highContrast, setHighContrast] = React.useState(false);
+  const [reducedMotion, setReducedMotion] = React.useState(false);
   const lastFrame = React.useRef<number | null>(null);
+  const scenario = React.useMemo(() => getScenarioById(scenarioId), [scenarioId]);
+  const comparisonScenario = React.useMemo(() => getScenarioById(comparisonId), [comparisonId]);
   const state = React.useMemo(
-    () => evaluateScenario(normalSinusRhythmScenario, time),
-    [time]
+    () => evaluateScenario(scenario, time),
+    [scenario, time]
+  );
+  const comparisonState = React.useMemo(
+    () => evaluateScenario(comparisonScenario, time),
+    [comparisonScenario, time]
   );
   const explanation = React.useMemo(
     () => explainLead(state, selectedLead),
     [selectedLead, state]
   );
+  const comparisonExplanation = React.useMemo(
+    () => explainLead(comparisonState, selectedLead),
+    [comparisonState, selectedLead]
+  );
+  const referenceTrace = React.useMemo(
+    () => generateSyntheticReferenceTrace(scenario, selectedLead),
+    [scenario, selectedLead]
+  );
+  const validationReport = React.useMemo(() => validateScenario(scenario), [scenario]);
   const tissueCounts = React.useMemo(
     () =>
       state.tissueNodes.reduce(
@@ -42,7 +64,7 @@ function App() {
   );
 
   React.useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || reducedMotion) {
       lastFrame.current = null;
       return;
     }
@@ -51,7 +73,7 @@ function App() {
     const tick = (now: number) => {
       if (lastFrame.current !== null) {
         const elapsedMs = now - lastFrame.current;
-        setTime((current) => (current + (elapsedMs / normalSinusRhythmScenario.timing.cycleMs) * speed) % 1);
+        setTime((current) => (current + (elapsedMs / scenario.timing.cycleMs) * speed) % 1);
       }
 
       lastFrame.current = now;
@@ -60,7 +82,67 @@ function App() {
 
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [isPlaying, speed]);
+  }, [isPlaying, reducedMotion, scenario, speed]);
+
+  React.useEffect(() => {
+    const stored = window.localStorage.getItem("ekg-view-preset");
+    if (!stored) return;
+
+    try {
+      const preset = JSON.parse(stored) as {
+        selectedLead?: LeadName;
+        scenarioId?: string;
+        comparisonId?: string;
+        highContrast?: boolean;
+        reducedMotion?: boolean;
+      };
+      if (preset.selectedLead && leadOrder.includes(preset.selectedLead)) setSelectedLead(preset.selectedLead);
+      if (preset.scenarioId) setScenarioId(preset.scenarioId);
+      if (preset.comparisonId) setComparisonId(preset.comparisonId);
+      if (typeof preset.highContrast === "boolean") setHighContrast(preset.highContrast);
+      if (typeof preset.reducedMotion === "boolean") setReducedMotion(preset.reducedMotion);
+    } catch {
+      window.localStorage.removeItem("ekg-view-preset");
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.tagName === "INPUT" || target?.tagName === "SELECT" || target?.tagName === "TEXTAREA") return;
+
+      if (event.key === " ") {
+        event.preventDefault();
+        setIsPlaying((value) => !value);
+      } else if (event.key === "ArrowRight") {
+        setTime((current) => (current + 0.01) % 1);
+      } else if (event.key === "ArrowLeft") {
+        setTime((current) => (current - 0.01 + 1) % 1);
+      } else if (event.key.toLowerCase() === "l") {
+        setSelectedLead((current) => leadOrder[(leadOrder.indexOf(current) + 1) % leadOrder.length]);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const savePreset = () => {
+    window.localStorage.setItem(
+      "ekg-view-preset",
+      JSON.stringify({ selectedLead, scenarioId, comparisonId, highContrast, reducedMotion })
+    );
+  };
+
+  const exportScreenshot = async () => {
+    const canvas = document.querySelector<HTMLCanvasElement>(".scene3d-canvas canvas");
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    link.download = `ekg-visualizer-${scenario.id}-${selectedLead}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
 
   return (
     <main className="app-shell">
@@ -72,6 +154,24 @@ function App() {
               <h1>EKG Voltage Visualizer</h1>
             </div>
             <p className="time-readout">{Math.round(state.timeMs)} ms</p>
+          </div>
+          <div className="scenario-controls" aria-label="Scenario controls">
+            <label htmlFor="scenario-select">
+              <span>Scenario</span>
+              <select id="scenario-select" aria-label="Scenario" value={scenarioId} onChange={(event) => setScenarioId(event.target.value)}>
+                {scenarioLibrary.map((item) => (
+                  <option value={item.id} key={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="comparison-select">
+              <span>Compare</span>
+              <select id="comparison-select" aria-label="Compare" value={comparisonId} onChange={(event) => setComparisonId(event.target.value)}>
+                {scenarioLibrary.map((item) => (
+                  <option value={item.id} key={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </label>
           </div>
           <HeartSchematic state={state} selectedLead={selectedLead} />
         </div>
@@ -122,6 +222,20 @@ function App() {
               </div>
             </dl>
             <p>{explanation.summary}</p>
+            <div className="mechanical-summary" aria-label="Current mechanical state">
+              <p className="eyebrow">Mechanical phase</p>
+              <h3>{state.mechanical.phaseLabel}</h3>
+              <p>{state.mechanical.phaseExplanation}</p>
+              <div className="valve-grid">
+                {Object.values(state.mechanical.valves).map((valve) => (
+                  <span key={valve.name}>
+                    <strong>{valve.label}</strong>
+                    {Math.round(valve.openFraction * 100)}% open
+                  </span>
+                ))}
+              </div>
+              <p className="flow-line">{state.mechanical.flow.label}: {state.mechanical.flow.direction}</p>
+            </div>
             <div className="tissue-summary" aria-label="Current tissue states">
               <p className="eyebrow">Tissue state</p>
               <p>{state.phaseExplanation}</p>
@@ -157,6 +271,12 @@ function App() {
           <button className="icon-button" type="button" onClick={() => setTime(0)} aria-label="Reset to start">
             <RotateCcw size={18} />
           </button>
+          <button className="icon-button" type="button" onClick={() => setTime((value) => (value - 0.02 + 1) % 1)} aria-label="Step backward">
+            <SkipBack size={18} />
+          </button>
+          <button className="icon-button" type="button" onClick={() => setTime((value) => (value + 0.02) % 1)} aria-label="Step forward">
+            <SkipForward size={18} />
+          </button>
           <div className="speed-control" aria-label="Playback speed">
             {[0.5, 1, 2].map((value) => (
               <button
@@ -169,6 +289,18 @@ function App() {
               </button>
             ))}
           </div>
+          <button className={`icon-button ${highContrast ? "active" : ""}`} type="button" onClick={() => setHighContrast((value) => !value)} aria-label="Toggle high contrast ECG grid">
+            <Contrast size={18} />
+          </button>
+          <button className={`text-toggle ${reducedMotion ? "active" : ""}`} type="button" onClick={() => setReducedMotion((value) => !value)}>
+            Reduced motion
+          </button>
+          <button className="icon-button" type="button" onClick={savePreset} aria-label="Save view preset">
+            <Save size={18} />
+          </button>
+          <button className="icon-button" type="button" onClick={() => void exportScreenshot()} aria-label="Export 3D screenshot">
+            <Camera size={18} />
+          </button>
         </div>
         <div className="scrubber-wrap">
           <input
@@ -181,11 +313,28 @@ function App() {
             onChange={(event) => setTime(Number(event.target.value))}
           />
           <div className="phase-markers" aria-hidden="true">
-            <span style={{ left: "10%" }}>P</span>
-            <span style={{ left: "38%" }}>QRS</span>
-            <span style={{ left: "55%" }}>ST</span>
-            <span style={{ left: "76%" }}>T</span>
+            <span style={{ left: `${(scenario.timing.pPeakMs / scenario.timing.cycleMs) * 100}%` }}>P</span>
+            <span style={{ left: `${(scenario.timing.qrsPeakMs / scenario.timing.cycleMs) * 100}%` }}>QRS</span>
+            {state.mechanical.sounds.map((sound) => (
+              <span className="sound-marker" style={{ left: `${sound.normalizedTime * 100}%` }} key={sound.id}>{sound.label}</span>
+            ))}
+            <span style={{ left: `${(scenario.timing.tPeakMs / scenario.timing.cycleMs) * 100}%` }}>T</span>
           </div>
+        </div>
+      </section>
+
+      <section className="comparison-panel" aria-label="Scenario comparison">
+        <div>
+          <p className="eyebrow">What changed?</p>
+          <h2>{scenario.name} vs {comparisonScenario.name}</h2>
+          <div className="change-list">
+            {(comparisonScenario.whatChanged ?? []).map((item) => <span key={item}>{item}</span>)}
+          </div>
+        </div>
+        <div className="comparison-metrics">
+          <span><strong>{scenario.name}</strong>{state.leadVoltages[selectedLead].toFixed(2)} mV in {selectedLead}</span>
+          <span><strong>{comparisonScenario.name}</strong>{comparisonState.leadVoltages[selectedLead].toFixed(2)} mV in {selectedLead}</span>
+          <span><strong>Delta</strong>{(comparisonExplanation.voltage - explanation.voltage).toFixed(2)} mV</span>
         </div>
       </section>
 
@@ -206,14 +355,30 @@ function App() {
             <p className="eyebrow">Generated 12-lead display</p>
             <h2>{state.phaseLabel}</h2>
           </div>
-          <p className="safety-note">{normalSinusRhythmScenario.disclaimer}</p>
+          <p className="safety-note">{scenario.disclaimer}</p>
         </div>
         <EcgLeadGrid
-          scenario={normalSinusRhythmScenario}
+          scenario={scenario}
           state={state}
           selectedLead={selectedLead}
           onSelectLead={setSelectedLead}
+          referenceTrace={referenceTrace}
+          highContrast={highContrast}
         />
+        <div className="validation-panel" aria-label="Reference and validation summary">
+          <div>
+            <p className="eyebrow">Reference overlay</p>
+            <p>{referenceTrace.label} ({referenceTrace.provenance}). {scenario.reference?.notes}</p>
+          </div>
+          <div className="validation-checks">
+            {validationReport.checks.map((check) => (
+              <span className={check.status} key={check.id}>
+                <strong>{check.label}</strong>
+                {check.detail}
+              </span>
+            ))}
+          </div>
+        </div>
       </section>
     </main>
   );

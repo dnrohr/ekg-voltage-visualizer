@@ -28,16 +28,16 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 | 02 | Done | Physically grounded lead/electrode model | 01 | `TASK_02.md` |
 | 03 | Done | Better anatomical electrical model | 02 | `TASK_03.md` |
 | 04 | Done | 3D anatomy and torso visualization | 03 | `TASK_04.md` |
-| 05 | Not started | Cardiac phase, valves, and heart sounds | 03 | `TASK_05.md` |
-| 06 | Not started | Simplified contraction animation | 05 | `TASK_06.md` |
-| 07 | Not started | Stylized blood flow | 06 | `TASK_07.md` |
-| 08 | Not started | Scenario library and comparative learning | 03 | `TASK_08.md` |
-| 09 | Not started | Reference data and validation layer | 08 | `TASK_09.md` |
-| 10 | Not started | Polish, accessibility, and distribution | 01 | `TASK_10.md` |
+| 05 | Done | Cardiac phase, valves, and heart sounds | 03 | `TASK_05.md` |
+| 06 | Done | Simplified contraction animation | 05 | `TASK_06.md` |
+| 07 | Done | Stylized blood flow | 06 | `TASK_07.md` |
+| 08 | Done | Scenario library and comparative learning | 03 | `TASK_08.md` |
+| 09 | Done | Reference data and validation layer | 08 | `TASK_09.md` |
+| 10 | Done | Polish, accessibility, and distribution | 01 | `TASK_10.md` |
 
 ## Current Next Task
 
-`TASK_05.md`
+All listed tasks are complete.
 
 ## Handoff Notes
 
@@ -51,3 +51,4 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 - Task 02 completed on branch `codex/task-02-electrode-model`; next task is the better anatomical electrical model.
 - Task 03 completed on branch `codex/task-03-anatomical-activation`; next task is 3D anatomy and torso visualization.
 - Task 04 completed on branch `codex/task-04-3d-visualization`; next task is cardiac phase, valves, and heart sounds.
+- Tasks 05-10 completed together on branch `codex/task-05-10-completion` scope: deterministic mechanical/flow model, scenario comparison, validation/reference overlays, accessibility polish, PWA manifest, docs, tests, and browser smoke checks.

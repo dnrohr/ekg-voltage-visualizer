@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -63,4 +63,6 @@ Make the app polished, accessible, responsive, and practical for repeated learne
 
 ## Verification Notes
 
-Record accessibility checks, viewport checks, performance observations, and remaining polish gaps.
+Added responsive panels, keyboard controls, reduced-motion mode, high-contrast ECG grid mode, saved local view presets, 3D screenshot export, explicit select labels, PWA manifest, and icon.
+
+Verified desktop and mobile layouts in the in-app browser: 12 lead cards render, 3D canvas is sized, scenario switching works, high-contrast toggles, step controls advance time, no console errors were reported, and no horizontal overflow was detected. `npm run build` passes with a Vite chunk-size warning due to Three.js bundling.

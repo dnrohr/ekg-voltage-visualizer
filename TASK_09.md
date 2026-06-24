@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -61,4 +61,6 @@ Integrate real or high-fidelity reference material for comparison and validation
 
 ## Verification Notes
 
-Record datasets/tools used, licenses, and validation results.
+Added project-authored synthetic reference traces, P/QRS/T annotations, reference-vs-generated overlay, provenance labels, and validation reports covering conceptual, polarity/timing, morphology plausibility, and reference agreement checks.
+
+No third-party ECG datasets are bundled. Provenance and license notes are documented in `docs/VALIDATION.md`, `references/sources.md`, and `references/licenses.md`.

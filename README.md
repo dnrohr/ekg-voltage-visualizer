@@ -106,6 +106,8 @@ Foundational docs for the first implementation tasks:
 \* \[`docs/COORDINATE_SYSTEM.md`](./docs/COORDINATE_SYSTEM.md) - shared heart, torso, electrode, and lead-axis coordinate convention
 \* \[`docs/ECG_LEADS.md`](./docs/ECG_LEADS.md) - electrode roles, lead formulas, Wilson central terminal, and polarity sanity checks
 \* \[`docs/ACTIVATION_MODEL.md`](./docs/ACTIVATION_MODEL.md) - 2D MVP timing, vector source assumptions, and known model limitations
+\* \[`docs/MECHANICAL_MODEL.md`](./docs/MECHANICAL_MODEL.md) - authored phase, valve, contraction, heart sound, and flow timing model
+\* \[`docs/VALIDATION.md`](./docs/VALIDATION.md) - scenario schema, reference overlay, validation levels, and accessibility/distribution notes
 
 
 

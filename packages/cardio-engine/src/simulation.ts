@@ -6,6 +6,7 @@ import {
   leadDefinitions,
   resolveTerminalPotential
 } from "./leads";
+import { evaluateMechanicalState } from "./mechanics";
 import type {
   ActivationNode,
   CardiacPhase,
@@ -261,6 +262,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
   const leadVoltages = computeLeadVoltages(electrodePotentials);
 
   const phase = phaseAtMs(scenario, timeMs);
+  const mechanical = evaluateMechanicalState(scenario, timeMs);
 
   return {
     normalizedTime: normalized,
@@ -278,7 +280,8 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
       atrialDepolarization: p,
       ventricularDepolarization: Math.max(septal, qrs, terminal),
       ventricularRepolarization: t
-    }
+    },
+    mechanical
   };
 }
 

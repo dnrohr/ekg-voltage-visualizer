@@ -12,6 +12,68 @@ export type CardiacPhase =
   | "st-segment"
   | "t-wave";
 
+export type MechanicalPhase =
+  | "atrial-systole"
+  | "isovolumetric-contraction"
+  | "ventricular-ejection"
+  | "isovolumetric-relaxation"
+  | "rapid-filling"
+  | "diastasis";
+
+export type ValveName = "mitral" | "tricuspid" | "aortic" | "pulmonary";
+
+export type FlowRegion =
+  | "venous-return"
+  | "av-inflow"
+  | "atrial-kick"
+  | "aortic-ejection"
+  | "pulmonary-ejection"
+  | "no-flow";
+
+export type ValveState = {
+  name: ValveName;
+  label: string;
+  openFraction: number;
+  flowDirection: string;
+  pressureLabel: string;
+};
+
+export type HeartSoundMarker = {
+  id: "S1" | "S2";
+  label: string;
+  timeMs: number;
+  normalizedTime: number;
+  description: string;
+};
+
+export type ChamberMechanics = {
+  atrialContraction: number;
+  ventricularContraction: number;
+  atrialVolumeFraction: number;
+  ventricularVolumeFraction: number;
+  wallThickening: number;
+  electromechanicalDelayMs: number;
+};
+
+export type FlowState = {
+  region: FlowRegion;
+  label: string;
+  intensity: number;
+  oxygenatedFraction: number;
+  direction: string;
+};
+
+export type MechanicalState = {
+  phase: MechanicalPhase;
+  phaseLabel: string;
+  phaseExplanation: string;
+  valves: Record<ValveName, ValveState>;
+  sounds: HeartSoundMarker[];
+  activeSound: HeartSoundMarker | null;
+  chamber: ChamberMechanics;
+  flow: FlowState;
+};
+
 export type LeadName =
   | "I"
   | "II"
@@ -115,11 +177,21 @@ export type ActivationModel = {
   edges: ActivationEdge[];
 };
 
+export type ScenarioReference = {
+  label: string;
+  source: string;
+  license: string;
+  notes: string;
+};
+
 export type CardiacScenario = {
   id: string;
   name: string;
   description: string;
   disclaimer: string;
+  category?: string;
+  whatChanged?: string[];
+  reference?: ScenarioReference;
   timing: ScenarioTiming;
   waveVectors: WaveVectorConfig;
   activationModel: ActivationModel;
@@ -182,6 +254,7 @@ export type SimulationState = {
   wilsonCentralTerminal: number;
   leadVoltages: LeadVoltages;
   phaseProgress: PhaseProgress;
+  mechanical: MechanicalState;
 };
 
 export type LeadExplanation = {
@@ -201,4 +274,28 @@ export type TraceSample = {
   normalizedTime: number;
   timeMs: number;
   voltage: number;
+};
+
+export type ReferenceTraceSample = TraceSample & {
+  annotation?: "P" | "QRS" | "T";
+};
+
+export type ReferenceLeadTrace = {
+  lead: LeadName;
+  provenance: "synthetic-reference" | "reference-derived" | "high-fidelity-precomputed";
+  label: string;
+  samples: ReferenceTraceSample[];
+};
+
+export type ValidationCheck = {
+  id: string;
+  label: string;
+  level: "conceptual" | "polarity-timing" | "morphology-plausibility" | "reference-agreement";
+  status: "pass" | "caution";
+  detail: string;
+};
+
+export type ScenarioValidationReport = {
+  scenarioId: string;
+  checks: ValidationCheck[];
 };

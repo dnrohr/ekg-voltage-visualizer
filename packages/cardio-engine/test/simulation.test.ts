@@ -3,10 +3,14 @@ import {
   computeLeadVoltage,
   computeWilsonCentralTerminal,
   evaluateScenario,
+  generateSyntheticReferenceTrace,
+  scenarioLibrary,
   type ElectrodePotentials,
   leadOrder,
   normalSinusRhythmScenario,
-  normalizeCycleTime
+  normalizeCycleTime,
+  validateScenario,
+  validateScenarioSchema
 } from "../src";
 
 describe("cardio-engine simulation", () => {
@@ -104,5 +108,54 @@ describe("cardio-engine simulation", () => {
     const tWaveState = evaluateScenario(normalSinusRhythmScenario, 580 / 800);
     expect(tWaveState.tissueNodes.some((node) => node.state === "repolarizing")).toBe(true);
     expect(tWaveState.phaseExplanation).toContain("not run backward");
+  });
+
+  it("aligns valve phases and heart sounds with the electrical timeline", () => {
+    const systoleStart = evaluateScenario(normalSinusRhythmScenario, 350 / 800);
+    const ejection = evaluateScenario(normalSinusRhythmScenario, 435 / 800);
+    const s2 = evaluateScenario(normalSinusRhythmScenario, 498 / 800);
+
+    expect(systoleStart.mechanical.phase).toBe("isovolumetric-contraction");
+    expect(systoleStart.mechanical.activeSound?.id).toBe("S1");
+    expect(systoleStart.mechanical.valves.mitral.openFraction).toBeLessThan(0.25);
+    expect(ejection.mechanical.phase).toBe("ventricular-ejection");
+    expect(ejection.mechanical.valves.aortic.openFraction).toBeGreaterThan(0.2);
+    expect(ejection.mechanical.flow.intensity).toBeGreaterThan(0);
+    expect(s2.mechanical.activeSound?.id).toBe("S2");
+  });
+
+  it("shows electromechanical delay and changing chamber volumes", () => {
+    const beforeQrs = evaluateScenario(normalSinusRhythmScenario, 300 / 800);
+    const peakEjection = evaluateScenario(normalSinusRhythmScenario, 460 / 800);
+
+    expect(beforeQrs.phase).toBe("qrs");
+    expect(beforeQrs.mechanical.chamber.ventricularContraction).toBeLessThan(0.2);
+    expect(peakEjection.mechanical.chamber.ventricularContraction).toBeGreaterThan(0.45);
+    expect(peakEjection.mechanical.chamber.ventricularVolumeFraction).toBeLessThan(beforeQrs.mechanical.chamber.ventricularVolumeFraction);
+  });
+
+  it("keeps major flow stopped during isovolumetric phases", () => {
+    const isoContraction = evaluateScenario(normalSinusRhythmScenario, 360 / 800);
+    const isoRelaxation = evaluateScenario(normalSinusRhythmScenario, 560 / 800);
+
+    expect(isoContraction.mechanical.flow.region).toBe("no-flow");
+    expect(isoContraction.mechanical.flow.intensity).toBe(0);
+    expect(isoRelaxation.mechanical.flow.region).toBe("no-flow");
+  });
+
+  it("validates all curated scenario schemas", () => {
+    for (const scenario of scenarioLibrary) {
+      expect(validateScenarioSchema(scenario)).toEqual([]);
+    }
+  });
+
+  it("creates validation reports and synthetic reference traces", () => {
+    const report = validateScenario(normalSinusRhythmScenario);
+    const reference = generateSyntheticReferenceTrace(normalSinusRhythmScenario, "II");
+
+    expect(report.checks.length).toBeGreaterThan(3);
+    expect(report.checks.some((check) => check.level === "reference-agreement")).toBe(true);
+    expect(reference.provenance).toBe("synthetic-reference");
+    expect(reference.samples.some((sample) => sample.annotation === "QRS")).toBe(true);
   });
 });

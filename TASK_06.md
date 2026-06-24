@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -60,4 +60,6 @@ Show atrial and ventricular contraction/relaxation with phase-based animation cu
 
 ## Verification Notes
 
-Record curve choices, checks, and known simplifications.
+Implemented authored atrial and ventricular contraction curves, chamber volume fractions, wall thickening cues, and a 42 ms electromechanical delay. The model is intentionally phase-based and does not attempt finite-element mechanics.
+
+Verified contraction delay and volume changes with `npm test`; also ran `npm run typecheck`, `npm run build`, and browser smoke checks.
