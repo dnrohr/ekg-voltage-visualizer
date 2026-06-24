@@ -51,7 +51,7 @@ Build the first interactive teaching prototype: one normal beat, one 2D heart sc
 - The simulation can be evaluated independently of React/rendering.
 - Basic tests or verification notes cover timeline determinism and lead display behavior.
 - Relevant documentation is updated for setup, architecture, and model assumptions.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -61,6 +61,8 @@ Build the first interactive teaching prototype: one normal beat, one 2D heart sc
 - Update README/docs for setup, usage, architecture, and known limitations introduced by this task.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

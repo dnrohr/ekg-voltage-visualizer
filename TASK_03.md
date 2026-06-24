@@ -45,7 +45,7 @@ Move from generic wave animation to a coarse anatomical activation model that re
 - The T wave explanation accounts for sequence and polarity rather than a simplistic reverse wave.
 - Tests or fixtures cover activation ordering and repolarization timing.
 - Relevant documentation is updated for activation and repolarization assumptions.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -55,6 +55,8 @@ Move from generic wave animation to a coarse anatomical activation model that re
 - Update docs for anatomical timing, repolarization assumptions, scenario parameters, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

@@ -48,7 +48,7 @@ Add a synchronized 3D view that improves spatial intuition for heart position, e
 - Asset sources and licenses are documented.
 - Visual verification confirms the 3D scene renders correctly on desktop and mobile-sized viewports.
 - Relevant documentation is updated for assets, controls, and rendering assumptions.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -58,6 +58,8 @@ Add a synchronized 3D view that improves spatial intuition for heart position, e
 - Update docs for asset sources, licenses, camera controls, rendering assumptions, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

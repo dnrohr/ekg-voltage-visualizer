@@ -46,7 +46,7 @@ Add stylized blood movement through chambers and valves to show timing relations
 - Flow direction matches valve state and cardiac phase.
 - Visual checks confirm flow does not obscure the core ECG explanation.
 - Relevant documentation is updated for flow phases, visual style, performance, and limitations.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -56,6 +56,8 @@ Add stylized blood movement through chambers and valves to show timing relations
 - Update docs for flow phases, visual encoding, performance assumptions, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

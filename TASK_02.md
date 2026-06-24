@@ -52,7 +52,7 @@ potential(electrode) ~= sum(source_strength * dot(source_moment, electrode_posit
 - Selected-lead UI shows positive/reference or positive/negative relationships.
 - Tests cover lead definitions and Wilson central terminal behavior.
 - Relevant documentation is updated for electrode geometry, lead equations, and model limitations.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -62,6 +62,8 @@ potential(electrode) ~= sum(source_strength * dot(source_moment, electrode_posit
 - Update docs for lead definitions, electrode geometry, calibration assumptions, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

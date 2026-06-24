@@ -45,7 +45,7 @@ Add mechanical phase labels, valve open/closed animation, and S1/S2 timing marke
 - Valve state is deterministic from scenario plus cycle time.
 - Tests or fixtures cover phase transitions and S1/S2 timing.
 - Relevant documentation is updated for phase timing, valve assumptions, and heart sound markers.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -55,6 +55,8 @@ Add mechanical phase labels, valve open/closed animation, and S1/S2 timing marke
 - Update docs for cardiac phases, valve assumptions, pressure labels, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

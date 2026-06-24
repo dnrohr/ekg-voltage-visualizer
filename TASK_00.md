@@ -57,7 +57,7 @@ myocardial activation state
 - Lead definitions and coordinate assumptions are documented.
 - Relevant tests/checks have been run, or the reason they are not applicable is recorded.
 - Documentation changed by this task is complete enough for the next agent.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -66,6 +66,8 @@ myocardial activation state
 - Document any decisions, assumptions, and unresolved questions in the relevant docs and verification notes.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

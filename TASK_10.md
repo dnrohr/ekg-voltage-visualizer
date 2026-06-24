@@ -48,7 +48,7 @@ Make the app polished, accessible, responsive, and practical for repeated learne
 - Visual contrast and color choices are checked.
 - Export/PWA features work if implemented.
 - Relevant documentation is updated for controls, accessibility, distribution, and remaining support notes.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -58,6 +58,8 @@ Make the app polished, accessible, responsive, and practical for repeated learne
 - Update docs for controls, accessibility notes, distribution/PWA behavior, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 

@@ -9,14 +9,15 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 3. Read the selected `TASK_##.md` file completely before editing code.
 4. Keep changes scoped to that task's deliverables.
 5. Test the task's behavior, update relevant documentation, commit the finished task, and push the branch.
-6. Update the status row here and the status block in the task file before handing off.
+6. Merge the finished task branch into `main`, push `main`, and keep the task branch intact.
+7. Update the status row here and the status block in the task file before handing off.
 
 ## Status Legend
 
 - `Not started`: No implementation work has begun.
 - `In progress`: Work has started but is not ready for handoff/review.
 - `Blocked`: Work cannot continue without user input or an external dependency.
-- `Done`: Exit criteria are met, tests/docs are complete, changes are committed and pushed, and verification notes are recorded.
+- `Done`: Exit criteria are met, tests/docs are complete, changes are committed, pushed, merged to `main`, and verification notes are recorded. Task branches are retained after merge.
 
 ## Task List
 
@@ -44,6 +45,6 @@ Status index for agent handoffs. If the user says "Work on the next task", pick 
 - Favor deterministic state derived from `scenario definition + normalized cardiac-cycle time`.
 - Build the explanatory engine before visual realism.
 - Start with 2D electrical intuition; defer 3D, valves, contraction, and blood until the basic explanation works.
-- Every completed task should leave the repo in a handoff-ready state: tested, documented, committed, and pushed.
+- Every completed task should leave the repo in a handoff-ready state: tested, documented, committed, pushed, merged to `main`, and with the task branch retained.
 - Task 00 completed on branch `codex/task-00-concept-safety-framing`.
 - Task 01 completed on branch `codex/task-01-2d-electrical-mvp`; next task is the physically grounded lead/electrode model.

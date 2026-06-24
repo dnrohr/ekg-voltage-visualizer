@@ -46,7 +46,7 @@ Integrate real or high-fidelity reference material for comparison and validation
 - Imported/reference data provenance is documented.
 - Validation checks distinguish conceptual validity, polarity/timing validity, morphology plausibility, and reference agreement.
 - Relevant documentation is updated for data sources, licenses, import behavior, and validation limits.
-- The finished task changes are committed and pushed.
+- The finished task changes are committed, pushed, merged to `main`, and the task branch is retained.
 - `TASKS.md` and this task file are updated with progress and verification notes.
 
 ## Required Closeout
@@ -56,6 +56,8 @@ Integrate real or high-fidelity reference material for comparison and validation
 - Update docs for data sources, licenses, import pipeline, validation levels, and limitations.
 - Commit the completed task with a focused commit message.
 - Push the branch after the commit succeeds.
+- Merge the finished task branch into `main` and push `main`.
+- Do not delete the task branch after merging.
 
 ## Verification Notes
 
