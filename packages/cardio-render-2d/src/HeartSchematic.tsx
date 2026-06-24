@@ -17,6 +17,8 @@ const lerp = (start: number, end: number, amount: number) =>
 
 const mapX = (x: number) => 180 + x * 118;
 const mapY = (z: number) => 172 - z * 142;
+const mapHeartX = (x: number) => 180 + x * 145;
+const mapHeartY = (z: number) => 172 - z * 180;
 
 function terminalWeight(lead: LeadName, terminal: "positiveTerminal" | "negativeTerminal", electrode: ElectrodeName): number {
   return leadDefinitions[lead][terminal].weights[electrode] ?? 0;
@@ -91,6 +93,25 @@ export function HeartSchematic({ state, selectedLead }: HeartSchematicProps) {
       <circle className="node sa" cx="127" cy="88" r={5 + atrialGlow * 6} />
       <circle className="node av" cx="174" cy="141" r={4} />
       <path className="conduction" d="M130 92 C145 112 157 128 173 141 C178 170 178 210 176 270" />
+
+      <g className="activation-edges" aria-hidden="true">
+        <path d="M119 78 C132 99 143 111 139 122 C150 127 159 133 174 129 C178 157 178 192 171 269 C151 239 141 219 142 208 M171 269 C197 231 215 211 221 215 M221 215 C219 183 213 164 206 165" />
+      </g>
+
+      <g className="tissue-node-layer">
+        {state.tissueNodes.map((node) => {
+          const x = mapHeartX(node.position.x);
+          const y = mapHeartY(node.position.z);
+          const isChanging = node.state === "depolarizing" || node.state === "repolarizing";
+
+          return (
+            <g className={`tissue-node ${node.state}`} key={node.id} transform={`translate(${x} ${y})`}>
+              <circle r={isChanging ? 7 : 5} />
+              <title>{`${node.label}: ${node.state}`}</title>
+            </g>
+          );
+        })}
+      </g>
 
       {atrialGlow > 0.03 && (
         <circle className="wave atrial" cx={lerp(128, 218, atrialGlow)} cy={lerp(89, 121, atrialGlow)} r={22 + atrialGlow * 28} opacity={0.2 + atrialGlow * 0.42} />

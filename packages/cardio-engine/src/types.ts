@@ -74,6 +74,47 @@ export type WaveVectorConfig = {
   ventricularRepolarization: Vec3;
 };
 
+export type TissueState =
+  | "resting"
+  | "depolarizing"
+  | "active"
+  | "repolarizing"
+  | "recovered";
+
+export type ActivationNodeRole =
+  | "pacemaker"
+  | "atria"
+  | "av-delay"
+  | "his-purkinje"
+  | "septum"
+  | "ventricle"
+  | "base";
+
+export type ActivationNode = {
+  id: string;
+  label: string;
+  region: string;
+  role: ActivationNodeRole;
+  position: Vec3;
+  activationTimeMs: number;
+  repolarizationTimeMs: number;
+  mass: number;
+  sourceId: keyof WaveVectorConfig;
+};
+
+export type ActivationEdge = {
+  from: string;
+  to: string;
+  label: string;
+};
+
+export type ActivationModel = {
+  depolarizationDurationMs: number;
+  repolarizationDurationMs: number;
+  nodes: ActivationNode[];
+  edges: ActivationEdge[];
+};
+
 export type CardiacScenario = {
   id: string;
   name: string;
@@ -81,6 +122,7 @@ export type CardiacScenario = {
   disclaimer: string;
   timing: ScenarioTiming;
   waveVectors: WaveVectorConfig;
+  activationModel: ActivationModel;
 };
 
 export type LeadDefinition = {
@@ -121,11 +163,19 @@ export type PhaseProgress = {
   ventricularRepolarization: number;
 };
 
+export type TissueNodeState = ActivationNode & {
+  state: TissueState;
+  activationProgress: number;
+  repolarizationProgress: number;
+};
+
 export type SimulationState = {
   normalizedTime: number;
   timeMs: number;
   phase: CardiacPhase;
   phaseLabel: string;
+  phaseExplanation: string;
+  tissueNodes: TissueNodeState[];
   netVector: Vec3;
   cardiacSources: RegionalCardiacSource[];
   electrodePotentials: ElectrodePotentials;

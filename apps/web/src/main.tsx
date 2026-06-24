@@ -28,6 +28,17 @@ function App() {
     () => explainLead(state, selectedLead),
     [selectedLead, state]
   );
+  const tissueCounts = React.useMemo(
+    () =>
+      state.tissueNodes.reduce(
+        (counts, node) => ({
+          ...counts,
+          [node.state]: counts[node.state] + 1
+        }),
+        { resting: 0, depolarizing: 0, active: 0, repolarizing: 0, recovered: 0 }
+      ),
+    [state]
+  );
 
   React.useEffect(() => {
     if (!isPlaying) {
@@ -110,6 +121,17 @@ function App() {
               </div>
             </dl>
             <p>{explanation.summary}</p>
+            <div className="tissue-summary" aria-label="Current tissue states">
+              <p className="eyebrow">Tissue state</p>
+              <p>{state.phaseExplanation}</p>
+              <div className="tissue-state-list">
+                {Object.entries(tissueCounts).map(([stateName, count]) => (
+                  <span className={`tissue-pill ${stateName}`} key={stateName}>
+                    {stateName} {count}
+                  </span>
+                ))}
+              </div>
+            </div>
             <div className="contribution-list" aria-label="Regional contribution breakdown">
               <p className="eyebrow">Top source contributions</p>
               {explanation.contributions.slice(0, 4).map((contribution) => (

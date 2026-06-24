@@ -7,12 +7,15 @@ import {
   resolveTerminalPotential
 } from "./leads";
 import type {
+  ActivationNode,
   CardiacPhase,
   CardiacScenario,
   LeadExplanation,
   LeadName,
   RegionalCardiacSource,
   SimulationState,
+  TissueNodeState,
+  TissueState,
   TraceSample,
   Vec3
 } from "./types";
@@ -79,6 +82,72 @@ function phaseLabel(phase: CardiacPhase): string {
   }
 }
 
+function phaseExplanation(phase: CardiacPhase): string {
+  switch (phase) {
+    case "p-wave":
+      return "The SA node and atrial muscle are depolarizing. Atrial mass is small, so the generated voltage is modest.";
+    case "pr-segment":
+      return "Most atrial tissue is active while the AV node delays conduction before the His-Purkinje system engages.";
+    case "qrs":
+      return "Ventricular tissue depolarizes rapidly from septum toward apex, free walls, and base, producing the largest deflection.";
+    case "st-segment":
+      return "Ventricular regions are broadly active and refractory, so opposing source changes mostly cancel near baseline.";
+    case "t-wave":
+      return "Ventricular regions repolarize with different action-potential durations. Recovery is authored separately from depolarization, not run backward.";
+    default:
+      return "Most tissue is electrically resting or recovered, leaving little net voltage change at the body surface.";
+  }
+}
+
+function nodeStateAtTime(
+  node: ActivationNode,
+  timeMs: number,
+  depolarizationDurationMs: number,
+  repolarizationDurationMs: number
+): TissueNodeState {
+  const activationEnd = node.activationTimeMs + depolarizationDurationMs;
+  const repolarizationEnd = node.repolarizationTimeMs + repolarizationDurationMs;
+  let state: TissueState = "resting";
+
+  if (timeMs >= node.activationTimeMs && timeMs < activationEnd) {
+    state = "depolarizing";
+  } else if (timeMs >= activationEnd && timeMs < node.repolarizationTimeMs) {
+    state = "active";
+  } else if (timeMs >= node.repolarizationTimeMs && timeMs < repolarizationEnd) {
+    state = "repolarizing";
+  } else if (timeMs >= repolarizationEnd) {
+    state = "recovered";
+  }
+
+  return {
+    ...node,
+    state,
+    activationProgress: smoothStep(node.activationTimeMs, activationEnd, timeMs),
+    repolarizationProgress: smoothStep(node.repolarizationTimeMs, repolarizationEnd, timeMs)
+  };
+}
+
+function depolarizationActivity(node: TissueNodeState, depolarizationDurationMs: number, timeMs: number): number {
+  return windowProgress(node.activationTimeMs, node.activationTimeMs + depolarizationDurationMs, timeMs);
+}
+
+function repolarizationActivity(node: TissueNodeState, repolarizationDurationMs: number, timeMs: number): number {
+  return windowProgress(node.repolarizationTimeMs, node.repolarizationTimeMs + repolarizationDurationMs, timeMs);
+}
+
+function weightedActivity(
+  nodes: TissueNodeState[],
+  activityForNode: (node: TissueNodeState) => number
+): number {
+  const totalMass = nodes.reduce((sum, node) => sum + node.mass, 0);
+
+  if (totalMass === 0) {
+    return 0;
+  }
+
+  return nodes.reduce((sum, node) => sum + activityForNode(node) * node.mass, 0) / totalMass;
+}
+
 function activeSource(
   id: RegionalCardiacSource["id"],
   label: string,
@@ -103,12 +172,39 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
   const normalized = normalizeCycleTime(normalizedTime);
   const timeMs = normalized * scenario.timing.cycleMs;
   const timing = scenario.timing;
+  const activationModel = scenario.activationModel;
+  const tissueNodes = activationModel.nodes.map((node) =>
+    nodeStateAtTime(
+      node,
+      timeMs,
+      activationModel.depolarizationDurationMs,
+      activationModel.repolarizationDurationMs
+    )
+  );
 
-  const p = windowProgress(timing.pStartMs, timing.pEndMs, timeMs);
-  const septal = gaussian(timing.qrsStartMs + 12, 8, timeMs);
-  const qrs = gaussian(timing.qrsPeakMs, 18, timeMs);
-  const terminal = gaussian(timing.qrsEndMs - 12, 10, timeMs);
-  const t = windowProgress(timing.tStartMs, timing.tEndMs, timeMs);
+  const depolarizationFor = (sourceId: RegionalCardiacSource["id"]) =>
+    weightedActivity(
+      tissueNodes.filter((node) => node.sourceId === sourceId),
+      (node) => depolarizationActivity(node, activationModel.depolarizationDurationMs, timeMs)
+    );
+  const ventricularRecoveryNodes = tissueNodes.filter((node) =>
+    node.role === "septum" || node.role === "ventricle" || node.role === "base"
+  );
+
+  const p = depolarizationFor("atrialDepolarization");
+  const septal = Math.max(
+    depolarizationFor("septalDepolarization"),
+    gaussian(timing.qrsStartMs + 12, 10, timeMs) * 0.35
+  );
+  const qrs = Math.max(
+    depolarizationFor("ventricularDepolarization"),
+    gaussian(timing.qrsPeakMs, 20, timeMs) * 0.25
+  );
+  const terminal = depolarizationFor("terminalDepolarization");
+  const t = weightedActivity(
+    ventricularRecoveryNodes,
+    (node) => repolarizationActivity(node, activationModel.repolarizationDurationMs, timeMs)
+  );
 
   const cardiacSources: RegionalCardiacSource[] = [
     activeSource(
@@ -118,7 +214,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
       "depolarization",
       { x: -0.05, y: 0.18, z: 0.32 },
       scenario.waveVectors.atrialDepolarization,
-      0.34 * p
+      0.55 * p
     ),
     activeSource(
       "septalDepolarization",
@@ -127,7 +223,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
       "depolarization",
       { x: -0.04, y: 0.22, z: 0.04 },
       scenario.waveVectors.septalDepolarization,
-      0.45 * septal
+      0.75 * septal
     ),
     activeSource(
       "ventricularDepolarization",
@@ -136,7 +232,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
       "depolarization",
       { x: 0.07, y: 0.18, z: -0.16 },
       scenario.waveVectors.ventricularDepolarization,
-      1.45 * qrs
+      2.7 * qrs
     ),
     activeSource(
       "terminalDepolarization",
@@ -145,7 +241,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
       "depolarization",
       { x: 0.12, y: 0.1, z: 0.08 },
       scenario.waveVectors.terminalDepolarization,
-      0.5 * terminal
+      0.9 * terminal
     ),
     activeSource(
       "ventricularRepolarization",
@@ -154,7 +250,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
       "repolarization",
       { x: 0.1, y: 0.2, z: -0.12 },
       scenario.waveVectors.ventricularRepolarization,
-      0.82 * t
+      1.25 * t
     )
   ];
 
@@ -171,6 +267,8 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
     timeMs,
     phase,
     phaseLabel: phaseLabel(phase),
+    phaseExplanation: phaseExplanation(phase),
+    tissueNodes,
     netVector,
     cardiacSources,
     electrodePotentials,
