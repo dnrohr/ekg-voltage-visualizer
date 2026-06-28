@@ -35,11 +35,11 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 | V2-09 | Done | Guided lessons and quizzes | V2-07 | `TASK_V2_09.md` |
 | V2-10 | Done | Heart-first abnormal scenario extensions | V2-08 | `TASK_V2_10.md` |
 | V2-11 | Done | V2 polish, performance, accessibility, and export | V2-10 | `TASK_V2_11.md` |
-| V2-12 | Not started | V2 validation audit and release handoff | V2-11 | `TASK_V2_12.md` |
+| V2-12 | Done | V2 validation audit and release handoff | V2-11 | `TASK_V2_12.md` |
 
 ## Current Next Task
 
-`TASK_V2_12.md`
+All V2 tasks are complete.
 
 ## Notes
 
@@ -55,4 +55,5 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 - V2-09 added six live guided lessons, non-blocking lesson navigation, immediate quiz feedback, mode/time/lead/region synchronization, browser smoke, and lesson documentation.
 - V2-10 added heart-first abnormal teaching scenarios for prolonged conduction delay, ventricular ectopic focus, and reversed arm leads; refined BBB notes; electrode-position overrides; scenario validation tests; browser smoke; and validation documentation.
 - V2-11 added 3D dynamic-object disposal, stable keyboard handlers, region/lesson keyboard shortcuts, broader high-contrast and reduced-motion styling, JSON study snapshot export, desktop/mobile smoke, and polish/export documentation.
+- V2-12 added the V2 release audit, README handoff updates, final verification evidence, and release limitations.
 - V2 work should preserve the V1 educational disclaimer and avoid clinical diagnostic claims.

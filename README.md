@@ -4,7 +4,7 @@ An educational cardiac-cycle visualizer for making 12-lead EKG/ECG voltages feel
 
 The goal is to help learners connect **myocardial depolarization and repolarization** to the changing voltage measurements seen in a 12-lead EKG. Rather than treating the tracing as an abstract waveform, the app shows what is happening in the heart, how that activity creates body-surface potentials, and why each lead deflects upward, downward, or remains nearly flat during the cardiac cycle.
 
-> **Status:** planning / pre-MVP  
+> **Status:** V2 release-candidate educational simulator on the `codex/v2-roadmap` branch  
 > **Scope:** educational physiology and signal-formation simulator  
 > **Non-goal:** diagnostic interpretation or clinical decision support
 
@@ -47,7 +47,7 @@ First success condition:
 
 > A learner can scrub through a normal beat and understand why several leads go positive, negative, or flat during P, QRS, ST, and T.
 
-The full roadmap is in [ROADMAP.md](./ROADMAP.md).
+The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md).
 
 Foundational docs for the first implementation tasks:
 
@@ -59,8 +59,12 @@ Foundational docs for the first implementation tasks:
 - [docs/ACTIVATION_MODEL.md](./docs/ACTIVATION_MODEL.md) - 2D MVP timing, vector source assumptions, and known model limitations
 - [docs/MECHANICAL_MODEL.md](./docs/MECHANICAL_MODEL.md) - authored phase, valve, contraction, heart sound, and flow timing model
 - [docs/VALIDATION.md](./docs/VALIDATION.md) - scenario schema, reference overlay, validation levels, and accessibility/distribution notes
+- [docs/V2_LAYER_CONTROLS.md](./docs/V2_LAYER_CONTROLS.md) - V2 learner modes and layer toggles
+- [docs/V2_GUIDED_LESSONS.md](./docs/V2_GUIDED_LESSONS.md) - V2 guided lesson and quiz structure
+- [docs/V2_POLISH_ACCESSIBILITY_EXPORT.md](./docs/V2_POLISH_ACCESSIBILITY_EXPORT.md) - V2 polish, keyboard, export, and PWA notes
+- [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md) - V2 completion evidence and known limits
 
-## Running the 2D MVP
+## Running the App
 
 Install dependencies and run the local web app:
 
@@ -69,7 +73,7 @@ npm install
 npm run dev
 ```
 
-The app lives in `apps/web` and uses a pure TypeScript simulation engine in `packages/cardio-engine`. The first screen is the simulator: a stylized 2D heart schematic, generated 12-lead ECG traces, timeline controls, lead selection, and selected-lead explanation.
+The app lives in `apps/web` and uses a pure TypeScript simulation engine in `packages/cardio-engine`. The first screen is the simulator: a heart-first 3D/2D teaching workspace with generated 12-lead ECG traces, timeline controls, lead probe mode, region-to-lead inspection, mechanical layers, guided lessons, scenario comparison, and export controls.
 
 Useful checks:
 
@@ -317,4 +321,4 @@ Before adding third-party anatomical models, datasets, textures, or reference me
 
 ## Current Next Step
 
-Build the physically grounded lead/electrode model from [TASK_02.md](./TASK_02.md).
+Finish the V2 release handoff from [TASK_V2_12.md](./TASK_V2_12.md), then continue with polish and validation follow-ups from [TASK_V2_11.md](./TASK_V2_11.md) and [TASK_V2_12.md](./TASK_V2_12.md) as needed.
