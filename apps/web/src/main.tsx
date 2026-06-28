@@ -21,7 +21,7 @@ import {
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic, SelectedLeadTrace } from "@ekg/cardio-render-2d";
-import { TorsoScene3D } from "@ekg/cardio-render-3d";
+import { TorsoScene3D, type TorsoScene3DLayers } from "@ekg/cardio-render-3d";
 import "./styles.css";
 
 const formatPotential = (value: number) =>
@@ -33,12 +33,103 @@ const formatRegionWeight = (value: number) =>
 const formatDelta = (value: number) =>
   value >= 0 ? `${Math.round(value)} ms ago` : `in ${Math.abs(Math.round(value))} ms`;
 
+type LearnerMode = "probe-to-heart" | "heart-to-probe" | "advanced";
+
+type VisualLayers = TorsoScene3DLayers & {
+  chamberVolume: boolean;
+  ecgGrid: boolean;
+  enlargedLead: boolean;
+  ecgLabels: boolean;
+  projectionMarkers: boolean;
+  contributionHighlights: boolean;
+};
+
+const learnerModes: Record<LearnerMode, string> = {
+  "probe-to-heart": "Lead to heart",
+  "heart-to-probe": "Heart to leads",
+  advanced: "Advanced"
+};
+
+const layerPresets: Record<LearnerMode, VisualLayers> = {
+  "probe-to-heart": {
+    wavefront: true,
+    contours: true,
+    stateMap: false,
+    vector: true,
+    leadProjection: true,
+    contraction: true,
+    chamberVolume: false,
+    valveState: true,
+    flow: true,
+    phaseLabels: true,
+    ecgGrid: true,
+    enlargedLead: true,
+    ecgLabels: true,
+    projectionMarkers: true,
+    contributionHighlights: true
+  },
+  "heart-to-probe": {
+    wavefront: true,
+    contours: true,
+    stateMap: true,
+    vector: false,
+    leadProjection: false,
+    contraction: true,
+    chamberVolume: true,
+    valveState: true,
+    flow: false,
+    phaseLabels: true,
+    ecgGrid: true,
+    enlargedLead: false,
+    ecgLabels: true,
+    projectionMarkers: false,
+    contributionHighlights: true
+  },
+  advanced: {
+    wavefront: true,
+    contours: true,
+    stateMap: true,
+    vector: true,
+    leadProjection: true,
+    contraction: true,
+    chamberVolume: true,
+    valveState: true,
+    flow: true,
+    phaseLabels: true,
+    ecgGrid: true,
+    enlargedLead: true,
+    ecgLabels: true,
+    projectionMarkers: true,
+    contributionHighlights: true
+  }
+};
+
+const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Electrical" | "Mechanical" | "ECG" }> = [
+  { key: "wavefront", label: "Wavefront", group: "Electrical" },
+  { key: "contours", label: "Contours", group: "Electrical" },
+  { key: "stateMap", label: "State map", group: "Electrical" },
+  { key: "vector", label: "Net vector", group: "Electrical" },
+  { key: "leadProjection", label: "Lead probe", group: "Electrical" },
+  { key: "contraction", label: "Contraction", group: "Mechanical" },
+  { key: "chamberVolume", label: "Chamber volume", group: "Mechanical" },
+  { key: "valveState", label: "Valves", group: "Mechanical" },
+  { key: "flow", label: "Flow", group: "Mechanical" },
+  { key: "phaseLabels", label: "Phase labels", group: "Mechanical" },
+  { key: "ecgGrid", label: "12-lead grid", group: "ECG" },
+  { key: "enlargedLead", label: "Enlarged lead", group: "ECG" },
+  { key: "ecgLabels", label: "Labels", group: "ECG" },
+  { key: "projectionMarkers", label: "Projection marker", group: "ECG" },
+  { key: "contributionHighlights", label: "Region highlights", group: "ECG" }
+];
+
 function App() {
   const [timeMs, setTimeMs] = React.useState(340);
   const [selectedLead, setSelectedLead] = React.useState<LeadName>("II");
   const [scenarioId, setScenarioId] = React.useState("normal-sinus-rhythm");
   const [comparisonId, setComparisonId] = React.useState("right-bundle-branch-block");
   const [selectedRegionId, setSelectedRegionId] = React.useState("lv-lateral");
+  const [learnerMode, setLearnerMode] = React.useState<LearnerMode>("probe-to-heart");
+  const [visualLayers, setVisualLayers] = React.useState<VisualLayers>(layerPresets["probe-to-heart"]);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState<PlaybackSpeed>(1);
   const [highContrast, setHighContrast] = React.useState(false);
@@ -121,6 +212,8 @@ function App() {
       const preset = JSON.parse(stored) as {
         selectedLead?: LeadName;
         selectedRegionId?: string;
+        learnerMode?: LearnerMode;
+        visualLayers?: Partial<VisualLayers>;
         scenarioId?: string;
         comparisonId?: string;
         highContrast?: boolean;
@@ -128,6 +221,8 @@ function App() {
       };
       if (preset.selectedLead && leadOrder.includes(preset.selectedLead)) setSelectedLead(preset.selectedLead);
       if (preset.selectedRegionId) setSelectedRegionId(preset.selectedRegionId);
+      if (preset.learnerMode && preset.learnerMode in learnerModes) setLearnerMode(preset.learnerMode);
+      if (preset.visualLayers) setVisualLayers((current) => ({ ...current, ...preset.visualLayers }));
       if (preset.scenarioId) setScenarioId(preset.scenarioId);
       if (preset.comparisonId) setComparisonId(preset.comparisonId);
       if (typeof preset.highContrast === "boolean") setHighContrast(preset.highContrast);
@@ -161,8 +256,17 @@ function App() {
   const savePreset = () => {
     window.localStorage.setItem(
       "ekg-view-preset",
-      JSON.stringify({ selectedLead, selectedRegionId, scenarioId, comparisonId, highContrast, reducedMotion })
+      JSON.stringify({ selectedLead, selectedRegionId, learnerMode, visualLayers, scenarioId, comparisonId, highContrast, reducedMotion })
     );
+  };
+
+  const applyLearnerMode = (mode: LearnerMode) => {
+    setLearnerMode(mode);
+    setVisualLayers(layerPresets[mode]);
+  };
+
+  const toggleLayer = (key: keyof VisualLayers) => {
+    setVisualLayers((current) => ({ ...current, [key]: !current[key] }));
   };
 
   const exportScreenshot = async () => {
@@ -259,14 +363,18 @@ function App() {
                 <h3>{probeExplanation.alignmentLabel}</h3>
                 <p>{probeExplanation.summary}</p>
               </div>
-              <SelectedLeadTrace
-                scenario={scenario}
-                state={state}
-                selectedLead={selectedLead}
-                probe={probeExplanation}
-                referenceTrace={referenceTrace}
-                highContrast={highContrast}
-              />
+              {visualLayers.enlargedLead && (
+                <SelectedLeadTrace
+                  scenario={scenario}
+                  state={state}
+                  selectedLead={selectedLead}
+                  probe={probeExplanation}
+                  referenceTrace={referenceTrace}
+                  showLabels={visualLayers.ecgLabels}
+                  showProjectionMarker={visualLayers.projectionMarkers}
+                  highContrast={highContrast}
+                />
+              )}
               <div className="probe-metrics" aria-label="Lead probe projection values">
                 <span>
                   <strong>Alignment</strong>
@@ -295,17 +403,20 @@ function App() {
             </div>
             <div className="mechanical-summary" aria-label="Current mechanical state">
               <p className="eyebrow">Mechanical phase</p>
-              <h3>{state.mechanical.phaseLabel}</h3>
-              <p>{state.mechanical.phaseExplanation}</p>
-              <div className="valve-grid">
+              {visualLayers.phaseLabels && <h3>{state.mechanical.phaseLabel}</h3>}
+              {visualLayers.phaseLabels && <p>{state.mechanical.phaseExplanation}</p>}
+              {visualLayers.chamberVolume && (
+                <p className="flow-line">Ventricular volume: {Math.round(state.mechanical.chamber.ventricularVolumeFraction * 100)}%</p>
+              )}
+              {visualLayers.valveState && <div className="valve-grid">
                 {Object.values(state.mechanical.valves).map((valve) => (
                   <span key={valve.name}>
                     <strong>{valve.label}</strong>
                     {Math.round(valve.openFraction * 100)}% open
                   </span>
                 ))}
-              </div>
-              <p className="flow-line">{state.mechanical.flow.label}: {state.mechanical.flow.direction}</p>
+              </div>}
+              {visualLayers.flow && <p className="flow-line">{state.mechanical.flow.label}: {state.mechanical.flow.direction}</p>}
             </div>
             <div className="tissue-summary" aria-label="Current tissue states">
               <p className="eyebrow">Tissue state</p>
@@ -400,6 +511,38 @@ function App() {
         </div>
       </section>
 
+      <section className="layer-panel" aria-label="Layer controls and learner modes">
+        <div className="learner-mode-controls" aria-label="Learner mode">
+          {Object.entries(learnerModes).map(([mode, label]) => (
+            <button
+              key={mode}
+              type="button"
+              className={learnerMode === mode ? "active" : ""}
+              onClick={() => applyLearnerMode(mode as LearnerMode)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="layer-groups">
+          {(["Electrical", "Mechanical", "ECG"] as const).map((group) => (
+            <fieldset className="layer-group" key={group}>
+              <legend>{group}</legend>
+              {layerLabels.filter((item) => item.group === group).map((item) => (
+                <label key={item.key}>
+                  <input
+                    type="checkbox"
+                    checked={visualLayers[item.key]}
+                    onChange={() => toggleLayer(item.key)}
+                  />
+                  <span>{item.label}</span>
+                </label>
+              ))}
+            </fieldset>
+          ))}
+        </div>
+      </section>
+
       <section className="comparison-panel" aria-label="Scenario comparison">
         <div>
           <p className="eyebrow">What changed?</p>
@@ -428,6 +571,7 @@ function App() {
           selectedLead={selectedLead}
           selectedRegionId={regionInspection?.regionId}
           onSelectRegion={setSelectedRegionId}
+          layers={visualLayers}
         />
         {regionInspection && (
           <div className="region-inspector" aria-label="Selected surface region inspection">
@@ -483,15 +627,19 @@ function App() {
           </div>
           <p className="safety-note">{scenario.disclaimer}</p>
         </div>
-        <EcgLeadGrid
-          scenario={scenario}
-          state={state}
-          selectedLead={selectedLead}
-          onSelectLead={setSelectedLead}
-          referenceTrace={referenceTrace}
-          regionInspection={regionInspection}
-          highContrast={highContrast}
-        />
+        {visualLayers.ecgGrid && (
+          <EcgLeadGrid
+            scenario={scenario}
+            state={state}
+            selectedLead={selectedLead}
+            onSelectLead={setSelectedLead}
+            referenceTrace={referenceTrace}
+            regionInspection={visualLayers.contributionHighlights ? regionInspection : undefined}
+            showLabels={visualLayers.ecgLabels}
+            showRegionIndicators={visualLayers.contributionHighlights}
+            highContrast={highContrast}
+          />
+        )}
         <div className="validation-panel" aria-label="Reference and validation summary">
           <div>
             <p className="eyebrow">Reference overlay</p>

@@ -30,7 +30,7 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 | V2-04 | Done | Isochrone contour map layer | V2-03 | `TASK_V2_04.md` |
 | V2-05 | Done | Lead probe teaching mode | V2-03 | `TASK_V2_05.md` |
 | V2-06 | Done | Region-to-lead inspection mode | V2-05 | `TASK_V2_06.md` |
-| V2-07 | Not started | Layer controls and learner modes | V2-06 | `TASK_V2_07.md` |
+| V2-07 | Done | Layer controls and learner modes | V2-06 | `TASK_V2_07.md` |
 | V2-08 | Not started | Mesh-aware mechanical contraction and chambers | V2-04 | `TASK_V2_08.md` |
 | V2-09 | Not started | Guided lessons and quizzes | V2-07 | `TASK_V2_09.md` |
 | V2-10 | Not started | Heart-first abnormal scenario extensions | V2-08 | `TASK_V2_10.md` |
@@ -39,7 +39,7 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 
 ## Current Next Task
 
-`TASK_V2_07.md`
+`TASK_V2_08.md`
 
 ## Notes
 
@@ -50,4 +50,5 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 - V2-04 added 20 ms isochrone band generation, whole-heart/atria/ventricle scoped contour maps, current wavefront highlights, 3D contour rings/labels, tests, browser smoke, and documentation.
 - V2-05 added the selected lead probe explanation model, enlarged synchronized trace, 3D projection arrow, alignment classification, region contribution readout, tests, browser smoke, and lead documentation.
 - V2-06 added selected surface-region inspection, pointer selection in 3D, keyboard-accessible region selection, region timing and lead-signature panels, ECG trace indicators, tests, browser smoke, and documentation.
+- V2-07 added learner mode presets, electrical/mechanical/ECG layer toggles, saved layer presets, renderer layer props, desktop/mobile browser smoke, and documentation.
 - V2 work should preserve the V1 educational disclaimer and avoid clinical diagnostic claims.

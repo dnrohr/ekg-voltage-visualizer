@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,22 @@ Add coherent layer toggles and learner modes so users can simplify or deepen the
 
 ## Verification Notes
 
-Record layer defaults, tested toggles, and layout checks.
+Implemented layer controls with three learner modes:
+
+- Lead to heart: beginner default with wavefront, contours, vector, lead projection, contraction, valves, flow, phase labels, ECG grid, enlarged lead, labels, projection marker, and region highlights on.
+- Heart to leads: emphasizes selected region, state map, chamber volume, and ECG contribution highlights while hiding lead projection, vector, flow, enlarged lead, and projection marker.
+- Advanced: enables all electrical, mechanical, and ECG layers.
+
+Layer groups:
+
+- Electrical: wavefront, contours, state map, vector, lead projection.
+- Mechanical: contraction, chamber volume, valve state, flow, phase labels.
+- ECG: 12-lead grid, enlarged lead, labels, projection markers, contribution highlights.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke desktop: mode buttons and toggles updated enlarged trace, ECG grid, region highlights, and 3D canvas.
+- Browser smoke mobile: layer panel collapsed without horizontal overflow and checkboxes remained reachable.

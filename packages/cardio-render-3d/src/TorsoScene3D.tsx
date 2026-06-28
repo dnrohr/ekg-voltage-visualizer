@@ -20,6 +20,31 @@ type TorsoScene3DProps = {
   selectedLead: LeadName;
   selectedRegionId?: string;
   onSelectRegion?: (regionId: string) => void;
+  layers?: Partial<TorsoScene3DLayers>;
+};
+
+export type TorsoScene3DLayers = {
+  wavefront: boolean;
+  contours: boolean;
+  stateMap: boolean;
+  vector: boolean;
+  leadProjection: boolean;
+  contraction: boolean;
+  valveState: boolean;
+  flow: boolean;
+  phaseLabels: boolean;
+};
+
+const defaultLayers: TorsoScene3DLayers = {
+  wavefront: true,
+  contours: true,
+  stateMap: false,
+  vector: true,
+  leadProjection: true,
+  contraction: true,
+  valveState: true,
+  flow: true,
+  phaseLabels: true
 };
 
 const tissueColors: Record<TissueState, number> = {
@@ -172,7 +197,7 @@ function disposeObject(object: THREE.Object3D) {
   });
 }
 
-export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRegion }: TorsoScene3DProps) {
+export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRegion, layers }: TorsoScene3DProps) {
   const mountRef = React.useRef<HTMLDivElement | null>(null);
   const sceneRef = React.useRef<THREE.Scene | null>(null);
   const rendererRef = React.useRef<THREE.WebGLRenderer | null>(null);
@@ -183,6 +208,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
   const [cutaway, setCutaway] = React.useState(false);
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
   const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
+  const activeLayers = { ...defaultLayers, ...layers };
 
   React.useEffect(() => {
     onSelectRegionRef.current = onSelectRegion;
@@ -321,30 +347,34 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       if (!(child instanceof THREE.Mesh)) return;
       const baseScale = child.userData.baseScale as THREE.Vector3 | undefined;
       if (!baseScale) return;
-      const chamberScale = child.name.includes("atrium")
+      const chamberScale = activeLayers.contraction && child.name.includes("atrium")
         ? 1 - state.mechanical.chamber.atrialContraction * 0.08
-        : 1 - state.mechanical.chamber.ventricularContraction * 0.11;
+        : activeLayers.contraction
+          ? 1 - state.mechanical.chamber.ventricularContraction * 0.11
+          : 1;
       child.scale.copy(baseScale).multiplyScalar(chamberScale);
     });
 
     const positiveCenter = terminalCenter(selectedDefinition.positiveTerminal.weights);
     const negativeCenter = terminalCenter(selectedDefinition.negativeTerminal.weights);
-    const leadLineGeometry = new THREE.BufferGeometry().setFromPoints([negativeCenter, positiveCenter]);
-    const leadLine = new THREE.Line(
-      leadLineGeometry,
-      new THREE.LineBasicMaterial({ color: 0x0f766e, linewidth: 3 })
-    );
-    dynamicGroup.add(leadLine);
+    if (activeLayers.leadProjection) {
+      const leadLineGeometry = new THREE.BufferGeometry().setFromPoints([negativeCenter, positiveCenter]);
+      const leadLine = new THREE.Line(
+        leadLineGeometry,
+        new THREE.LineBasicMaterial({ color: 0x0f766e, linewidth: 3 })
+      );
+      dynamicGroup.add(leadLine);
 
-    const leadArrow = new THREE.ArrowHelper(
-      positiveCenter.clone().sub(negativeCenter).normalize(),
-      negativeCenter,
-      positiveCenter.distanceTo(negativeCenter),
-      0x0f766e,
-      0.13,
-      0.08
-    );
-    dynamicGroup.add(leadArrow);
+      const leadArrow = new THREE.ArrowHelper(
+        positiveCenter.clone().sub(negativeCenter).normalize(),
+        negativeCenter,
+        positiveCenter.distanceTo(negativeCenter),
+        0x0f766e,
+        0.13,
+        0.08
+      );
+      dynamicGroup.add(leadArrow);
+    }
 
     const leadVoltage = state.leadVoltages[selectedLead];
     const projectionAxis = toScene(selectedDefinition.axis).normalize();
@@ -352,7 +382,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     const projectionColor = leadVoltage > 0.04 ? 0x16a34a : leadVoltage < -0.04 ? 0xdc2626 : 0x64748b;
     const projectionOrigin = new THREE.Vector3(0, 0.04, 0.18);
     const projectionLength = 0.2 + Math.min(0.46, Math.abs(leadVoltage) * 0.32);
-    if (projectionDirection.lengthSq() > 0.001) {
+    if (activeLayers.leadProjection && projectionDirection.lengthSq() > 0.001) {
       dynamicGroup.add(
         new THREE.ArrowHelper(projectionDirection, projectionOrigin, projectionLength, projectionColor, 0.11, 0.07)
       );
@@ -409,9 +439,9 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       dynamicGroup.add(tissue);
     }
 
-    for (const region of state.surfaceRegions) {
+    if (activeLayers.wavefront || activeLayers.stateMap) for (const region of state.surfaceRegions) {
       const position = toScene(region.center).add(new THREE.Vector3(0, 0, 0.18));
-      const color = surfaceRegionColor(region.state, surfaceMapMode);
+      const color = surfaceRegionColor(region.state, activeLayers.stateMap ? "electrical-state" : surfaceMapMode);
       const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
       const isSelectedRegion = region.id === selectedRegionId;
       const marker = new THREE.Mesh(
@@ -446,7 +476,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     const scopedRegionIds = new Set(activeIsochroneMap.bands.map((band) => band.regionId));
     const bandsByRegion = new Map(activeIsochroneMap.bands.map((band) => [band.regionId, band]));
 
-    for (const region of state.surfaceRegions) {
+    if (activeLayers.contours) for (const region of state.surfaceRegions) {
       if (!scopedRegionIds.has(region.id)) continue;
       const band = bandsByRegion.get(region.id);
       if (!band) continue;
@@ -487,19 +517,21 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       transparent: true,
       opacity: 0.45 + Math.max(state.mechanical.valves.mitral.openFraction, state.mechanical.valves.aortic.openFraction) * 0.45
     });
-    const avValve = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.018, 0.05), valveMaterial);
-    avValve.name = "AV valve plane";
-    avValve.position.set(0.02, 0.12, 0.18);
-    avValve.rotation.z = state.mechanical.valves.mitral.openFraction > 0.5 ? 0.42 : 0.02;
-    dynamicGroup.add(avValve);
+    if (activeLayers.valveState) {
+      const avValve = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.018, 0.05), valveMaterial);
+      avValve.name = "AV valve plane";
+      avValve.position.set(0.02, 0.12, 0.18);
+      avValve.rotation.z = state.mechanical.valves.mitral.openFraction > 0.5 ? 0.42 : 0.02;
+      dynamicGroup.add(avValve);
 
-    const semilunarValve = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.018, 0.05), valveMaterial.clone());
-    semilunarValve.name = "semilunar valve plane";
-    semilunarValve.position.set(0.04, 0.28, 0.13);
-    semilunarValve.rotation.z = state.mechanical.valves.aortic.openFraction > 0.5 ? -0.5 : -0.04;
-    dynamicGroup.add(semilunarValve);
+      const semilunarValve = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.018, 0.05), valveMaterial.clone());
+      semilunarValve.name = "semilunar valve plane";
+      semilunarValve.position.set(0.04, 0.28, 0.13);
+      semilunarValve.rotation.z = state.mechanical.valves.aortic.openFraction > 0.5 ? -0.5 : -0.04;
+      dynamicGroup.add(semilunarValve);
+    }
 
-    if (state.mechanical.flow.intensity > 0) {
+    if (activeLayers.flow && state.mechanical.flow.intensity > 0) {
       const flowColor = state.mechanical.flow.region === "aortic-ejection" ? 0xdc2626 : 0x2563eb;
       const start = state.mechanical.flow.region === "aortic-ejection"
         ? new THREE.Vector3(0.04, 0.02, 0.18)
@@ -514,7 +546,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
 
     const vectorLength = Math.min(0.72, state.netVector.x ** 2 + state.netVector.y ** 2 + state.netVector.z ** 2);
     const vectorDirection = toScene(state.netVector).normalize();
-    if (Number.isFinite(vectorDirection.length()) && vectorLength > 0.01) {
+    if (activeLayers.vector && Number.isFinite(vectorDirection.length()) && vectorLength > 0.01) {
       dynamicGroup.add(
         new THREE.ArrowHelper(vectorDirection, new THREE.Vector3(0, 0.04, 0.18), vectorLength, 0x1f2937, 0.13, 0.08)
       );
@@ -526,7 +558,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     }
 
     renderer.render(scene, camera);
-  }, [cutaway, isochroneScope, selectedLead, selectedRegionId, state, surfaceMapMode]);
+  }, [activeLayers, cutaway, isochroneScope, selectedLead, selectedRegionId, state, surfaceMapMode]);
 
   return (
     <div className="scene3d">
@@ -574,9 +606,11 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
           ))}
         </div>
       </div>
-      <div className="isochrone-caption" aria-label="Isochrone contour summary">
-        Isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current wavefront highlighted.
-      </div>
+      {activeLayers.phaseLabels && (
+        <div className="isochrone-caption" aria-label="Isochrone contour summary">
+          Isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current wavefront highlighted.
+        </div>
+      )}
       <div className="surface-map-legend" aria-label="Surface state legend">
         <span><i className="legend-dot resting" />Not activated</span>
         <span><i className="legend-dot depolarizing" />Depolarizing</span>
