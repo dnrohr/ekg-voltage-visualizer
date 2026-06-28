@@ -17,6 +17,7 @@ import {
 
 type CameraPreset = "frontal" | "transverse" | "left-lateral" | "heart-close";
 type SurfaceMapMode = "wavefront" | "electrical-state";
+type AnatomyViewMode = "external" | "cutaway" | "chambers";
 
 type TorsoScene3DProps = {
   state: SimulationState;
@@ -73,6 +74,12 @@ const surfaceMapModes: Record<SurfaceMapMode, string> = {
   "electrical-state": "Electrical state"
 };
 
+const anatomyViewModes: Record<AnatomyViewMode, string> = {
+  external: "External",
+  cutaway: "Cutaway",
+  chambers: "Chambers"
+};
+
 const wavefrontBandWidthMs = 18;
 const repolarizationBandWidthMs = 26;
 
@@ -116,6 +123,13 @@ const toScene = (point: Vec3) => new THREE.Vector3(point.x, point.z, point.y);
 const externalMeshOffset = new THREE.Vector3(0, 0, 0.26);
 const surfacePatchOffset = new THREE.Vector3(0, 0, 0.31);
 const surfacePatchScale = 2.05;
+
+const chamberCueDefinitions = [
+  { chamber: "RA", label: "RA", position: new THREE.Vector3(-0.2, 0.34, 0.14), scale: new THREE.Vector3(0.12, 0.11, 0.11), color: 0x2563eb },
+  { chamber: "LA", label: "LA", position: new THREE.Vector3(0.22, 0.34, 0.12), scale: new THREE.Vector3(0.13, 0.11, 0.11), color: 0xdc2626 },
+  { chamber: "RV", label: "RV", position: new THREE.Vector3(-0.15, -0.08, 0.2), scale: new THREE.Vector3(0.15, 0.28, 0.13), color: 0x2563eb },
+  { chamber: "LV", label: "LV", position: new THREE.Vector3(0.18, -0.11, 0.18), scale: new THREE.Vector3(0.18, 0.32, 0.15), color: 0xdc2626 }
+] as const;
 
 function terminalCenter(weights: Partial<Record<ElectrodeName, number>>) {
   let totalWeight = 0;
@@ -217,7 +231,8 @@ function makeExternalMeshFallbackMaterial(
   stateName: TissueState,
   isSelected: boolean,
   isCurrentWave: boolean,
-  mode: SurfaceMapMode
+  mode: SurfaceMapMode,
+  surfaceOpacity: number
 ) {
   return new THREE.MeshStandardMaterial({
     color: externalMeshColor(chamber, stateName, isSelected, mode),
@@ -226,7 +241,7 @@ function makeExternalMeshFallbackMaterial(
     roughness: 0.42,
     metalness: 0.03,
     transparent: true,
-    opacity: isSelected ? 0.97 : mode === "wavefront" && stateName === "resting" ? 0.72 : 0.9,
+    opacity: isSelected ? Math.max(0.92, surfaceOpacity) : mode === "wavefront" && stateName === "resting" ? Math.min(0.72, surfaceOpacity) : surfaceOpacity,
     side: THREE.DoubleSide
   });
 }
@@ -235,7 +250,8 @@ function makeWavefrontShaderMaterial(
   chamber: HeartChamber,
   isSelected: boolean,
   mode: SurfaceMapMode,
-  renderer: THREE.WebGLRenderer
+  renderer: THREE.WebGLRenderer,
+  surfaceOpacity: number
 ) {
   if (!renderer.capabilities.precision) {
     return undefined;
@@ -253,7 +269,8 @@ function makeWavefrontShaderMaterial(
       wavefrontWidthMs: { value: wavefrontBandWidthMs },
       repolarizationWidthMs: { value: repolarizationBandWidthMs },
       electricalStateMode: { value: mode === "electrical-state" ? 1 : 0 },
-      selected: { value: isSelected ? 1 : 0 }
+      selected: { value: isSelected ? 1 : 0 },
+      surfaceOpacity: { value: surfaceOpacity }
     },
     vertexShader: `
       attribute float phiActivationMs;
@@ -279,6 +296,7 @@ function makeWavefrontShaderMaterial(
       uniform vec3 selectedColor;
       uniform float wavefrontWidthMs;
       uniform float repolarizationWidthMs;
+      uniform float surfaceOpacity;
       uniform int electricalStateMode;
       uniform int selected;
       varying float vPhiActivationMs;
@@ -299,7 +317,7 @@ function makeWavefrontShaderMaterial(
         baseColor = selected == 1 ? mix(baseColor, selectedColor, 0.76) : baseColor;
         float light = 0.58 + 0.42 * max(dot(normalize(vNormal), normalize(vec3(0.45, 0.72, 0.54))), 0.0);
         float waveGlow = max(activationBand, recoveryBand) * 0.28;
-        gl_FragColor = vec4(baseColor * light + waveGlow, selected == 1 ? 0.98 : 0.92);
+        gl_FragColor = vec4(baseColor * light + waveGlow, selected == 1 ? max(0.94, surfaceOpacity) : surfaceOpacity);
       }
     `,
     transparent: true,
@@ -457,7 +475,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
   const dynamicGroupRef = React.useRef<THREE.Group | null>(null);
   const onSelectRegionRef = React.useRef<TorsoScene3DProps["onSelectRegion"]>(onSelectRegion);
   const [preset, setPreset] = React.useState<CameraPreset>("frontal");
-  const [cutaway, setCutaway] = React.useState(false);
+  const [anatomyViewMode, setAnatomyViewMode] = React.useState<AnatomyViewMode>("external");
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
   const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
   const activeLayers = React.useMemo(() => ({ ...defaultLayers, ...layers }), [layers]);
@@ -502,6 +520,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       new THREE.WireframeGeometry(torso.geometry),
       new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.25 })
     );
+    torsoWire.name = "transparent torso wireframe";
     torsoWire.scale.copy(torso.scale);
     torsoWire.position.copy(torso.position);
     scene.add(torsoWire);
@@ -597,6 +616,8 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     const selectedDefinition = leadDefinitions[selectedLead];
     const regionMechanics = new Map(state.mechanical.regionMechanics.map((region) => [region.regionId, region]));
     const regionsById = new Map(state.surfaceRegions.map((region) => [region.id, region]));
+    const internalAnatomyMode = anatomyViewMode !== "external";
+    const surfaceOpacity = anatomyViewMode === "external" ? 0.92 : anatomyViewMode === "cutaway" ? 0.46 : 0.24;
     const heart = scene.getObjectByName("procedural heart");
     heart?.children.forEach((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -619,8 +640,8 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
         const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
         const meshMode = activeLayers.stateMap ? "electrical-state" : surfaceMapMode;
         const material =
-          makeWavefrontShaderMaterial(segment.chamber, isSelectedRegion, meshMode, renderer) ??
-          makeExternalMeshFallbackMaterial(segment.chamber, region.state, isSelectedRegion, isCurrentWave, meshMode);
+          makeWavefrontShaderMaterial(segment.chamber, isSelectedRegion, meshMode, renderer, surfaceOpacity) ??
+          makeExternalMeshFallbackMaterial(segment.chamber, region.state, isSelectedRegion, isCurrentWave, meshMode, surfaceOpacity);
         const mesh = new THREE.Mesh(
           makeExternalMeshGeometry(state.heartMeshField, segment),
           material
@@ -637,7 +658,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
             new THREE.LineBasicMaterial({
               color: isSelectedRegion ? 0x0f766e : isCurrentWave ? 0x111827 : 0x475569,
               transparent: true,
-              opacity: isSelectedRegion || isCurrentWave ? 0.95 : 0.46
+              opacity: isSelectedRegion || isCurrentWave ? 0.95 : internalAnatomyMode ? 0.28 : 0.46
             })
           );
           outline.name = `v3 external heart outline ${segment.id}`;
@@ -757,29 +778,87 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       dynamicGroup.add(label);
     }
 
-    if (activeLayers.chamberVolume) {
-      const volumeCues = [
-        { chamber: "RA", position: new THREE.Vector3(-0.2, 0.34, 0.14), scale: new THREE.Vector3(0.12, 0.11, 0.11), color: 0x2563eb },
-        { chamber: "LA", position: new THREE.Vector3(0.22, 0.34, 0.12), scale: new THREE.Vector3(0.13, 0.11, 0.11), color: 0xdc2626 },
-        { chamber: "RV", position: new THREE.Vector3(-0.15, -0.08, 0.2), scale: new THREE.Vector3(0.15, 0.28, 0.13), color: 0x2563eb },
-        { chamber: "LV", position: new THREE.Vector3(0.18, -0.11, 0.18), scale: new THREE.Vector3(0.18, 0.32, 0.15), color: 0xdc2626 }
-      ] as const;
-
-      for (const cue of volumeCues) {
+    if (activeLayers.chamberVolume || internalAnatomyMode) {
+      for (const cue of chamberCueDefinitions) {
         const fraction = state.mechanical.chamberVolumes[cue.chamber];
         const volumeMesh = new THREE.Mesh(
           new THREE.SphereGeometry(1, 28, 18),
           new THREE.MeshStandardMaterial({
             color: cue.color,
             transparent: true,
-            opacity: 0.18 + fraction * 0.18,
+            opacity: internalAnatomyMode ? 0.28 + fraction * 0.2 : 0.18 + fraction * 0.18,
             roughness: 0.5
           })
         );
         volumeMesh.name = `chamber volume ${cue.chamber}`;
         volumeMesh.position.copy(cue.position);
         volumeMesh.scale.copy(cue.scale).multiplyScalar(0.52 + fraction * 0.58);
+        volumeMesh.renderOrder = internalAnatomyMode ? 16 : 10;
         dynamicGroup.add(volumeMesh);
+
+        if (internalAnatomyMode) {
+          const label = new THREE.Sprite(
+            new THREE.SpriteMaterial({
+              map: createLabelTexture(cue.label, cue.chamber === "RA" || cue.chamber === "RV" ? "#dbeafe" : "#fee2e2"),
+              transparent: true,
+              depthTest: false
+            })
+          );
+          label.name = `chamber label ${cue.chamber}`;
+          label.position.copy(cue.position).add(new THREE.Vector3(0, cue.chamber === "RA" || cue.chamber === "LA" ? 0.13 : -0.04, 0.2));
+          label.scale.set(0.22, 0.11, 1);
+          label.renderOrder = 34;
+          dynamicGroup.add(label);
+        }
+      }
+
+      if (internalAnatomyMode) {
+        const septum = new THREE.Mesh(
+          new THREE.BoxGeometry(0.04, 0.72, 0.11),
+          new THREE.MeshStandardMaterial({
+            color: 0xf8fafc,
+            emissive: 0xcbd5e1,
+            emissiveIntensity: 0.08,
+            transparent: true,
+            opacity: anatomyViewMode === "chambers" ? 0.54 : 0.42,
+            roughness: 0.38
+          })
+        );
+        septum.name = "interventricular septum landmark";
+        septum.position.set(0.02, -0.03, 0.25);
+        septum.rotation.z = 0.18;
+        septum.renderOrder = 17;
+        dynamicGroup.add(septum);
+
+        const septumLabel = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: createLabelTexture("septum", "#f8fafc"),
+            transparent: true,
+            depthTest: false
+          })
+        );
+        septumLabel.name = "septum label";
+        septumLabel.position.set(0.03, -0.38, 0.42);
+        septumLabel.scale.set(0.28, 0.14, 1);
+        septumLabel.renderOrder = 35;
+        dynamicGroup.add(septumLabel);
+
+        if (anatomyViewMode === "cutaway") {
+          const cutPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.96, 1.12),
+            new THREE.MeshBasicMaterial({
+              color: 0x0f766e,
+              transparent: true,
+              opacity: 0.1,
+              side: THREE.DoubleSide,
+              depthWrite: false
+            })
+          );
+          cutPlane.name = "anterior cutaway plane";
+          cutPlane.position.set(0, 0.02, 0.48);
+          cutPlane.renderOrder = 15;
+          dynamicGroup.add(cutPlane);
+        }
       }
     }
 
@@ -979,11 +1058,16 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
 
     const torsoShell = scene.getObjectByName("transparent torso shell") as THREE.Mesh | undefined;
     if (torsoShell) {
-      torsoShell.visible = !cutaway;
+      torsoShell.visible = anatomyViewMode === "external";
+    }
+
+    const torsoWire = scene.getObjectByName("transparent torso wireframe");
+    if (torsoWire) {
+      torsoWire.visible = anatomyViewMode === "external";
     }
 
     renderer.render(scene, camera);
-  }, [activeLayers, cutaway, isochroneScope, selectedLead, selectedRegionId, state, surfaceMapMode]);
+  }, [activeLayers, anatomyViewMode, isochroneScope, selectedLead, selectedRegionId, state, surfaceMapMode]);
 
   return (
     <div className="scene3d">
@@ -998,14 +1082,18 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
             {view.label}
           </button>
         ))}
-        <label className="cutaway-toggle">
-          <input
-            type="checkbox"
-            checked={cutaway}
-            onChange={(event) => setCutaway(event.target.checked)}
-          />
-          Cutaway
-        </label>
+        <div className="anatomy-mode-toggle" aria-label="Anatomy view mode">
+          {Object.entries(anatomyViewModes).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={anatomyViewMode === key ? "active" : ""}
+              onClick={() => setAnatomyViewMode(key as AnatomyViewMode)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="surface-mode-toggle" aria-label="Surface map mode">
           {Object.entries(surfaceMapModes).map(([key, label]) => (
             <button
@@ -1033,7 +1121,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       </div>
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
-          Mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
+          {anatomyViewModes[anatomyViewMode]} anatomy, mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
         </div>
       )}
       <div className="surface-map-legend" aria-label="Surface state legend">

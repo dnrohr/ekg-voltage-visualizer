@@ -103,3 +103,13 @@ Current behavior:
 - the older V2 ring contours remain as a secondary comparison layer while the mesh contour path matures
 
 Because the current mesh field is derived from coarse authored regions, the contours are segment-boundary overlays rather than fully interpolated isolines through dense vertex fields. Once imported anatomy provides varied per-vertex activation times, the same timing attributes can support smoother isoline extraction.
+
+## Chamber And Cutaway Anatomy Mode
+
+V3-06 adds an anatomy view mode control to the 3D scene:
+
+- External keeps the translucent torso shell and full external heart surface.
+- Cutaway hides the torso shell, lowers external mesh opacity, adds a soft anterior cut plane, and exposes chamber-volume cues.
+- Chambers lowers the external mesh further and emphasizes RA, RV, LA, LV, and the interventricular septum.
+
+The internal modes keep the shader wavefront, isochrone contours, selected-lead vector, and selectable mesh regions visible. Chamber volumes continue to use `SimulationState.mechanical.chamberVolumes`, so the cavity cues expand and contract with the same authored mechanical timing as the rest of the teaching model.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,17 @@ Add an internal-anatomy view that helps learners inspect chambers, septum, valve
 
 ## Verification Notes
 
-Pending.
+Completed:
+
+- Added External, Cutaway, and Chambers anatomy modes to the 3D scene toolbar.
+- Cutaway and Chambers modes lower the external mesh opacity while keeping wavefront shader bands, contours, selected-region picking, lead projection, and vector overlays readable.
+- Internal modes automatically reveal RA, RV, LA, and LV chamber-volume cues synchronized to `SimulationState.mechanical.chamberVolumes`.
+- Added chamber labels, an interventricular septum landmark, and a soft anterior cutaway plane cue.
+- Documented the anatomy modes in `docs/ANATOMICAL_MESH_MODEL.md` and the synchronized chamber-volume behavior in `docs/MECHANICAL_MODEL.md`.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke for External, Cutaway, and Chambers modes at `http://127.0.0.1:5187/`

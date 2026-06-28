@@ -55,6 +55,8 @@ Atrial regions use a 55 ms teaching delay. Ventricular regions use the existing 
 
 The mechanical state exposes RA, LA, RV, and LV volume fractions. The 3D renderer can show them as optional translucent chamber volumes. Ventricular volume remains high at QRS onset and falls during modeled ejection, avoiding the misleading impression that electrical depolarization instantly empties the ventricles.
 
+The V3 cutaway and chamber anatomy modes also reveal these chamber-volume cues automatically, with RA/RV/LA/LV labels and an interventricular septum landmark. Those internal-anatomy cues are synchronized to the same mechanical chamber-volume fractions rather than a separate animation timeline.
+
 ## Flow Encoding
 
 Flow is stylized:

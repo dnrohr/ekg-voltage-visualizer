@@ -1028,20 +1028,7 @@ h3 {
   color: #0f4f4a;
 }
 
-.cutaway-toggle {
-  min-height: 34px;
-  padding: 0 10px;
-  display: inline-flex;
-  gap: 7px;
-  align-items: center;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #243041;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
+.anatomy-mode-toggle,
 .surface-mode-toggle {
   display: flex;
   flex-wrap: wrap;

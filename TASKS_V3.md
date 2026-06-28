@@ -29,7 +29,7 @@ Status index for V3 visual/anatomical-heart work derived from `ROADMAP_V3.md`.
 | V3-03 | Done | External heart mesh renderer foundation | V3-02 | `TASK_V3_03.md` |
 | V3-04 | Done | Shader-driven depolarization and repolarization wavefront | V3-03 | `TASK_V3_04.md` |
 | V3-05 | Done | Isochrone and level-set contour rendering | V3-04 | `TASK_V3_05.md` |
-| V3-06 | Not started | Chamber/cutaway anatomy mode | V3-03 | `TASK_V3_06.md` |
+| V3-06 | Done | Chamber/cutaway anatomy mode | V3-03 | `TASK_V3_06.md` |
 | V3-07 | Not started | Lead contribution overlays on mesh | V3-04 | `TASK_V3_07.md` |
 | V3-08 | Not started | Med-student inspection panels and explanations | V3-07 | `TASK_V3_08.md` |
 | V3-09 | Not started | Scenario comparison viewer | V3-07 | `TASK_V3_09.md` |
@@ -39,7 +39,7 @@ Status index for V3 visual/anatomical-heart work derived from `ROADMAP_V3.md`.
 
 ## Current Next Task
 
-V3-06 is next.
+V3-07 is next.
 
 ## Notes
 
@@ -51,3 +51,4 @@ V3-06 is next.
 - V3-03 threaded `heartMeshField` into `SimulationState`, added a Three.js mesh-field adapter in the 3D renderer, made the external mesh the primary heart surface, preserved region picking and overlays, and documented the renderer foundation.
 - V3-04 added per-vertex level-set geometry attributes, shader-driven depolarization/repolarization bands, tunable band widths, a standard-material fallback path, browser smoke, and mesh model documentation.
 - V3-05 added activation/recovery timing attributes, V3 mesh-surface contour loops, current level-set contour highlights, mesh contour labels, browser smoke, and contour documentation.
+- V3-06 added External/Cutaway/Chambers anatomy modes, internal chamber-volume labels, a septal landmark, cutaway plane cue, synchronized mechanical volume cues, browser smoke, and anatomy-mode documentation.
