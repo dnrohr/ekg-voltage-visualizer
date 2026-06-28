@@ -462,6 +462,7 @@ export type LeadExplanation = {
 };
 
 export type LeadProbeAlignment = "toward" | "away" | "sideways" | "mixed";
+export type LeadContributionClass = "aligned" | "opposed" | "weak";
 
 export type RegionProbeContribution = {
   regionId: string;
@@ -469,7 +470,12 @@ export type RegionProbeContribution = {
   chamber: HeartChamber;
   state: TissueState;
   relationship: "best-seen" | "opposite" | "indirect";
+  classification: LeadContributionClass;
   signedWeight: number;
+  activationTimeMs: number;
+  repolarizationTimeMs: number;
+  activationProgress: number;
+  repolarizationProgress: number;
 };
 
 export type LeadProbeExplanation = {

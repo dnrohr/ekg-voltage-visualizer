@@ -1,6 +1,7 @@
 import React from "react";
 import * as THREE from "three";
 import {
+  classifyRegionLeadContribution,
   electrodeDefinitions,
   electrodeOrder,
   leadDefinitions,
@@ -9,6 +10,7 @@ import {
   type HeartMeshField,
   type HeartMeshSegment,
   type IsochroneScope,
+  type LeadContributionClass,
   type LeadName,
   type SimulationState,
   type TissueState,
@@ -33,6 +35,7 @@ export type TorsoScene3DLayers = {
   stateMap: boolean;
   vector: boolean;
   leadProjection: boolean;
+  leadContribution: boolean;
   contraction: boolean;
   chamberVolume: boolean;
   valveState: boolean;
@@ -46,6 +49,7 @@ const defaultLayers: TorsoScene3DLayers = {
   stateMap: false,
   vector: true,
   leadProjection: true,
+  leadContribution: true,
   contraction: true,
   chamberVolume: false,
   valveState: true,
@@ -94,6 +98,12 @@ const isochroneScopes: Record<IsochroneScope, string> = {
   "whole-heart": "Whole",
   atria: "Atria",
   ventricles: "Ventricles"
+};
+
+const leadContributionLabels: Record<LeadContributionClass, string> = {
+  aligned: "aligned",
+  opposed: "opposed",
+  weak: "weak"
 };
 
 const cameraPresets: Record<CameraPreset, { label: string; position: THREE.Vector3; target: THREE.Vector3 }> = {
@@ -211,6 +221,12 @@ function contourColor(relativeTimeMs: number): number {
   if (relativeTimeMs < 40) return 0xf59e0b;
   if (relativeTimeMs < 80) return 0xdc2626;
   return 0x7c3aed;
+}
+
+function leadContributionColor(classification: LeadContributionClass): number {
+  if (classification === "aligned") return 0x16a34a;
+  if (classification === "opposed") return 0xdc2626;
+  return 0x64748b;
 }
 
 function externalMeshColor(chamber: HeartChamber, stateName: TissueState, isSelected: boolean, mode: SurfaceMapMode): number {
@@ -710,6 +726,60 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       }
     }
 
+    if (activeLayers.leadContribution) for (const segment of state.heartMeshField.segments) {
+      const region = regionsById.get(segment.id);
+      if (!region) continue;
+
+      const contribution = classifyRegionLeadContribution(region, selectedLead);
+      if (Math.abs(contribution.signedWeight) <= 0.05) continue;
+
+      const haloPoints = externalMeshOutlinePoints(state.heartMeshField, segment, 0.04 + Math.min(0.03, Math.abs(contribution.signedWeight) * 0.025));
+      if (haloPoints.length < 3) continue;
+
+      const color = leadContributionColor(contribution.classification);
+      const halo = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(haloPoints),
+        new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity: contribution.classification === "weak" ? 0.52 : 0.88,
+          depthTest: false
+        })
+      );
+      halo.name = `selected lead contribution ${selectedLead} ${segment.id}`;
+      halo.renderOrder = 38;
+      dynamicGroup.add(halo);
+
+      const marker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.018 + Math.min(0.022, Math.abs(contribution.signedWeight) * 0.016), 16, 10),
+        new THREE.MeshBasicMaterial({
+          color,
+          transparent: true,
+          opacity: contribution.classification === "weak" ? 0.7 : 0.96,
+          depthTest: false
+        })
+      );
+      marker.name = `selected lead contribution marker ${selectedLead} ${segment.id}`;
+      marker.position.copy(averagePoint(haloPoints)).add(new THREE.Vector3(0, 0.02, 0.08));
+      marker.renderOrder = 39;
+      dynamicGroup.add(marker);
+
+      if (contribution.classification !== "weak") {
+        const label = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: createLabelTexture(leadContributionLabels[contribution.classification], contribution.classification === "aligned" ? "#dcfce7" : "#fee2e2"),
+            transparent: true,
+            depthTest: false
+          })
+        );
+        label.name = `selected lead contribution label ${selectedLead} ${segment.id}`;
+        label.position.copy(marker.position).add(new THREE.Vector3(0, 0.07, 0.04));
+        label.scale.set(0.24, 0.12, 1);
+        label.renderOrder = 40;
+        dynamicGroup.add(label);
+      }
+    }
+
     const positiveCenter = terminalCenter(selectedDefinition.positiveTerminal.weights);
     const negativeCenter = terminalCenter(selectedDefinition.negativeTerminal.weights);
     if (activeLayers.leadProjection) {
@@ -1122,6 +1192,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
           {anatomyViewModes[anatomyViewMode]} anatomy, mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
+          {activeLayers.leadContribution && ` ${selectedLead} contributor halos: aligned, opposed, weak.`}
         </div>
       )}
       <div className="surface-map-legend" aria-label="Surface state legend">

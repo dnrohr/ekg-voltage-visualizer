@@ -57,6 +57,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
     stateMap: false,
     vector: true,
     leadProjection: true,
+    leadContribution: true,
     contraction: true,
     chamberVolume: false,
     valveState: true,
@@ -74,6 +75,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
     stateMap: true,
     vector: false,
     leadProjection: false,
+    leadContribution: true,
     contraction: true,
     chamberVolume: true,
     valveState: true,
@@ -91,6 +93,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
     stateMap: true,
     vector: true,
     leadProjection: true,
+    leadContribution: true,
     contraction: true,
     chamberVolume: true,
     valveState: true,
@@ -110,6 +113,7 @@ const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Elect
   { key: "stateMap", label: "State map", group: "Electrical" },
   { key: "vector", label: "Net vector", group: "Electrical" },
   { key: "leadProjection", label: "Lead probe", group: "Electrical" },
+  { key: "leadContribution", label: "Mesh contributors", group: "Electrical" },
   { key: "contraction", label: "Contraction", group: "Mechanical" },
   { key: "chamberVolume", label: "Chamber volume", group: "Mechanical" },
   { key: "valveState", label: "Valves", group: "Mechanical" },
@@ -537,6 +541,7 @@ function App() {
                   referenceTrace={referenceTrace}
                   showLabels={visualLayers.ecgLabels}
                   showProjectionMarker={visualLayers.projectionMarkers}
+                  showContributionMarkers={visualLayers.contributionHighlights}
                   highContrast={highContrast}
                 />
               )}
@@ -556,10 +561,10 @@ function App() {
               </div>
               <div className="probe-region-list" aria-label="Surface region probe contribution summary">
                 {probeExplanation.regions.map((region) => (
-                  <div className="probe-region-row" key={region.regionId}>
+                  <div className={`probe-region-row ${region.classification}`} key={region.regionId}>
                     <span>
                       <strong>{region.label}</strong>
-                      <small>{region.chamber}, {region.state}, {region.relationship}</small>
+                      <small>{region.chamber}, {region.state}, {region.classification}, {region.relationship}</small>
                     </span>
                     <span>{formatRegionWeight(region.signedWeight)}</span>
                   </div>

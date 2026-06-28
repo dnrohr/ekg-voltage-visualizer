@@ -86,6 +86,14 @@ The probe classifies the current view as:
 
 The region contribution list is a simplified surface-region summary. It uses each active region's current tissue state plus its lead metadata (`bestSeenLeads`, `oppositeLeads`, or indirect) to explain why that lead is rising, falling, or staying small. It is a teaching aid tied to the surface model, not an inverse solution from a real ECG.
 
+V3 extends the same selected-lead probe classification onto the anatomical mesh and enlarged trace. Active surface regions are classified as:
+
+- `aligned`: active region metadata says the selected lead directly sees that region.
+- `opposed`: active region metadata says the selected lead views that region from the opposite side.
+- `weak`: the region is inactive, indirect, or near-perpendicular in the simplified teaching model.
+
+The 3D mesh draws selected-lead contributor halos using this classification, and the enlarged selected-lead ECG trace places contributor timing markers at the same regions' activation times. These overlays are explanatory and synchronized to the current teaching beat; they are not an inverse ECG localization algorithm.
+
 ## Region-To-Lead Inspection
 
 The inverse teaching path starts from an inspectable heart surface region and asks which ECG leads should notice that region most clearly. Each surface region carries deterministic lead metadata:
@@ -130,6 +138,7 @@ These are educational sanity checks, not diagnostic criteria.
 - Prefer "positive electrode", "negative reference", and "computed voltage" over vague phrases.
 - When selecting a lead, show both its formula and the current explanation.
 - In lead probe mode, keep the enlarged trace, 3D probe arrow, projection marker, and text explanation synchronized to the same selected lead and timestamp.
+- In V3 mesh mode, keep selected-lead contributor halos and enlarged-trace contributor markers synchronized to the same regional classification.
 - In region-to-lead mode, keep the 3D selected surface region, region panel, keyboard picker, and ECG trace indicators synchronized to the same selected region.
 - Keep Wilson central terminal visible in explanations of V1 through V6.
 - Make it clear that lead axes are explanatory aids, while electrode potentials are the modeled measurements.

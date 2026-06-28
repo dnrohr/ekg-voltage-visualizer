@@ -563,6 +563,53 @@ h3 {
   font-weight: 900;
 }
 
+.lead-contribution-marker line {
+  stroke-width: 1.4;
+  stroke-dasharray: 3 4;
+  opacity: 0.72;
+}
+
+.lead-contribution-marker circle {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.lead-contribution-marker text {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.lead-contribution-marker.aligned line,
+.lead-contribution-marker.aligned circle {
+  fill: #16a34a;
+  stroke: #16a34a;
+}
+
+.lead-contribution-marker.aligned text {
+  fill: #166534;
+}
+
+.lead-contribution-marker.opposed line,
+.lead-contribution-marker.opposed circle {
+  fill: #dc2626;
+  stroke: #dc2626;
+}
+
+.lead-contribution-marker.opposed text {
+  fill: #991b1b;
+}
+
+.lead-contribution-marker.weak line,
+.lead-contribution-marker.weak circle {
+  fill: #64748b;
+  stroke: #64748b;
+}
+
+.lead-contribution-marker.weak text {
+  fill: #475569;
+}
+
 .probe-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -603,6 +650,18 @@ h3 {
   border-radius: 6px;
   background: #ffffff;
   font-variant-numeric: tabular-nums;
+}
+
+.probe-region-row.aligned {
+  border-color: #86efac;
+}
+
+.probe-region-row.opposed {
+  border-color: #fca5a5;
+}
+
+.probe-region-row.weak {
+  border-color: #cbd5e1;
 }
 
 .probe-region-row span:first-child {

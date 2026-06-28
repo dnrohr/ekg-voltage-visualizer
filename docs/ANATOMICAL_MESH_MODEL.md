@@ -113,3 +113,13 @@ V3-06 adds an anatomy view mode control to the 3D scene:
 - Chambers lowers the external mesh further and emphasizes RA, RV, LA, LV, and the interventricular septum.
 
 The internal modes keep the shader wavefront, isochrone contours, selected-lead vector, and selectable mesh regions visible. Chamber volumes continue to use `SimulationState.mechanical.chamberVolumes`, so the cavity cues expand and contract with the same authored mechanical timing as the rest of the teaching model.
+
+## Selected-Lead Contribution Halos
+
+V3-07 connects the selected ECG lead back onto the mesh surface. The renderer classifies each active mesh region with `classifyRegionLeadContribution`:
+
+- aligned regions are active regions marked as best seen by the selected lead
+- opposed regions are active regions marked as opposite the selected lead
+- weak regions are inactive or indirect contributors
+
+The 3D scene draws colored contributor halos and small surface markers over active regions while preserving region picking, shader wavefront bands, isochrone contours, and the lead-projection arrow. The enlarged selected-lead ECG trace uses the same classified regions to draw activation-time markers, keeping the spatial overlay and trace explanation synchronized.

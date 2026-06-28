@@ -4,6 +4,7 @@ import {
   computeWilsonCentralTerminal,
   advanceClock,
   buildHeartMeshField,
+  classifyRegionLeadContribution,
   createClockState,
   cycleMsToNormalized,
   educationalHeartSurface,
@@ -463,6 +464,8 @@ describe("cardio-engine simulation", () => {
     expect(leadII.markerVoltage).toBeGreaterThan(0);
     expect(leadII.projection).toBeGreaterThan(0);
     expect(leadII.regions.length).toBeGreaterThan(0);
+    expect(leadII.regions.some((region) => region.classification === "aligned")).toBe(true);
+    expect(leadII.regions.every((region) => Number.isFinite(region.activationTimeMs))).toBe(true);
 
     expect(avr.alignment).toBe("away");
     expect(avr.markerVoltage).toBeLessThan(0);
@@ -481,6 +484,28 @@ describe("cardio-engine simulation", () => {
       expect(probe.summary).toContain(`${probe.lead}`);
       expect(probe.alignmentLabel.length).toBeGreaterThan(8);
     }
+  });
+
+  it("classifies selected-lead mesh contributors deterministically", () => {
+    const qrsState = evaluateScenario(normalSinusRhythmScenario, 380 / 800);
+    const lvLateral = qrsState.surfaceRegions.find((region) => region.id === "lv-lateral");
+    const rvFreeWall = qrsState.surfaceRegions.find((region) => region.id === "rv-free-wall");
+    const inactiveAtrium = qrsState.surfaceRegions.find((region) => region.id === "ra-high-lateral");
+
+    expect(lvLateral).toBeDefined();
+    expect(rvFreeWall).toBeDefined();
+    expect(inactiveAtrium).toBeDefined();
+
+    expect(classifyRegionLeadContribution(lvLateral!, "V6")).toMatchObject({
+      relationship: "best-seen",
+      classification: "aligned"
+    });
+    expect(classifyRegionLeadContribution(lvLateral!, "aVR")).toMatchObject({
+      relationship: "opposite",
+      classification: "opposed"
+    });
+    expect(classifyRegionLeadContribution(rvFreeWall!, "II").classification).toBe("weak");
+    expect(classifyRegionLeadContribution(inactiveAtrium!, "II").classification).toBe("weak");
   });
 
   it("explains selected surface regions with deterministic lead signatures", () => {

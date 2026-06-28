@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,17 @@ Make selected ECG lead behavior causally visible on the V3 mesh.
 
 ## Verification Notes
 
-Pending.
+Completed:
+
+- Added deterministic selected-lead contributor classification: aligned, opposed, and weak.
+- Extended selected-lead probe region data with contribution class, activation timing, and recovery timing.
+- Added V3 mesh contributor halos and markers driven by the selected lead.
+- Added enlarged selected-lead ECG trace contributor markers synchronized to regional activation times.
+- Added a Mesh contributors layer control and documented the overlay in `docs/ECG_LEADS.md` and `docs/ANATOMICAL_MESH_MODEL.md`.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke for selected-lead contributor overlays at `http://127.0.0.1:5187/`

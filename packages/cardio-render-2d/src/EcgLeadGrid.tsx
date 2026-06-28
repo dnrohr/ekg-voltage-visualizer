@@ -29,6 +29,7 @@ type SelectedLeadTraceProps = {
   referenceTrace?: ReferenceLeadTrace;
   showLabels?: boolean;
   showProjectionMarker?: boolean;
+  showContributionMarkers?: boolean;
   highContrast?: boolean;
 };
 
@@ -40,6 +41,12 @@ const probeWidth = 500;
 const probeHeight = 156;
 const probeMidline = probeHeight / 2;
 const probeScaleY = 52;
+
+const contributionLabels = {
+  aligned: "aligned",
+  opposed: "opposed",
+  weak: "weak"
+};
 
 function tracePath(scenario: CardiacScenario, lead: LeadName): string {
   return generateLeadTrace(scenario, lead, 220)
@@ -89,11 +96,17 @@ export function SelectedLeadTrace({
   referenceTrace,
   showLabels = true,
   showProjectionMarker = true,
+  showContributionMarkers = true,
   highContrast = false
 }: SelectedLeadTraceProps) {
   const cursorX = state.normalizedTime * probeWidth;
   const markerY = Math.max(14, Math.min(probeHeight - 14, probeMidline - probe.markerVoltage * probeScaleY));
   const markerClass = probe.markerVoltage > 0.04 ? "positive" : probe.markerVoltage < -0.04 ? "negative" : "flat";
+  const contributionMarkers = probe.regions.slice(0, 5).map((region, index) => ({
+    ...region,
+    index,
+    x: Math.max(0, Math.min(probeWidth, (region.activationTimeMs / scenario.timing.cycleMs) * probeWidth))
+  }));
 
   return (
     <div className={`selected-lead-trace ${highContrast ? "high-contrast" : ""}`} aria-label={`${selectedLead} enlarged live trace`}>
@@ -111,6 +124,17 @@ export function SelectedLeadTrace({
         <line className="baseline" x1="0" y1={probeMidline} x2={probeWidth} y2={probeMidline} />
         {referenceTrace?.lead === selectedLead && <path className="reference-trace" d={largeReferencePath(referenceTrace)} />}
         <path className="trace" d={largeTracePath(scenario, selectedLead)} />
+        {showContributionMarkers && contributionMarkers.map((region) => (
+          <g className={`lead-contribution-marker ${region.classification}`} key={region.regionId}>
+            <line x1={region.x} y1="12" x2={region.x} y2={probeHeight - 12} />
+            <circle cx={region.x} cy={18 + region.index * 12} r="4.5" />
+            {showLabels && region.index < 3 && (
+              <text x={Math.min(probeWidth - 86, region.x + 6)} y={22 + region.index * 12}>
+                {contributionLabels[region.classification]}
+              </text>
+            )}
+          </g>
+        ))}
         <line className="cursor" x1={cursorX} y1="0" x2={cursorX} y2={probeHeight} />
         {showProjectionMarker && (
           <>

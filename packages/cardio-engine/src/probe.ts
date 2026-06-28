@@ -1,9 +1,11 @@
 import { leadDefinitions } from "./leads";
 import type {
   LeadName,
+  LeadContributionClass,
   LeadProbeAlignment,
   LeadProbeExplanation,
   RegionProbeContribution,
+  HeartSurfaceRegionState,
   SimulationState,
   TissueState
 } from "./types";
@@ -16,10 +18,34 @@ function activeWeight(state: TissueState, activationProgress: number, repolariza
   return 0;
 }
 
-function relationshipWeight(region: SimulationState["surfaceRegions"][number], lead: LeadName): RegionProbeContribution["relationship"] {
+function relationshipWeight(
+  region: Pick<HeartSurfaceRegionState, "bestSeenLeads" | "oppositeLeads">,
+  lead: LeadName
+): RegionProbeContribution["relationship"] {
   if (region.bestSeenLeads.includes(lead)) return "best-seen";
   if (region.oppositeLeads.includes(lead)) return "opposite";
   return "indirect";
+}
+
+export function classifyRegionLeadContribution(
+  region: Pick<
+    HeartSurfaceRegionState,
+    "bestSeenLeads" | "oppositeLeads" | "state" | "activationProgress" | "repolarizationProgress"
+  >,
+  lead: LeadName
+): Pick<RegionProbeContribution, "relationship" | "classification" | "signedWeight"> {
+  const relationship = relationshipWeight(region, lead);
+  const activity = activeWeight(region.state, region.activationProgress, region.repolarizationProgress);
+  const relationshipSign = relationship === "opposite" ? -1 : relationship === "best-seen" ? 1 : 0.35;
+  const signedWeight = relationshipSign * activity;
+  const classification: LeadContributionClass =
+    activity <= 0.05 ? "weak" : relationship === "best-seen" ? "aligned" : relationship === "opposite" ? "opposed" : "weak";
+
+  return {
+    relationship,
+    classification,
+    signedWeight
+  };
 }
 
 function classifyAlignment(
@@ -57,17 +83,20 @@ export function explainLeadProbe(state: SimulationState, lead: LeadName): LeadPr
   const markerVoltage = state.leadVoltages[lead];
   const regions = state.surfaceRegions
     .map((region) => {
-      const relationship = relationshipWeight(region, lead);
-      const relationshipSign = relationship === "opposite" ? -1 : relationship === "best-seen" ? 1 : 0.35;
-      const signedWeight = relationshipSign * activeWeight(region.state, region.activationProgress, region.repolarizationProgress);
+      const contribution = classifyRegionLeadContribution(region, lead);
 
       return {
         regionId: region.id,
         label: region.label,
         chamber: region.chamber,
         state: region.state,
-        relationship,
-        signedWeight
+        relationship: contribution.relationship,
+        classification: contribution.classification,
+        signedWeight: contribution.signedWeight,
+        activationTimeMs: region.activationTimeMs,
+        repolarizationTimeMs: region.repolarizationTimeMs,
+        activationProgress: region.activationProgress,
+        repolarizationProgress: region.repolarizationProgress
       };
     })
     .filter((region) => Math.abs(region.signedWeight) > 0.05)
