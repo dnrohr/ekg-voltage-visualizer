@@ -100,6 +100,8 @@ const cameraPresets: Record<CameraPreset, { label: string; position: THREE.Vecto
 };
 
 const toScene = (point: Vec3) => new THREE.Vector3(point.x, point.z, point.y);
+const surfacePatchOffset = new THREE.Vector3(0, 0, 0.31);
+const surfacePatchScale = 2.05;
 
 function terminalCenter(weights: Partial<Record<ElectrodeName, number>>) {
   let totalWeight = 0;
@@ -181,6 +183,36 @@ function contourColor(relativeTimeMs: number): number {
   if (relativeTimeMs < 40) return 0xf59e0b;
   if (relativeTimeMs < 80) return 0xdc2626;
   return 0x7c3aed;
+}
+
+function surfacePatchPoints(center: Vec3, vertices: Vec3[]) {
+  const centerPoint = toScene(center).add(surfacePatchOffset);
+  return vertices.map((vertex) => {
+    const point = toScene(vertex).add(surfacePatchOffset);
+    const offset = point.clone().sub(centerPoint);
+    return new THREE.Vector3(centerPoint.x + offset.x * surfacePatchScale, centerPoint.y + offset.y * surfacePatchScale, centerPoint.z);
+  });
+}
+
+function makeSurfacePatchGeometry(center: Vec3, vertices: Vec3[]) {
+  const points = [toScene(center).add(surfacePatchOffset), ...surfacePatchPoints(center, vertices)];
+  const positions: number[] = [];
+  const indices: number[] = [];
+
+  for (const point of points) {
+    positions.push(point.x, point.y, point.z);
+  }
+
+  for (let index = 1; index < points.length; index += 1) {
+    const next = index === points.length - 1 ? 1 : index + 1;
+    indices.push(0, index, next);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
 }
 
 function disposeObject(object: THREE.Object3D) {
@@ -475,28 +507,58 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
       const isSelectedRegion = region.id === selectedRegionId;
       const mechanicalRegion = regionMechanics.get(region.id);
-      const marker = new THREE.Mesh(
-        new THREE.SphereGeometry(isSelectedRegion ? 0.105 : isCurrentWave ? 0.082 : 0.065, 24, 16),
-        new THREE.MeshStandardMaterial({
+      const outlinePoints = surfacePatchPoints(region.center, region.vertices).map((point) => point.add(new THREE.Vector3(0, 0, 0.006)));
+      const patch = new THREE.Mesh(
+        makeSurfacePatchGeometry(region.center, region.vertices),
+        new THREE.MeshBasicMaterial({
           color: isSelectedRegion ? 0x0f766e : color,
-          emissive: isSelectedRegion ? 0x0f766e : isCurrentWave ? color : 0x000000,
-          emissiveIntensity: isSelectedRegion ? 0.38 : isCurrentWave ? 0.25 : 0.04,
-          roughness: 0.48,
+          side: THREE.DoubleSide,
           transparent: true,
-          opacity: isSelectedRegion ? 0.98 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.38 : 0.82
+          opacity: isSelectedRegion ? 0.98 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.62 : 0.92,
+          depthTest: false
         })
       );
-      marker.name = `surface region ${region.id}`;
-      marker.userData.regionId = region.id;
-      marker.position.copy(position);
+      patch.name = `surface mesh region ${region.id}`;
+      patch.userData.regionId = region.id;
+      patch.renderOrder = 20;
       if (activeLayers.contraction && mechanicalRegion) {
-        marker.scale.setScalar(1 + mechanicalRegion.wallDeformation);
+        patch.scale.setScalar(1 + mechanicalRegion.wallDeformation * 0.55);
       }
-      dynamicGroup.add(marker);
+      dynamicGroup.add(patch);
+
+      const outline = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(outlinePoints),
+        new THREE.LineBasicMaterial({
+          color: isSelectedRegion ? 0x0f766e : isCurrentWave ? 0x111827 : 0x64748b,
+          transparent: true,
+          opacity: isCurrentWave || isSelectedRegion ? 0.98 : 0.66,
+          depthTest: false
+        })
+      );
+      outline.name = `surface mesh outline ${region.id}`;
+      outline.renderOrder = 21;
+      dynamicGroup.add(outline);
+
+      if (isCurrentWave) {
+        const wavefront = new THREE.Mesh(
+          new THREE.TorusGeometry(isSelectedRegion ? 0.145 : 0.125, 0.008, 8, 48),
+          new THREE.MeshBasicMaterial({
+            color: region.state === "depolarizing" ? 0xf59e0b : 0x2563eb,
+            transparent: true,
+            opacity: 0.98,
+            depthTest: false
+          })
+        );
+        wavefront.name = `moving wavefront ${region.id}`;
+        wavefront.renderOrder = 22;
+        wavefront.position.copy(position);
+        wavefront.rotation.x = Math.PI / 2;
+        dynamicGroup.add(wavefront);
+      }
 
       if (isSelectedRegion) {
         const selectionRing = new THREE.Mesh(
-          new THREE.TorusGeometry(0.13, 0.007, 8, 36),
+          new THREE.TorusGeometry(0.16, 0.007, 8, 36),
           new THREE.MeshBasicMaterial({ color: 0x0f766e })
         );
         selectionRing.name = `selected region ring ${region.id}`;
@@ -504,6 +566,41 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
         selectionRing.rotation.x = Math.PI / 2;
         dynamicGroup.add(selectionRing);
       }
+    }
+
+    if (activeLayers.wavefront || activeLayers.stateMap) {
+      const surfaceLinePoints: THREE.Vector3[] = [];
+      for (let index = 0; index < state.surfaceRegions.length - 1; index += 1) {
+        surfaceLinePoints.push(
+          toScene(state.surfaceRegions[index].center).add(new THREE.Vector3(0, 0, 0.34)),
+          toScene(state.surfaceRegions[index + 1].center).add(new THREE.Vector3(0, 0, 0.34))
+        );
+      }
+
+      const ventricularRegions = state.surfaceRegions.filter((region) => region.chamber === "RV" || region.chamber === "LV");
+      for (const region of ventricularRegions) {
+        for (const neighbor of ventricularRegions) {
+          if (region.id >= neighbor.id) continue;
+          const from = toScene(region.center).add(new THREE.Vector3(0, 0, 0.34));
+          const to = toScene(neighbor.center).add(new THREE.Vector3(0, 0, 0.34));
+          if (from.distanceTo(to) < 0.48) {
+            surfaceLinePoints.push(from, to);
+          }
+        }
+      }
+
+      const surfaceMeshLines = new THREE.LineSegments(
+        new THREE.BufferGeometry().setFromPoints(surfaceLinePoints),
+        new THREE.LineBasicMaterial({
+          color: 0x334155,
+          transparent: true,
+          opacity: 0.38,
+          depthTest: false
+        })
+      );
+      surfaceMeshLines.name = "coarse heart surface mesh scaffold";
+      surfaceMeshLines.renderOrder = 19;
+      dynamicGroup.add(surfaceMeshLines);
     }
 
     const activeIsochroneMap = state.isochroneMaps[isochroneScope];

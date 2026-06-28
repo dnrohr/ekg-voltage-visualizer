@@ -6,9 +6,9 @@ This audit checks the V2 implementation against `V2_VISION.md`, `ROADMAP_V2.md`,
 
 | Requirement | Evidence |
 |---|---|
-| 3D heart surface with region labels and per-region activation timing | `packages/cardio-engine/src/surface.ts`, `SimulationState.surfaceRegions`, selectable region panel in `apps/web/src/main.tsx`, 3D surface markers in `packages/cardio-render-3d/src/TorsoScene3D.tsx` |
-| Moving ventricular depolarization wavefront | Surface state evaluation in `evaluateHeartSurface`, 3D wavefront mode in `TorsoScene3D`, synchronized by `evaluateScenario` time |
-| Isochrone/contour lines and activation-time bands | `generateIsochroneMap`, `SimulationState.isochroneMaps`, 3D contour rings and scope controls |
+| 3D heart surface with region labels and per-region activation timing | `packages/cardio-engine/src/surface.ts`, `SimulationState.surfaceRegions`, selectable region panel in `apps/web/src/main.tsx`, 3D surface patch meshes in `packages/cardio-render-3d/src/TorsoScene3D.tsx` |
+| Moving ventricular depolarization wavefront | Surface state evaluation in `evaluateHeartSurface`, 3D wavefront mode with colored patch meshes and active wavefront halos in `TorsoScene3D`, synchronized by `evaluateScenario` time |
+| Isochrone/contour lines and activation-time bands | `generateIsochroneMap`, `SimulationState.isochroneMaps`, 3D surface outlines/contour rings and scope controls |
 | Transmembrane/electrical-state map distinct from activation time | `HeartSurfaceRegionState.state`, electrical-state surface mode, docs in `docs/ACTIVATION_MODEL.md` |
 | Prominent net electrical vector arrow | `state.netVector` in `packages/cardio-engine/src/simulation.ts`, 3D vector layer in `TorsoScene3D` |
 | Twelve synchronized ECG traces with moving cursor | `EcgLeadGrid`, `generateLeadTrace`, shared `clock.normalizedTime` cursor |
@@ -31,7 +31,7 @@ All task files `TASK_V2_00.md` through `TASK_V2_12.md` are marked `Done` in `TAS
 
 - The heart is an authored educational surface model, not a patient-specific anatomical mesh.
 - ECG generation uses approximate regional dipoles and lead/electrode definitions, not a validated torso-conduction solver.
-- 3D isochrone contours are coarse region rings rather than true interpolated mesh isolines.
+- 3D isochrone contours are coarse patch/ring overlays rather than true interpolated mesh isolines.
 - Export supports 3D PNG screenshots and JSON study snapshots; short animation capture is deferred.
 - Abnormal scenarios are synthetic teaching cases and must not be treated as diagnostic templates.
 

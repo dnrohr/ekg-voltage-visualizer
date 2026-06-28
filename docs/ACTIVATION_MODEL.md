@@ -55,7 +55,7 @@ Each `HeartSurfaceRegion` has:
 
 - a chamber label: `RA`, `LA`, `RV`, or `LV`
 - an anatomical region label
-- an approximate center and small set of vertices for later 3D rendering
+- an approximate center and small set of vertices for 3D patch-mesh rendering
 - an activation-node link so scenario timing changes can affect the surface
 - base activation and repolarization times
 - source-vector family
@@ -75,7 +75,7 @@ Surface timing is resolved from the current scenario's activation nodes when an 
 
 ## V2 Surface Map Display Modes
 
-The 3D view now consumes `SimulationState.surfaceRegions`, which are evaluated from the same cardiac time as the ECG traces.
+The 3D view now consumes `SimulationState.surfaceRegions`, which are evaluated from the same cardiac time as the ECG traces and rendered as colored surface patch meshes with outline scaffolding.
 
 Two display modes are available:
 
@@ -92,7 +92,7 @@ V2 adds `generateIsochroneMap` for authored activation-time bands. The initial i
 - `atria`: right and left atrial surface regions, anchored to P-wave onset
 - `ventricles`: right and left ventricular surface regions, anchored to QRS onset
 
-The 3D view draws thin contour rings around the scoped surface patches and highlights the current wavefront. Labels use milliseconds relative to the selected scope anchor, so ventricular labels describe time after QRS onset while atrial labels describe time after P-wave onset.
+The 3D view draws surface patch outlines, thin contour rings around the scoped patches, and active wavefront halos. Labels use milliseconds relative to the selected scope anchor, so ventricular labels describe time after QRS onset while atrial labels describe time after P-wave onset.
 
 This is an educational contour layer over coarse patches rather than a true interpolated mesh isoline solver. It is designed to make activation order inspectable when paused and visually connected to the live activation-wave mode.
 

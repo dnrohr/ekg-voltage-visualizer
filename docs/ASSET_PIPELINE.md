@@ -6,6 +6,7 @@ The Task 04 3D view uses procedural geometry generated at runtime with Three.js:
 
 - transparent torso shell from an ellipsoid primitive
 - simplified heart chambers from scaled ellipsoid primitives
+- coarse surface patch meshes from the engine's authored heart-surface regions
 - electrode markers from the engine's `electrodeDefinitions`
 - tissue activation markers from the current `SimulationState`
 - selected-lead overlays from the existing lead terminal definitions
@@ -73,8 +74,8 @@ Any imported model should be simplified for web use and separated into meaningfu
 
 ## Known Limitations
 
-- The heart is a chamber schematic, not a realistic mesh.
+- The heart surface is a coarse authored patch mesh over a chamber schematic, not a realistic anatomical mesh.
 - The torso is an ellipsoid shell and does not model tissue conductivity.
 - Electrode locations are normalized teaching positions.
-- Color maps are node markers, not volumetric myocardial activation.
+- Color maps are surface patch states, not volumetric myocardial activation.
 - The selected lead overlay connects electrode/reference centers geometrically; it does not imply current travels along that line.
