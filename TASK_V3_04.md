@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -36,4 +36,18 @@ Render smooth activation and recovery wavefronts from mesh field attributes inst
 
 ## Verification Notes
 
-Pending.
+Added shader-driven wavefront coloring in `packages/cardio-render-3d/src/TorsoScene3D.tsx`. The external mesh geometry now includes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes, and the renderer uses a custom `ShaderMaterial` to draw depolarization and repolarization wavefront bands from those values.
+
+The initial tunable band widths are:
+
+- depolarization: 18 ms
+- repolarization: 26 ms
+
+A standard Three.js material fallback remains available if the shader path cannot be used. The fallback preserves tissue-state color, selected-region highlighting, and region picking.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke at `http://127.0.0.1:5187/`: canvas visible, shader-rendered anatomy panel loads without console errors, and mobile/desktop checks show no horizontal overflow.

@@ -73,6 +73,9 @@ const surfaceMapModes: Record<SurfaceMapMode, string> = {
   "electrical-state": "Electrical state"
 };
 
+const wavefrontBandWidthMs = 18;
+const repolarizationBandWidthMs = 26;
+
 const chamberSurfaceColors: Record<HeartChamber, number> = {
   RA: 0x6bc4bb,
   LA: 0xee9f93,
@@ -205,6 +208,105 @@ function externalMeshColor(chamber: HeartChamber, stateName: TissueState, isSele
   return chamberSurfaceColors[chamber];
 }
 
+function colorUniform(color: number) {
+  return new THREE.Color(color);
+}
+
+function makeExternalMeshFallbackMaterial(
+  chamber: HeartChamber,
+  stateName: TissueState,
+  isSelected: boolean,
+  isCurrentWave: boolean,
+  mode: SurfaceMapMode
+) {
+  return new THREE.MeshStandardMaterial({
+    color: externalMeshColor(chamber, stateName, isSelected, mode),
+    emissive: isCurrentWave || isSelected ? externalMeshColor(chamber, stateName, isSelected, "electrical-state") : 0x000000,
+    emissiveIntensity: isSelected ? 0.38 : isCurrentWave ? 0.24 : 0.04,
+    roughness: 0.42,
+    metalness: 0.03,
+    transparent: true,
+    opacity: isSelected ? 0.97 : mode === "wavefront" && stateName === "resting" ? 0.72 : 0.9,
+    side: THREE.DoubleSide
+  });
+}
+
+function makeWavefrontShaderMaterial(
+  chamber: HeartChamber,
+  isSelected: boolean,
+  mode: SurfaceMapMode,
+  renderer: THREE.WebGLRenderer
+) {
+  if (!renderer.capabilities.precision) {
+    return undefined;
+  }
+
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      chamberColor: { value: colorUniform(chamberSurfaceColors[chamber]) },
+      restingColor: { value: colorUniform(0xe5e7eb) },
+      depolarizingColor: { value: colorUniform(0xf59e0b) },
+      activeColor: { value: colorUniform(0xdc2626) },
+      repolarizingColor: { value: colorUniform(0x2563eb) },
+      recoveredColor: { value: colorUniform(0x14b8a6) },
+      selectedColor: { value: colorUniform(0x0f766e) },
+      wavefrontWidthMs: { value: wavefrontBandWidthMs },
+      repolarizationWidthMs: { value: repolarizationBandWidthMs },
+      electricalStateMode: { value: mode === "electrical-state" ? 1 : 0 },
+      selected: { value: isSelected ? 1 : 0 }
+    },
+    vertexShader: `
+      attribute float phiActivationMs;
+      attribute float phiRepolarizationMs;
+      varying float vPhiActivationMs;
+      varying float vPhiRepolarizationMs;
+      varying vec3 vNormal;
+
+      void main() {
+        vPhiActivationMs = phiActivationMs;
+        vPhiRepolarizationMs = phiRepolarizationMs;
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 chamberColor;
+      uniform vec3 restingColor;
+      uniform vec3 depolarizingColor;
+      uniform vec3 activeColor;
+      uniform vec3 repolarizingColor;
+      uniform vec3 recoveredColor;
+      uniform vec3 selectedColor;
+      uniform float wavefrontWidthMs;
+      uniform float repolarizationWidthMs;
+      uniform int electricalStateMode;
+      uniform int selected;
+      varying float vPhiActivationMs;
+      varying float vPhiRepolarizationMs;
+      varying vec3 vNormal;
+
+      void main() {
+        float activationBand = 1.0 - smoothstep(0.0, wavefrontWidthMs, abs(vPhiActivationMs));
+        float recoveryBand = 1.0 - smoothstep(0.0, repolarizationWidthMs, abs(vPhiRepolarizationMs));
+        float activeTissue = smoothstep(wavefrontWidthMs, wavefrontWidthMs + 12.0, vPhiActivationMs) * (1.0 - smoothstep(-repolarizationWidthMs, 0.0, vPhiRepolarizationMs));
+        float recoveredTissue = smoothstep(repolarizationWidthMs, repolarizationWidthMs + 24.0, vPhiRepolarizationMs);
+        float preActivation = 1.0 - smoothstep(-wavefrontWidthMs - 24.0, -wavefrontWidthMs, vPhiActivationMs);
+        vec3 baseColor = electricalStateMode == 1 ? mix(chamberColor, restingColor, preActivation * 0.75) : chamberColor;
+        baseColor = mix(baseColor, activeColor, activeTissue * (electricalStateMode == 1 ? 0.85 : 0.34));
+        baseColor = mix(baseColor, recoveredColor, recoveredTissue * (electricalStateMode == 1 ? 0.72 : 0.22));
+        baseColor = mix(baseColor, repolarizingColor, recoveryBand);
+        baseColor = mix(baseColor, depolarizingColor, activationBand);
+        baseColor = selected == 1 ? mix(baseColor, selectedColor, 0.76) : baseColor;
+        float light = 0.58 + 0.42 * max(dot(normalize(vNormal), normalize(vec3(0.45, 0.72, 0.54))), 0.0);
+        float waveGlow = max(activationBand, recoveryBand) * 0.28;
+        gl_FragColor = vec4(baseColor * light + waveGlow, selected == 1 ? 0.98 : 0.92);
+      }
+    `,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+}
+
 function externalMeshPoint(point: Vec3, normal: Vec3, chamber: HeartChamber, center?: Vec3) {
   const base = toScene(point);
   const sceneNormal = toScene(normal).normalize();
@@ -239,6 +341,8 @@ function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegme
   const centerVertex = verticesById.get(`${segment.id}:center`);
   const positions: number[] = [];
   const normals: number[] = [];
+  const activationPhiValues: number[] = [];
+  const repolarizationPhiValues: number[] = [];
   const indices: number[] = [];
   const indexByVertexId = new Map<string, number>();
 
@@ -251,6 +355,8 @@ function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegme
     indexByVertexId.set(vertexId, positions.length / 3);
     positions.push(position.x, position.y, position.z);
     normals.push(normal.x, normal.y, normal.z);
+    activationPhiValues.push(vertex.phiActivationMs);
+    repolarizationPhiValues.push(vertex.phiRepolarizationMs);
   }
 
   for (const face of field.faces) {
@@ -264,6 +370,8 @@ function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegme
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geometry.setAttribute("phiActivationMs", new THREE.Float32BufferAttribute(activationPhiValues, 1));
+  geometry.setAttribute("phiRepolarizationMs", new THREE.Float32BufferAttribute(repolarizationPhiValues, 1));
   geometry.setIndex(indices);
   geometry.computeBoundingSphere();
   return geometry;
@@ -483,18 +591,13 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
 
         const isSelectedRegion = segment.id === selectedRegionId;
         const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
+        const meshMode = activeLayers.stateMap ? "electrical-state" : surfaceMapMode;
+        const material =
+          makeWavefrontShaderMaterial(segment.chamber, isSelectedRegion, meshMode, renderer) ??
+          makeExternalMeshFallbackMaterial(segment.chamber, region.state, isSelectedRegion, isCurrentWave, meshMode);
         const mesh = new THREE.Mesh(
           makeExternalMeshGeometry(state.heartMeshField, segment),
-          new THREE.MeshStandardMaterial({
-            color: externalMeshColor(segment.chamber, region.state, isSelectedRegion, activeLayers.stateMap ? "electrical-state" : surfaceMapMode),
-            emissive: isCurrentWave || isSelectedRegion ? externalMeshColor(segment.chamber, region.state, isSelectedRegion, "electrical-state") : 0x000000,
-            emissiveIntensity: isSelectedRegion ? 0.38 : isCurrentWave ? 0.24 : 0.04,
-            roughness: 0.42,
-            metalness: 0.03,
-            transparent: true,
-            opacity: isSelectedRegion ? 0.97 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.72 : 0.9,
-            side: THREE.DoubleSide
-          })
+          material
         );
         mesh.name = `v3 external heart mesh ${segment.id}`;
         mesh.userData.regionId = segment.id;
@@ -871,7 +974,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       </div>
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
-          Isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current wavefront highlighted.
+          Isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, shader wavefront highlighted.
         </div>
       )}
       <div className="surface-map-legend" aria-label="Surface state legend">

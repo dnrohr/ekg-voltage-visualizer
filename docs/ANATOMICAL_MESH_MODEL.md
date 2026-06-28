@@ -73,3 +73,20 @@ Current behavior:
 - electrodes, lead projection, net vector, contours, valve cues, flow cues, and ECG synchronization remain driven by the same `SimulationState`
 
 This is still a coarse educational surface. Its purpose is to prove the renderer contract before importing a licensed anatomical mesh.
+
+## Shader Wavefront Rendering
+
+V3-04 adds shader-driven coloring for the external mesh surface. The renderer writes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes into each Three.js geometry. A custom `ShaderMaterial` then colors the surface from those level-set values:
+
+- `phiActivationMs` near zero becomes the depolarization wavefront band
+- `phiRepolarizationMs` near zero becomes the repolarization wavefront band
+- positive activation and negative repolarization values indicate active/depolarized tissue
+- positive repolarization values indicate recovered tissue
+- negative activation values indicate not-yet-activated tissue
+
+The first tunable band widths are:
+
+- depolarization wavefront: 18 ms
+- repolarization wavefront: 26 ms
+
+If the custom shader path is unavailable, the renderer falls back to a standard Three.js material colored by the region's evaluated tissue state. The fallback is less continuous, but it preserves the teaching state and selected-region behavior.
