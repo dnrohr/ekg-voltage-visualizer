@@ -25,7 +25,7 @@ Status index for V3 visual/anatomical-heart work derived from `ROADMAP_V3.md`.
 |---|---|---|---|---|
 | V3-00 | Done | Roadmap and V3 task scaffold | V2 complete | `TASK_V3_00.md` |
 | V3-01 | Done | Mesh field and level-set engine contract | V3-00 | `TASK_V3_01.md` |
-| V3-02 | Not started | Anatomical asset pipeline and provenance manifest | V3-01 | `TASK_V3_02.md` |
+| V3-02 | Done | Anatomical asset pipeline and provenance manifest | V3-01 | `TASK_V3_02.md` |
 | V3-03 | Not started | External heart mesh renderer foundation | V3-02 | `TASK_V3_03.md` |
 | V3-04 | Not started | Shader-driven depolarization and repolarization wavefront | V3-03 | `TASK_V3_04.md` |
 | V3-05 | Not started | Isochrone and level-set contour rendering | V3-04 | `TASK_V3_05.md` |
@@ -39,7 +39,7 @@ Status index for V3 visual/anatomical-heart work derived from `ROADMAP_V3.md`.
 
 ## Current Next Task
 
-V3-02 is next.
+V3-03 is next.
 
 ## Notes
 
@@ -47,3 +47,4 @@ V3-02 is next.
 - V3 should build from the current authored V2 surface model first, then allow imported anatomical assets once provenance and validation are in place.
 - V3-00 created `ROADMAP_V3.md`, this index, and task files through V3-12.
 - V3-01 added engine mesh-field and level-set types, `buildHeartMeshField`, tests for deterministic topology and wavefront `phi` values, and `docs/ANATOMICAL_MESH_MODEL.md`.
+- V3-02 added an anatomical asset manifest contract, validator, example manifest, asset-pipeline docs, and tests for accepted/rejected mesh provenance.

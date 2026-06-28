@@ -1,0 +1,57 @@
+{
+  "id": "example-heart-v3",
+  "label": "Example heart anatomy mesh",
+  "assetType": "heart-anatomy-mesh",
+  "version": 1,
+  "source": {
+    "url": "https://example.edu/heart-mesh",
+    "title": "Example educational heart mesh",
+    "author": "Example Anatomy Lab",
+    "institution": "Example University",
+    "retrievedAt": "2026-06-28"
+  },
+  "license": {
+    "name": "Creative Commons Attribution 4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "allowsRedistribution": true,
+    "allowsCommercialUse": true,
+    "attributionRequired": true,
+    "attributionText": "Example educational heart mesh by Example Anatomy Lab, CC BY 4.0."
+  },
+  "files": {
+    "originalFormat": "gltf",
+    "optimizedFormat": "glb",
+    "originalPath": "references/example-heart/source/model.gltf",
+    "optimizedPath": "references/example-heart/optimized/model.glb",
+    "texturePaths": []
+  },
+  "geometry": {
+    "vertexCount": 42000,
+    "faceCount": 78000,
+    "hasNormals": true,
+    "hasUvCoordinates": true,
+    "scaleUnit": "normalized",
+    "coordinateSystem": "engine"
+  },
+  "segmentation": {
+    "chambers": ["RA", "LA", "RV", "LV"],
+    "regionIds": ["ra-free-wall", "la-lateral", "septal-right-facing", "rv-free-wall", "lv-lateral"],
+    "hasSeptum": true,
+    "hasValves": true,
+    "notes": "Region ids map to the existing educational surface model."
+  },
+  "modifications": ["Optimized to GLB and simplified for web delivery."],
+  "optimization": {
+    "targetMaxVertices": 60000,
+    "targetMaxTextureSize": 2048,
+    "dracoCompressed": false,
+    "meshoptCompressed": true,
+    "notes": "Target keeps the main 3D view responsive on mid-range laptops."
+  },
+  "redistribution": {
+    "bundledInRepository": true,
+    "requiresSeparateDownload": false,
+    "notes": "License allows redistribution with attribution."
+  },
+  "educationalUseNotes": "Teaching mesh only; not patient-specific or diagnostic."
+}

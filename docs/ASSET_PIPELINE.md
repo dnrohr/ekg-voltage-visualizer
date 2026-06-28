@@ -58,19 +58,88 @@ Camera controls are preset-based rather than free orbit controls so learners lan
 
 Cutaway mode hides the transparent torso shell while retaining electrodes, heart geometry, tissue nodes, lead overlays, and the net vector. This is intended for quick anatomy inspection, not as a surgical or anatomical slice.
 
-## Future Asset Intake Requirements
+## V3 Anatomical Mesh Intake Gate
 
-Before adding third-party assets, record:
+V3 may use a realistic anatomical heart mesh only after an asset manifest passes review. The manifest format is typed as `AnatomicalAssetManifest` in `packages/cardio-engine/src/types.ts`, validated by `validateAnatomicalAssetManifest` in `packages/cardio-engine/src/assetManifest.ts`, and illustrated by `references/anatomical-heart-asset-manifest.example.json`.
 
-- source URL
+The intake gate exists so the app does not accidentally bundle unclear or restricted anatomy assets. A mesh must be rejected until blocking validation errors are resolved.
+
+### Accepted Runtime Formats
+
+- Source/original formats: `.glb`, `.gltf`, or `.obj`.
+- Runtime optimized format: `.glb`.
+- Textures, if used, should be web-sized and listed in the manifest.
+- Geometry must be triangular or triangulatable.
+- Vertex normals are required for anatomical lighting.
+
+### Recommended Web Targets
+
+- Target maximum vertices: 60,000 for the main interactive heart mesh.
+- Hard review threshold: document a performance reason before exceeding 100,000 target vertices.
+- Target maximum texture size: 2048 px on the longest side.
+- Use mesh compression only when the runtime loader path is documented and browser-tested.
+
+### Required Manifest Evidence
+
+Before adding third-party assets, record all of the following in a manifest:
+
+- source URL and title
 - author or institution
-- license name and version
+- retrieval date
+- license name and license URL
 - attribution requirements
 - whether commercial use is allowed
+- whether redistribution is allowed
+- whether the asset can be bundled in the repository
 - modifications made
 - original file format and optimized output format
+- vertex and face counts
+- normals and UV availability
+- scale unit and coordinate system
+- chamber segmentation coverage
+- mapped anatomical region ids
+- septum and valve availability
+- optimization targets
+- educational-use notes
 
-Any imported model should be simplified for web use and separated into meaningful educational regions where possible.
+### Segmentation Requirements
+
+The minimum useful anatomical mesh must identify:
+
+- right atrium (`RA`)
+- left atrium (`LA`)
+- right ventricle (`RV`)
+- left ventricle (`LV`)
+- septum availability
+- anatomical region ids that can map to the existing educational surface regions
+
+Valves are strongly preferred for V3 chamber/cutaway teaching. If valves are absent, the manifest must say so and the renderer must keep the procedural valve fallback.
+
+### Automatic Rejection Conditions
+
+Reject or quarantine the asset if:
+
+- redistribution is disallowed but the asset is proposed for repository bundling
+- license, source, author, or attribution text is missing
+- optimized runtime format is not GLB
+- normals are missing
+- chamber labels do not cover all four chambers
+- region ids are missing
+- physical-scale assets omit a documented maximum dimension
+- educational-use boundaries are missing
+
+Warnings such as non-commercial limitations, missing septum, high vertex count, or large textures require explicit review before merge.
+
+## Procedural Fallback
+
+The V2/V3 procedural path remains mandatory even after an anatomical asset is approved. Environments without bundled assets, with failed manifest validation, or with unsupported rendering features must continue using:
+
+- the authored educational heart surface
+- mesh fields from `buildHeartMeshField`
+- procedural chamber and valve cues
+- synchronized ECG, lead, and wavefront state
+
+The fallback is part of the product, not a temporary error state.
 
 ## Known Limitations
 

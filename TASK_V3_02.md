@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,12 @@ Define the asset pipeline required before using a realistic heart mesh in the ap
 
 ## Verification Notes
 
-Pending.
+Implemented a typed anatomical mesh provenance contract in `packages/cardio-engine/src/types.ts` and validator helpers in `packages/cardio-engine/src/assetManifest.ts`. Added an example manifest at `references/anatomical-heart-asset-manifest.example.json`.
+
+Documentation now covers accepted runtime formats, optimization targets, required provenance evidence, segmentation requirements, automatic rejection conditions, and procedural fallback behavior in `docs/ASSET_PIPELINE.md` and `docs/ANATOMICAL_MESH_MODEL.md`.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`

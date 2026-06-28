@@ -331,6 +331,75 @@ export type HeartMeshField = {
   segments: HeartMeshSegment[];
 };
 
+export type AnatomicalAssetFormat = "glb" | "gltf" | "obj";
+
+export type AnatomicalAssetManifest = {
+  id: string;
+  label: string;
+  assetType: "heart-anatomy-mesh";
+  version: number;
+  source: {
+    url: string;
+    title: string;
+    author: string;
+    institution?: string;
+    retrievedAt: string;
+  };
+  license: {
+    name: string;
+    url: string;
+    allowsRedistribution: boolean;
+    allowsCommercialUse: boolean;
+    attributionRequired: boolean;
+    attributionText: string;
+  };
+  files: {
+    originalFormat: AnatomicalAssetFormat;
+    optimizedFormat: "glb";
+    originalPath?: string;
+    optimizedPath: string;
+    texturePaths?: string[];
+  };
+  geometry: {
+    vertexCount: number;
+    faceCount: number;
+    hasNormals: boolean;
+    hasUvCoordinates: boolean;
+    scaleUnit: "normalized" | "meter" | "millimeter" | "centimeter";
+    coordinateSystem: "engine" | "asset-native";
+    maxDimensionMeters?: number;
+  };
+  segmentation: {
+    chambers: HeartChamber[];
+    regionIds: string[];
+    hasSeptum: boolean;
+    hasValves: boolean;
+    notes: string;
+  };
+  modifications: string[];
+  optimization: {
+    targetMaxVertices: number;
+    targetMaxTextureSize: number;
+    dracoCompressed: boolean;
+    meshoptCompressed: boolean;
+    notes: string;
+  };
+  redistribution: {
+    bundledInRepository: boolean;
+    requiresSeparateDownload: boolean;
+    notes: string;
+  };
+  educationalUseNotes: string;
+};
+
+export type AssetManifestIssueSeverity = "error" | "warning";
+
+export type AssetManifestIssue = {
+  severity: AssetManifestIssueSeverity;
+  field: string;
+  message: string;
+};
+
 export type IsochroneScope = "whole-heart" | "atria" | "ventricles";
 
 export type IsochroneBand = {

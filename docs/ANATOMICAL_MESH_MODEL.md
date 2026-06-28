@@ -50,3 +50,11 @@ A future anatomical mesh asset must provide or be mapped to:
 - optimization notes for web delivery
 
 Until those requirements are met, the coarse V2-derived mesh field remains the canonical source for V3 renderer development.
+
+## Provenance Manifest
+
+Every imported anatomical mesh must have an `AnatomicalAssetManifest`. The validator checks the source/license record, runtime file format, geometry counts, normals, chamber segmentation, redistribution rules, and educational-use notes before an asset can be treated as usable.
+
+Use `references/anatomical-heart-asset-manifest.example.json` as the template. The example is a schema-style placeholder, not a bundled asset.
+
+Blocking issues mean the asset must not be bundled or loaded as the primary V3 anatomy. Warning issues require an explicit review note in the task file or release audit.

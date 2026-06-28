@@ -15,15 +15,18 @@ import {
   generateIsochroneMap,
   getSurfaceRegionById,
   generateSyntheticReferenceTrace,
+  hasBlockingAssetManifestIssues,
   millisecondStepMs,
   normalizedToCycleMs,
   playbackSpeeds,
   scenarioLibrary,
   stepClock,
   type ElectrodePotentials,
+  type AnatomicalAssetManifest,
   leadOrder,
   normalSinusRhythmScenario,
   normalizeCycleTime,
+  validateAnatomicalAssetManifest,
   validateScenario,
   validateScenarioSchema
 } from "../src";
@@ -314,6 +317,137 @@ describe("cardio-engine simulation", () => {
     expect(basal?.phiActivationMs ?? 0).toBeLessThan(0);
     expect(apex?.state).toBe("depolarizing");
     expect(apex?.phiRepolarizationMs ?? 0).toBeLessThan(0);
+  });
+
+  it("accepts a complete anatomical mesh asset manifest", () => {
+    const manifest: AnatomicalAssetManifest = {
+      id: "example-heart-v3",
+      label: "Example heart anatomy mesh",
+      assetType: "heart-anatomy-mesh",
+      version: 1,
+      source: {
+        url: "https://example.edu/heart-mesh",
+        title: "Example educational heart mesh",
+        author: "Example Anatomy Lab",
+        institution: "Example University",
+        retrievedAt: "2026-06-28"
+      },
+      license: {
+        name: "Creative Commons Attribution 4.0",
+        url: "https://creativecommons.org/licenses/by/4.0/",
+        allowsRedistribution: true,
+        allowsCommercialUse: true,
+        attributionRequired: true,
+        attributionText: "Example educational heart mesh by Example Anatomy Lab, CC BY 4.0."
+      },
+      files: {
+        originalFormat: "gltf",
+        optimizedFormat: "glb",
+        originalPath: "references/example-heart/source/model.gltf",
+        optimizedPath: "references/example-heart/optimized/model.glb",
+        texturePaths: []
+      },
+      geometry: {
+        vertexCount: 42000,
+        faceCount: 78000,
+        hasNormals: true,
+        hasUvCoordinates: true,
+        scaleUnit: "normalized",
+        coordinateSystem: "engine"
+      },
+      segmentation: {
+        chambers: ["RA", "LA", "RV", "LV"],
+        regionIds: ["ra-free-wall", "la-lateral", "septal-right-facing", "rv-free-wall", "lv-lateral"],
+        hasSeptum: true,
+        hasValves: true,
+        notes: "Region ids map to the existing educational surface model."
+      },
+      modifications: ["Optimized to GLB and simplified for web delivery."],
+      optimization: {
+        targetMaxVertices: 60000,
+        targetMaxTextureSize: 2048,
+        dracoCompressed: false,
+        meshoptCompressed: true,
+        notes: "Target keeps the main 3D view responsive on mid-range laptops."
+      },
+      redistribution: {
+        bundledInRepository: true,
+        requiresSeparateDownload: false,
+        notes: "License allows redistribution with attribution."
+      },
+      educationalUseNotes: "Teaching mesh only; not patient-specific or diagnostic."
+    };
+
+    const issues = validateAnatomicalAssetManifest(manifest);
+    expect(issues).toEqual([]);
+    expect(hasBlockingAssetManifestIssues(issues)).toBe(false);
+  });
+
+  it("rejects anatomical mesh manifests with unsafe licensing or missing segmentation", () => {
+    const manifest: AnatomicalAssetManifest = {
+      id: "blocked-heart-v3",
+      label: "Blocked heart anatomy mesh",
+      assetType: "heart-anatomy-mesh",
+      version: 1,
+      source: {
+        url: "https://example.edu/restricted-heart",
+        title: "Restricted heart mesh",
+        author: "Example Anatomy Lab",
+        retrievedAt: "2026-06-28"
+      },
+      license: {
+        name: "Restricted educational preview",
+        url: "https://example.edu/license",
+        allowsRedistribution: false,
+        allowsCommercialUse: false,
+        attributionRequired: true,
+        attributionText: "Restricted preview."
+      },
+      files: {
+        originalFormat: "obj",
+        optimizedFormat: "glb",
+        optimizedPath: "references/restricted-heart/model.glb"
+      },
+      geometry: {
+        vertexCount: 25000,
+        faceCount: 50000,
+        hasNormals: false,
+        hasUvCoordinates: false,
+        scaleUnit: "millimeter",
+        coordinateSystem: "asset-native"
+      },
+      segmentation: {
+        chambers: ["LV"],
+        regionIds: [],
+        hasSeptum: false,
+        hasValves: false,
+        notes: ""
+      },
+      modifications: [],
+      optimization: {
+        targetMaxVertices: 60000,
+        targetMaxTextureSize: 2048,
+        dracoCompressed: false,
+        meshoptCompressed: false,
+        notes: ""
+      },
+      redistribution: {
+        bundledInRepository: true,
+        requiresSeparateDownload: false,
+        notes: ""
+      },
+      educationalUseNotes: ""
+    };
+
+    const issues = validateAnatomicalAssetManifest(manifest);
+    expect(hasBlockingAssetManifestIssues(issues)).toBe(true);
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ field: "redistribution.bundledInRepository", severity: "error" }),
+      expect.objectContaining({ field: "geometry.hasNormals", severity: "error" }),
+      expect.objectContaining({ field: "segmentation.chambers", severity: "error" }),
+      expect.objectContaining({ field: "segmentation.regionIds", severity: "error" }),
+      expect.objectContaining({ field: "educationalUseNotes", severity: "error" })
+    ]));
   });
 
   it("explains lead probe polarity and regional alignment at the QRS peak", () => {
