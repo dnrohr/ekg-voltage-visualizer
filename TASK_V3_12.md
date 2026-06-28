@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,10 @@ Audit the V3 implementation against `ROADMAP_V3.md`, task files, docs, and safet
 
 ## Verification Notes
 
-Pending.
+Completed.
+
+- Added `docs/V3_RELEASE_AUDIT.md` with roadmap evidence, task completion status, verification scope, limitations, and handoff recommendations.
+- Updated `README.md` to point at V3 roadmap/audit/docs and replace the stale V2 release-candidate status.
+- Updated `docs/VALIDATION.md` with final V3 release verification scope and non-clinical validation boundary.
+- Marked every V3 task as complete in `TASKS_V3.md`.
+- Verification: `npm test`, `npm run typecheck`, `npm run build`, and desktop/mobile browser smoke.

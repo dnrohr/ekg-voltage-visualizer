@@ -4,7 +4,7 @@ An educational cardiac-cycle visualizer for making 12-lead EKG/ECG voltages feel
 
 The goal is to help learners connect **myocardial depolarization and repolarization** to the changing voltage measurements seen in a 12-lead EKG. Rather than treating the tracing as an abstract waveform, the app shows what is happening in the heart, how that activity creates body-surface potentials, and why each lead deflects upward, downward, or remains nearly flat during the cardiac cycle.
 
-> **Status:** V2 release-candidate educational simulator on the `codex/v2-roadmap` branch  
+> **Status:** V3 educational anatomical-heart and wavefront simulator
 > **Scope:** educational physiology and signal-formation simulator  
 > **Non-goal:** diagnostic interpretation or clinical decision support
 
@@ -47,7 +47,7 @@ First success condition:
 
 > A learner can scrub through a normal beat and understand why several leads go positive, negative, or flat during P, QRS, ST, and T.
 
-The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md).
+The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md). The anatomical V3 roadmap and release audit are in [ROADMAP_V3.md](./ROADMAP_V3.md) and [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md).
 
 Foundational docs for the first implementation tasks:
 
@@ -63,6 +63,11 @@ Foundational docs for the first implementation tasks:
 - [docs/V2_GUIDED_LESSONS.md](./docs/V2_GUIDED_LESSONS.md) - V2 guided lesson and quiz structure
 - [docs/V2_POLISH_ACCESSIBILITY_EXPORT.md](./docs/V2_POLISH_ACCESSIBILITY_EXPORT.md) - V2 polish, keyboard, export, and PWA notes
 - [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md) - V2 completion evidence and known limits
+- [docs/ANATOMICAL_MESH_MODEL.md](./docs/ANATOMICAL_MESH_MODEL.md) - V3 mesh, level-set, renderer, anatomy-mode, and contour model notes
+- [docs/ASSET_PIPELINE.md](./docs/ASSET_PIPELINE.md) - anatomical asset manifest and provenance requirements
+- [docs/V3_GUIDED_LESSONS.md](./docs/V3_GUIDED_LESSONS.md) - V3 mesh/wavefront guided lesson structure
+- [docs/V3_PERFORMANCE_ACCESSIBILITY_EXPORT.md](./docs/V3_PERFORMANCE_ACCESSIBILITY_EXPORT.md) - V3 keyboard, accessibility, render budget, and export notes
+- [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md) - V3 completion evidence, verification, limitations, and handoff
 
 ## Running the App
 
@@ -321,4 +326,4 @@ Before adding third-party anatomical models, datasets, textures, or reference me
 
 ## Current Next Step
 
-Finish the V2 release handoff from [TASK_V2_12.md](./TASK_V2_12.md), then continue with polish and validation follow-ups from [TASK_V2_11.md](./TASK_V2_11.md) and [TASK_V2_12.md](./TASK_V2_12.md) as needed.
+V3 is complete through [TASK_V3_12.md](./TASK_V3_12.md). Recommended follow-ups are listed in [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md): licensed anatomical mesh import, renderer bundle splitting, curated reference ECG examples, and optional animation export.

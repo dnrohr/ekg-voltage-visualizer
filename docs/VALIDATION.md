@@ -90,3 +90,17 @@ Task 10 added:
 - PWA manifest and icon.
 
 The production build currently includes Three.js in the main bundle, so Vite reports a chunk-size warning. That is a performance note rather than a functional failure.
+
+## V3 Release Verification
+
+V3 release verification is summarized in `docs/V3_RELEASE_AUDIT.md`.
+
+The final V3 browser smoke covers:
+
+- V3 canvas load with no new browser runtime errors.
+- Render-budget profile visibility.
+- Keyboard paths for scenario, comparison scenario, selected lead, selected region, learner mode, V3 camera, anatomy mode, surface map, isochrone scope, and first nine layer controls.
+- High-contrast and reduced-motion state reaching both the app shell and 3D scene.
+- Desktop and 390 px mobile layouts without horizontal overflow.
+
+The V3 release remains educational only. The validation evidence proves deterministic teaching behavior, synchronized UI state, accessibility/export coverage, and absence of obvious runtime/layout failures in smoke checks. It does not prove clinical diagnostic accuracy.
