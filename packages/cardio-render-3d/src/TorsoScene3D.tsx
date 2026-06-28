@@ -18,7 +18,7 @@ import {
 } from "@ekg/cardio-engine";
 
 export type CameraPreset = "frontal" | "transverse" | "left-lateral" | "heart-close";
-type SurfaceMapMode = "wavefront" | "electrical-state";
+export type SurfaceMapMode = "wavefront" | "electrical-state";
 export type AnatomyViewMode = "external" | "cutaway" | "chambers";
 
 type TorsoScene3DProps = {
@@ -29,6 +29,14 @@ type TorsoScene3DProps = {
   layers?: Partial<TorsoScene3DLayers>;
   cameraPreset?: CameraPreset;
   anatomyViewMode?: AnatomyViewMode;
+  surfaceMapMode?: SurfaceMapMode;
+  isochroneScope?: IsochroneScope;
+  highContrast?: boolean;
+  reducedMotion?: boolean;
+  onCameraPresetChange?: (preset: CameraPreset) => void;
+  onAnatomyViewModeChange?: (mode: AnatomyViewMode) => void;
+  onSurfaceMapModeChange?: (mode: SurfaceMapMode) => void;
+  onIsochroneScopeChange?: (scope: IsochroneScope) => void;
 };
 
 export type TorsoScene3DLayers = {
@@ -250,12 +258,14 @@ function makeExternalMeshFallbackMaterial(
   isSelected: boolean,
   isCurrentWave: boolean,
   mode: SurfaceMapMode,
-  surfaceOpacity: number
+  surfaceOpacity: number,
+  highContrast: boolean
 ) {
+  const color = highContrast && isSelected ? 0x000000 : externalMeshColor(chamber, stateName, isSelected, mode);
   return new THREE.MeshStandardMaterial({
-    color: externalMeshColor(chamber, stateName, isSelected, mode),
-    emissive: isCurrentWave || isSelected ? externalMeshColor(chamber, stateName, isSelected, "electrical-state") : 0x000000,
-    emissiveIntensity: isSelected ? 0.38 : isCurrentWave ? 0.24 : 0.04,
+    color,
+    emissive: isCurrentWave || isSelected ? color : 0x000000,
+    emissiveIntensity: highContrast && (isSelected || isCurrentWave) ? 0.52 : isSelected ? 0.38 : isCurrentWave ? 0.24 : 0.04,
     roughness: 0.42,
     metalness: 0.03,
     transparent: true,
@@ -269,7 +279,9 @@ function makeWavefrontShaderMaterial(
   isSelected: boolean,
   mode: SurfaceMapMode,
   renderer: THREE.WebGLRenderer,
-  surfaceOpacity: number
+  surfaceOpacity: number,
+  highContrast: boolean,
+  reducedMotion: boolean
 ) {
   if (!renderer.capabilities.precision) {
     return undefined;
@@ -283,9 +295,9 @@ function makeWavefrontShaderMaterial(
       activeColor: { value: colorUniform(0xdc2626) },
       repolarizingColor: { value: colorUniform(0x2563eb) },
       recoveredColor: { value: colorUniform(0x14b8a6) },
-      selectedColor: { value: colorUniform(0x0f766e) },
-      wavefrontWidthMs: { value: wavefrontBandWidthMs },
-      repolarizationWidthMs: { value: repolarizationBandWidthMs },
+      selectedColor: { value: colorUniform(highContrast ? 0x000000 : 0x0f766e) },
+      wavefrontWidthMs: { value: highContrast ? wavefrontBandWidthMs + 8 : reducedMotion ? wavefrontBandWidthMs + 4 : wavefrontBandWidthMs },
+      repolarizationWidthMs: { value: highContrast ? repolarizationBandWidthMs + 8 : reducedMotion ? repolarizationBandWidthMs + 4 : repolarizationBandWidthMs },
       electricalStateMode: { value: mode === "electrical-state" ? 1 : 0 },
       selected: { value: isSelected ? 1 : 0 },
       surfaceOpacity: { value: surfaceOpacity }
@@ -485,7 +497,23 @@ function disposeObject(object: THREE.Object3D) {
   });
 }
 
-export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRegion, layers, cameraPreset, anatomyViewMode: preferredAnatomyViewMode }: TorsoScene3DProps) {
+export function TorsoScene3D({
+  state,
+  selectedLead,
+  selectedRegionId,
+  onSelectRegion,
+  layers,
+  cameraPreset,
+  anatomyViewMode: preferredAnatomyViewMode,
+  surfaceMapMode: preferredSurfaceMapMode,
+  isochroneScope: preferredIsochroneScope,
+  highContrast = false,
+  reducedMotion = false,
+  onCameraPresetChange,
+  onAnatomyViewModeChange,
+  onSurfaceMapModeChange,
+  onIsochroneScopeChange
+}: TorsoScene3DProps) {
   const mountRef = React.useRef<HTMLDivElement | null>(null);
   const sceneRef = React.useRef<THREE.Scene | null>(null);
   const rendererRef = React.useRef<THREE.WebGLRenderer | null>(null);
@@ -509,6 +537,34 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
   React.useEffect(() => {
     if (preferredAnatomyViewMode) setAnatomyViewMode(preferredAnatomyViewMode);
   }, [preferredAnatomyViewMode]);
+
+  React.useEffect(() => {
+    if (preferredSurfaceMapMode) setSurfaceMapMode(preferredSurfaceMapMode);
+  }, [preferredSurfaceMapMode]);
+
+  React.useEffect(() => {
+    if (preferredIsochroneScope) setIsochroneScope(preferredIsochroneScope);
+  }, [preferredIsochroneScope]);
+
+  const chooseCameraPreset = (value: CameraPreset) => {
+    setPreset(value);
+    onCameraPresetChange?.(value);
+  };
+
+  const chooseAnatomyViewMode = (value: AnatomyViewMode) => {
+    setAnatomyViewMode(value);
+    onAnatomyViewModeChange?.(value);
+  };
+
+  const chooseSurfaceMapMode = (value: SurfaceMapMode) => {
+    setSurfaceMapMode(value);
+    onSurfaceMapModeChange?.(value);
+  };
+
+  const chooseIsochroneScope = (value: IsochroneScope) => {
+    setIsochroneScope(value);
+    onIsochroneScopeChange?.(value);
+  };
 
   React.useEffect(() => {
     if (!mountRef.current) return;
@@ -666,8 +722,8 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
         const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
         const meshMode = activeLayers.stateMap ? "electrical-state" : surfaceMapMode;
         const material =
-          makeWavefrontShaderMaterial(segment.chamber, isSelectedRegion, meshMode, renderer, surfaceOpacity) ??
-          makeExternalMeshFallbackMaterial(segment.chamber, region.state, isSelectedRegion, isCurrentWave, meshMode, surfaceOpacity);
+          makeWavefrontShaderMaterial(segment.chamber, isSelectedRegion, meshMode, renderer, surfaceOpacity, highContrast, reducedMotion) ??
+          makeExternalMeshFallbackMaterial(segment.chamber, region.state, isSelectedRegion, isCurrentWave, meshMode, surfaceOpacity, highContrast);
         const mesh = new THREE.Mesh(
           makeExternalMeshGeometry(state.heartMeshField, segment),
           material
@@ -814,7 +870,9 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     const leadVoltage = state.leadVoltages[selectedLead];
     const projectionAxis = toScene(selectedDefinition.axis).normalize();
     const projectionDirection = leadVoltage >= 0 ? projectionAxis : projectionAxis.clone().multiplyScalar(-1);
-    const projectionColor = leadVoltage > 0.04 ? 0x16a34a : leadVoltage < -0.04 ? 0xdc2626 : 0x64748b;
+    const projectionColor = highContrast
+      ? leadVoltage > 0.04 ? 0x166534 : leadVoltage < -0.04 ? 0x991b1b : 0x111827
+      : leadVoltage > 0.04 ? 0x16a34a : leadVoltage < -0.04 ? 0xdc2626 : 0x64748b;
     const projectionOrigin = new THREE.Vector3(0, 0.04, 0.18);
     const projectionLength = 0.2 + Math.min(0.46, Math.abs(leadVoltage) * 0.32);
     if (activeLayers.leadProjection && projectionDirection.lengthSq() > 0.001) {
@@ -1147,17 +1205,19 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     }
 
     renderer.render(scene, camera);
-  }, [activeLayers, anatomyViewMode, isochroneScope, selectedLead, selectedRegionId, state, surfaceMapMode]);
+  }, [activeLayers, anatomyViewMode, highContrast, isochroneScope, reducedMotion, selectedLead, selectedRegionId, state, surfaceMapMode]);
 
   return (
-    <div className="scene3d">
+    <div className={`scene3d ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""}`}>
       <div className="scene3d-toolbar" aria-label="3D camera controls">
         {Object.entries(cameraPresets).map(([key, view]) => (
           <button
             key={key}
             type="button"
             className={preset === key ? "active" : ""}
-            onClick={() => setPreset(key as CameraPreset)}
+            onClick={() => chooseCameraPreset(key as CameraPreset)}
+            aria-pressed={preset === key}
+            aria-keyshortcuts="V"
           >
             {view.label}
           </button>
@@ -1168,7 +1228,9 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
               key={key}
               type="button"
               className={anatomyViewMode === key ? "active" : ""}
-              onClick={() => setAnatomyViewMode(key as AnatomyViewMode)}
+              onClick={() => chooseAnatomyViewMode(key as AnatomyViewMode)}
+              aria-pressed={anatomyViewMode === key}
+              aria-keyshortcuts="A"
             >
               {label}
             </button>
@@ -1180,7 +1242,9 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
               key={key}
               type="button"
               className={surfaceMapMode === key ? "active" : ""}
-              onClick={() => setSurfaceMapMode(key as SurfaceMapMode)}
+              onClick={() => chooseSurfaceMapMode(key as SurfaceMapMode)}
+              aria-pressed={surfaceMapMode === key}
+              aria-keyshortcuts="F"
             >
               {label}
             </button>
@@ -1192,7 +1256,9 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
               key={key}
               type="button"
               className={isochroneScope === key ? "active" : ""}
-              onClick={() => setIsochroneScope(key as IsochroneScope)}
+              onClick={() => chooseIsochroneScope(key as IsochroneScope)}
+              aria-pressed={isochroneScope === key}
+              aria-keyshortcuts="I"
             >
               {label}
             </button>

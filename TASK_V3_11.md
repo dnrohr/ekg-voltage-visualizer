@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,11 @@ Make the V3 visualizer dependable and usable across common devices and accessibi
 
 ## Verification Notes
 
-Pending.
+Completed.
+
+- Added controlled V3 camera, anatomy, surface-map, and isochrone state so the app can save/export the exact current visual state.
+- Added keyboard operation for scenario, comparison, learner mode, V3 camera/anatomy/surface/isochrone controls, and layer shortcuts.
+- Added V3 high-contrast and reduced-motion paths for shader/fallback material choices and 3D UI styling.
+- Added a V3 render-budget profile in the UI and study snapshot export.
+- Added `docs/V3_PERFORMANCE_ACCESSIBILITY_EXPORT.md`.
+- Verification: `npm test`, `npm run typecheck`, `npm run build`, and desktop/mobile browser smoke.

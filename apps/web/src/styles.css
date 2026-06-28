@@ -1098,6 +1098,24 @@ h3 {
   color: #0f4f4a;
 }
 
+.scene3d.high-contrast .scene3d-toolbar button,
+.scene3d.high-contrast .surface-map-legend,
+.scene3d.high-contrast .isochrone-caption,
+.scene3d.high-contrast .scene3d-canvas {
+  border-color: #111827;
+  color: #0b1220;
+}
+
+.scene3d.high-contrast .scene3d-toolbar button.active {
+  border-color: #000000;
+  background: #fef3c7;
+  color: #000000;
+}
+
+.scene3d.reduced-motion .isochrone-caption::after {
+  content: " Reduced motion: playback is paused and wider wave bands improve static inspection.";
+}
+
 .anatomy-mode-toggle,
 .surface-mode-toggle {
   display: flex;
@@ -1657,6 +1675,27 @@ input[type="range"] {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.render-profile {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.render-profile .eyebrow {
+  grid-column: 1 / -1;
+}
+
+.render-profile span {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d7dee5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #263445;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .validation-checks span.pass {
   border-color: #14b8a6;
 }
@@ -1691,6 +1730,10 @@ input[type="range"] {
   .region-timing-grid,
   .region-lead-groups,
   .validation-checks {
+    grid-template-columns: 1fr;
+  }
+
+  .render-profile {
     grid-template-columns: 1fr;
   }
 }

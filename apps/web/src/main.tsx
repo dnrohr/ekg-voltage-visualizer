@@ -17,11 +17,12 @@ import {
   scenarioLibrary,
   stepClock,
   validateScenario,
+  type IsochroneScope,
   type PlaybackSpeed,
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic, SelectedLeadTrace } from "@ekg/cardio-render-2d";
-import { TorsoScene3D, type AnatomyViewMode, type CameraPreset, type TorsoScene3DLayers } from "@ekg/cardio-render-3d";
+import { TorsoScene3D, type AnatomyViewMode, type CameraPreset, type SurfaceMapMode, type TorsoScene3DLayers } from "@ekg/cardio-render-3d";
 import "./styles.css";
 
 const formatPotential = (value: number) =>
@@ -44,6 +45,13 @@ const leadPolarityLabel = (voltage: number) =>
 
 type LearnerMode = "probe-to-heart" | "heart-to-probe" | "advanced";
 
+type V3ViewState = {
+  cameraPreset: CameraPreset;
+  anatomyViewMode: AnatomyViewMode;
+  surfaceMapMode: SurfaceMapMode;
+  isochroneScope: IsochroneScope;
+};
+
 type VisualLayers = TorsoScene3DLayers & {
   chamberVolume: boolean;
   ecgGrid: boolean;
@@ -58,6 +66,12 @@ const learnerModes: Record<LearnerMode, string> = {
   "heart-to-probe": "Heart to leads",
   advanced: "Advanced"
 };
+
+const learnerModeOrder = Object.keys(learnerModes) as LearnerMode[];
+const cameraPresetOrder: CameraPreset[] = ["frontal", "transverse", "left-lateral", "heart-close"];
+const anatomyViewModeOrder: AnatomyViewMode[] = ["external", "cutaway", "chambers"];
+const surfaceMapModeOrder: SurfaceMapMode[] = ["wavefront", "electrical-state"];
+const isochroneScopeOrder: IsochroneScope[] = ["whole-heart", "atria", "ventricles"];
 
 const layerPresets: Record<LearnerMode, VisualLayers> = {
   "probe-to-heart": {
@@ -133,6 +147,20 @@ const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Elect
   { key: "ecgLabels", label: "Labels", group: "ECG" },
   { key: "projectionMarkers", label: "Projection marker", group: "ECG" },
   { key: "contributionHighlights", label: "Region highlights", group: "ECG" }
+];
+
+const v3LayerKeys: Array<keyof TorsoScene3DLayers> = [
+  "wavefront",
+  "contours",
+  "stateMap",
+  "vector",
+  "leadProjection",
+  "leadContribution",
+  "contraction",
+  "chamberVolume",
+  "valveState",
+  "flow",
+  "phaseLabels"
 ];
 
 type Lesson = {
@@ -295,8 +323,12 @@ function App() {
   const [comparisonId, setComparisonId] = React.useState("right-bundle-branch-block");
   const [selectedRegionId, setSelectedRegionId] = React.useState("lv-lateral");
   const [learnerMode, setLearnerMode] = React.useState<LearnerMode>("probe-to-heart");
-  const [lessonCameraPreset, setLessonCameraPreset] = React.useState<CameraPreset>(lessons[0].cameraPreset);
-  const [lessonAnatomyViewMode, setLessonAnatomyViewMode] = React.useState<AnatomyViewMode>(lessons[0].anatomyViewMode);
+  const [v3ViewState, setV3ViewState] = React.useState<V3ViewState>({
+    cameraPreset: lessons[0].cameraPreset,
+    anatomyViewMode: lessons[0].anatomyViewMode,
+    surfaceMapMode: "wavefront",
+    isochroneScope: "ventricles"
+  });
   const [visualLayers, setVisualLayers] = React.useState<VisualLayers>(layerPresets["probe-to-heart"]);
   const [selectedLessonId, setSelectedLessonId] = React.useState(lessons[0].id);
   const [quizChoiceId, setQuizChoiceId] = React.useState<string | null>(null);
@@ -368,6 +400,23 @@ function App() {
       ),
     [state]
   );
+  const v3RenderProfile = React.useMemo(() => {
+    const segmentCount = state.heartMeshField.segments.length;
+    const vertexCount = state.heartMeshField.vertices.length;
+    const faceCount = state.heartMeshField.faces.length;
+    const currentContourCount = state.isochroneMaps[v3ViewState.isochroneScope].bands.filter((band) => band.isCurrentWavefront).length;
+    const enabled3DLayers = v3LayerKeys.filter((key) => visualLayers[key]);
+
+    return {
+      segmentCount,
+      vertexCount,
+      faceCount,
+      currentContourCount,
+      enabled3DLayers,
+      shaderPath: visualLayers.wavefront || visualLayers.stateMap ? "shader wavefront material with standard-material fallback" : "static overlay layers",
+      devicePixelRatioCap: 2
+    };
+  }, [state.heartMeshField, state.isochroneMaps, v3ViewState.isochroneScope, visualLayers]);
 
   React.useEffect(() => {
     scenarioRef.current = scenario;
@@ -413,6 +462,7 @@ function App() {
         comparisonId?: string;
         highContrast?: boolean;
         reducedMotion?: boolean;
+        v3ViewState?: Partial<V3ViewState>;
       };
       if (preset.selectedLead && leadOrder.includes(preset.selectedLead)) setSelectedLead(preset.selectedLead);
       if (preset.selectedRegionId) setSelectedRegionId(preset.selectedRegionId);
@@ -422,6 +472,14 @@ function App() {
       if (preset.comparisonId) setComparisonId(preset.comparisonId);
       if (typeof preset.highContrast === "boolean") setHighContrast(preset.highContrast);
       if (typeof preset.reducedMotion === "boolean") setReducedMotion(preset.reducedMotion);
+      if (preset.v3ViewState) {
+        setV3ViewState((current) => ({
+          cameraPreset: preset.v3ViewState?.cameraPreset && cameraPresetOrder.includes(preset.v3ViewState.cameraPreset) ? preset.v3ViewState.cameraPreset : current.cameraPreset,
+          anatomyViewMode: preset.v3ViewState?.anatomyViewMode && anatomyViewModeOrder.includes(preset.v3ViewState.anatomyViewMode) ? preset.v3ViewState.anatomyViewMode : current.anatomyViewMode,
+          surfaceMapMode: preset.v3ViewState?.surfaceMapMode && surfaceMapModeOrder.includes(preset.v3ViewState.surfaceMapMode) ? preset.v3ViewState.surfaceMapMode : current.surfaceMapMode,
+          isochroneScope: preset.v3ViewState?.isochroneScope && isochroneScopeOrder.includes(preset.v3ViewState.isochroneScope) ? preset.v3ViewState.isochroneScope : current.isochroneScope
+        }));
+      }
     } catch {
       window.localStorage.removeItem("ekg-view-preset");
     }
@@ -441,6 +499,39 @@ function App() {
         setTimeMs((current) => stepClock(scenarioRef.current, current, -millisecondStepMs).timeMs);
       } else if (event.key.toLowerCase() === "l") {
         setSelectedLead((current) => leadOrder[(leadOrder.indexOf(current) + 1) % leadOrder.length]);
+      } else if (event.key.toLowerCase() === "s") {
+        setScenarioId((current) => scenarioLibrary[(scenarioLibrary.findIndex((item) => item.id === current) + 1) % scenarioLibrary.length].id);
+      } else if (event.key.toLowerCase() === "c") {
+        setComparisonId((current) => scenarioLibrary[(scenarioLibrary.findIndex((item) => item.id === current) + 1) % scenarioLibrary.length].id);
+      } else if (event.key.toLowerCase() === "m") {
+        setLearnerMode((current) => {
+          const nextMode = learnerModeOrder[(learnerModeOrder.indexOf(current) + 1) % learnerModeOrder.length];
+          setVisualLayers(layerPresets[nextMode]);
+          return nextMode;
+        });
+      } else if (event.key.toLowerCase() === "v") {
+        setV3ViewState((current) => ({
+          ...current,
+          cameraPreset: cameraPresetOrder[(cameraPresetOrder.indexOf(current.cameraPreset) + 1) % cameraPresetOrder.length]
+        }));
+      } else if (event.key.toLowerCase() === "a") {
+        setV3ViewState((current) => ({
+          ...current,
+          anatomyViewMode: anatomyViewModeOrder[(anatomyViewModeOrder.indexOf(current.anatomyViewMode) + 1) % anatomyViewModeOrder.length]
+        }));
+      } else if (event.key.toLowerCase() === "f") {
+        setV3ViewState((current) => ({
+          ...current,
+          surfaceMapMode: surfaceMapModeOrder[(surfaceMapModeOrder.indexOf(current.surfaceMapMode) + 1) % surfaceMapModeOrder.length]
+        }));
+      } else if (event.key.toLowerCase() === "i") {
+        setV3ViewState((current) => ({
+          ...current,
+          isochroneScope: isochroneScopeOrder[(isochroneScopeOrder.indexOf(current.isochroneScope) + 1) % isochroneScopeOrder.length]
+        }));
+      } else if (/^[1-9]$/.test(event.key)) {
+        const layer = layerLabels[Number(event.key) - 1];
+        if (layer) setVisualLayers((current) => ({ ...current, [layer.key]: !current[layer.key] }));
       } else if (event.key.toLowerCase() === "r") {
         setSelectedRegionId((current) => {
           const regions = surfaceRegionsRef.current;
@@ -459,8 +550,11 @@ function App() {
           setTimeMs(nextLesson.timeMs);
           setScenarioId(nextLesson.scenarioId);
           setComparisonId(nextLesson.comparisonId);
-          setLessonCameraPreset(nextLesson.cameraPreset);
-          setLessonAnatomyViewMode(nextLesson.anatomyViewMode);
+          setV3ViewState((current) => ({
+            ...current,
+            cameraPreset: nextLesson.cameraPreset,
+            anatomyViewMode: nextLesson.anatomyViewMode
+          }));
           setLearnerMode(nextLesson.mode);
           setVisualLayers(layerPresets[nextLesson.mode]);
           return nextLesson.id;
@@ -475,7 +569,7 @@ function App() {
   const savePreset = () => {
     window.localStorage.setItem(
       "ekg-view-preset",
-      JSON.stringify({ selectedLead, selectedRegionId, learnerMode, visualLayers, scenarioId, comparisonId, highContrast, reducedMotion })
+      JSON.stringify({ selectedLead, selectedRegionId, learnerMode, visualLayers, scenarioId, comparisonId, highContrast, reducedMotion, v3ViewState })
     );
   };
 
@@ -496,8 +590,11 @@ function App() {
     setTimeMs(lesson.timeMs);
     setScenarioId(lesson.scenarioId);
     setComparisonId(lesson.comparisonId);
-    setLessonCameraPreset(lesson.cameraPreset);
-    setLessonAnatomyViewMode(lesson.anatomyViewMode);
+    setV3ViewState((current) => ({
+      ...current,
+      cameraPreset: lesson.cameraPreset,
+      anatomyViewMode: lesson.anatomyViewMode
+    }));
     applyLearnerMode(lesson.mode);
   };
 
@@ -506,7 +603,7 @@ function App() {
     if (!canvas) return;
 
     const link = document.createElement("a");
-    link.download = `ekg-visualizer-${scenario.id}-${selectedLead}.png`;
+    link.download = `ekg-visualizer-${scenario.id}-${selectedLead}-${v3ViewState.cameraPreset}-${v3ViewState.anatomyViewMode}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
@@ -521,6 +618,12 @@ function App() {
       selectedRegionId: regionInspection?.regionId,
       learnerMode,
       visualLayers,
+      v3ViewState,
+      accessibility: {
+        highContrast,
+        reducedMotion
+      },
+      renderProfile: v3RenderProfile,
       leadVoltage: state.leadVoltages[selectedLead],
       phaseLabel: state.phaseLabel,
       mechanicalPhase: state.mechanical.phaseLabel,
@@ -775,14 +878,15 @@ function App() {
       <section className="layer-panel" aria-label="Layer controls and learner modes">
         <div className="learner-mode-controls" aria-label="Learner mode">
           {Object.entries(learnerModes).map(([mode, label]) => (
-            <button
-              key={mode}
-              type="button"
-              className={learnerMode === mode ? "active" : ""}
-              onClick={() => applyLearnerMode(mode as LearnerMode)}
-            >
-              {label}
-            </button>
+              <button
+                key={mode}
+                type="button"
+                className={learnerMode === mode ? "active" : ""}
+                onClick={() => applyLearnerMode(mode as LearnerMode)}
+                aria-pressed={learnerMode === mode}
+              >
+                {label}
+              </button>
           ))}
         </div>
         <div className="layer-groups">
@@ -795,6 +899,11 @@ function App() {
                     type="checkbox"
                     checked={visualLayers[item.key]}
                     onChange={() => toggleLayer(item.key)}
+                    aria-keyshortcuts={
+                      layerLabels.findIndex((candidate) => candidate.key === item.key) < 9
+                        ? String(layerLabels.findIndex((candidate) => candidate.key === item.key) + 1)
+                        : undefined
+                    }
                   />
                   <span>{item.label}</span>
                 </label>
@@ -916,8 +1025,16 @@ function App() {
           selectedRegionId={regionInspection?.regionId}
           onSelectRegion={setSelectedRegionId}
           layers={visualLayers}
-          cameraPreset={lessonCameraPreset}
-          anatomyViewMode={lessonAnatomyViewMode}
+          cameraPreset={v3ViewState.cameraPreset}
+          anatomyViewMode={v3ViewState.anatomyViewMode}
+          surfaceMapMode={v3ViewState.surfaceMapMode}
+          isochroneScope={v3ViewState.isochroneScope}
+          highContrast={highContrast}
+          reducedMotion={reducedMotion}
+          onCameraPresetChange={(cameraPreset) => setV3ViewState((current) => ({ ...current, cameraPreset }))}
+          onAnatomyViewModeChange={(anatomyViewMode) => setV3ViewState((current) => ({ ...current, anatomyViewMode }))}
+          onSurfaceMapModeChange={(surfaceMapMode) => setV3ViewState((current) => ({ ...current, surfaceMapMode }))}
+          onIsochroneScopeChange={(isochroneScope) => setV3ViewState((current) => ({ ...current, isochroneScope }))}
         />
         {regionInspection && (
           <div className="region-inspector" aria-label="Selected surface region inspection">
@@ -1010,6 +1127,13 @@ function App() {
           <div>
             <p className="eyebrow">Reference overlay</p>
             <p>{referenceTrace.label} ({referenceTrace.provenance}). {scenario.reference?.notes}</p>
+          </div>
+          <div className="render-profile" aria-label="V3 render budget profile">
+            <p className="eyebrow">V3 render budget</p>
+            <span>{v3RenderProfile.segmentCount} segments</span>
+            <span>{v3RenderProfile.vertexCount} vertices</span>
+            <span>{v3RenderProfile.faceCount} faces</span>
+            <span>{v3RenderProfile.currentContourCount} current contours</span>
           </div>
           <div className="validation-checks">
             {validationReport.checks.map((check) => (
