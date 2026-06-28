@@ -490,6 +490,7 @@ export type LeadProbeExplanation = {
 };
 
 export type RegionLeadRelationship = "best-seen" | "opposite";
+export type SelectedLeadRegionRelationship = RegionLeadRelationship | "indirect";
 
 export type RegionLeadIndicator = {
   lead: LeadName;
@@ -512,6 +513,13 @@ export type RegionLeadInspection = {
   bestSeenLeads: LeadName[];
   oppositeLeads: LeadName[];
   leadIndicators: RegionLeadIndicator[];
+  selectedLead?: LeadName;
+  selectedLeadRelationship?: SelectedLeadRegionRelationship;
+  selectedLeadContributionClass?: LeadContributionClass;
+  tissueStateExplanation: string;
+  wavefrontTimingSummary: string;
+  leadRelationshipSummary?: string;
+  safetyNote: string;
   summary: string;
 };
 

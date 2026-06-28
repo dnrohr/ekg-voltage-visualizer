@@ -510,8 +510,8 @@ describe("cardio-engine simulation", () => {
 
   it("explains selected surface regions with deterministic lead signatures", () => {
     const state = evaluateScenario(normalSinusRhythmScenario, 340 / 800);
-    const lv = explainSurfaceRegion(state, "lv-lateral");
-    const rv = explainSurfaceRegion(state, "rv-free-wall");
+    const lv = explainSurfaceRegion(state, "lv-lateral", "V6");
+    const rv = explainSurfaceRegion(state, "rv-free-wall", "II");
     const septum = explainSurfaceRegion(state, "septal-right-facing");
     const atrium = explainSurfaceRegion(state, "ra-high-lateral");
 
@@ -519,8 +519,15 @@ describe("cardio-engine simulation", () => {
     expect(lv?.oppositeLeads).toEqual(["aVR", "V1"]);
     expect(lv?.leadIndicators.map((item) => item.lead)).toContain("V6");
     expect(lv?.contractionOnsetMs).toBeGreaterThan(lv?.activationTimeMs ?? 0);
+    expect(lv?.selectedLeadRelationship).toBe("best-seen");
+    expect(lv?.selectedLeadContributionClass).toBe("weak");
+    expect(lv?.leadRelationshipSummary).toContain("V6");
+    expect(lv?.tissueStateExplanation).toContain("future contributor");
+    expect(lv?.wavefrontTimingSummary).toContain("Activation");
+    expect(lv?.safetyNote).toContain("not to localize disease");
 
     expect(rv?.bestSeenLeads).toContain("V1");
+    expect(rv?.selectedLeadRelationship).toBe("indirect");
     expect(septum?.bestSeenLeads).toEqual(["V1", "V2"]);
     expect(atrium?.chamber).toBe("RA");
     expect(atrium?.contractionOnsetMs).toBeGreaterThan(atrium?.activationTimeMs ?? 0);

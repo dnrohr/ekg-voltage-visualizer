@@ -52,6 +52,8 @@ Reference ECG example. Labels and signals are provided for educational compariso
 - Identify synthetic, approximate, and reference-derived data clearly.
 - Explain polarity through source distribution and lead definition.
 - Prefer a simpler accurate explanation over a more realistic-looking misleading one.
+- In selected-region inspection panels, frame "best-seen", "opposite", and "indirect" as educational lead relationships, not anatomical localization or diagnostic evidence.
+- When describing tissue state, distinguish depolarizing wavefront, active/refractory tissue, repolarizing tissue, and recovered tissue without implying patient-specific electrophysiology.
 
 ## Risk Notes
 

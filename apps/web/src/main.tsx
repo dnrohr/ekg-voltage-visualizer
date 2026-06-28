@@ -262,8 +262,8 @@ function App() {
     [selectedLead, state]
   );
   const regionInspection = React.useMemo(
-    () => explainSurfaceRegion(state, selectedRegionId) ?? explainSurfaceRegion(state, state.surfaceRegions[0]?.id ?? ""),
-    [selectedRegionId, state]
+    () => explainSurfaceRegion(state, selectedRegionId, selectedLead) ?? explainSurfaceRegion(state, state.surfaceRegions[0]?.id ?? "", selectedLead),
+    [selectedLead, selectedRegionId, state]
   );
   const comparisonExplanation = React.useMemo(
     () => explainLead(comparisonState, selectedLead),
@@ -800,6 +800,25 @@ function App() {
               <p className="eyebrow">Selected region</p>
               <h3>{regionInspection.label}</h3>
               <p>{regionInspection.summary}</p>
+              <div className="region-study-card" aria-label="Selected lead relationship for region">
+                <p className="eyebrow">Study focus</p>
+                <h4>{selectedLead} relationship: {regionInspection.selectedLeadRelationship}</h4>
+                <p>{regionInspection.leadRelationshipSummary}</p>
+              </div>
+              <div className="region-state-explainer" aria-label="Tissue state explanation">
+                <span>
+                  <strong>Electrical state</strong>
+                  {regionInspection.tissueStateExplanation}
+                </span>
+                <span>
+                  <strong>Wavefront timing</strong>
+                  {regionInspection.wavefrontTimingSummary}
+                </span>
+                <span>
+                  <strong>Contributor class</strong>
+                  {regionInspection.selectedLeadContributionClass ?? "weak"}
+                </span>
+              </div>
               <div className="region-timing-grid">
                 <span>
                   <strong>Activation</strong>
@@ -822,6 +841,7 @@ function App() {
                 <span><strong>Best seen</strong>{regionInspection.bestSeenLeads.join(", ")}</span>
                 <span><strong>Opposite</strong>{regionInspection.oppositeLeads.join(", ")}</span>
               </div>
+              <p className="region-safety-note">{regionInspection.safetyNote}</p>
             </div>
             <div className="region-picker" aria-label="Keyboard surface region selection">
               {state.surfaceRegions.map((region) => (

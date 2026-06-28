@@ -5,6 +5,9 @@
 **Action potential duration**  
 The time a cardiac tissue region remains electrically active before repolarizing. Regional differences help explain T wave behavior.
 
+**Active / refractory tissue**
+Tissue that has already depolarized and is not ready to activate again. In the app, it may still shape the field but is no longer the moving depolarization wavefront.
+
 **Activation**  
 The process of cardiac tissue depolarizing over time. In the app, activation is represented as deterministic state derived from scenario timing and cardiac-cycle time.
 
@@ -32,6 +35,9 @@ A defined voltage measurement, not a physical wire path. For example, Lead I is 
 **Lead axis**  
 The approximate direction of a lead's positive measurement orientation. Useful for vector explanations, especially limb leads.
 
+**Lead-region relationship**
+An educational label for whether a selected region is best seen by a lead, viewed from the opposite side, or only indirectly related in the simplified model. It is not a clinical localization claim.
+
 **Limb leads**  
 Leads I, II, and III. They are computed from RA, LA, and LL electrode potentials.
 
@@ -49,6 +55,9 @@ The ECG deflection associated primarily with ventricular depolarization.
 
 **Repolarization**  
 The electrical recovery process after depolarization. Ventricular repolarization produces the T wave in the normal teaching model.
+
+**Recovered tissue**
+Tissue that has completed repolarization in the current teaching cycle and contributes little changing signal until the next activation.
 
 **Scenario**  
 A deterministic set of timing, anatomy, activation, repolarization, and display settings used to generate one educational example.

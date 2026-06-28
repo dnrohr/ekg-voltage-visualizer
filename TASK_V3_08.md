@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -36,4 +36,17 @@ Improve the learner-facing explanations around selected mesh regions, chambers, 
 
 ## Verification Notes
 
-Pending.
+Completed:
+
+- Extended selected-region inspection with med-student-focused fields for tissue-state meaning, wavefront timing, selected-lead relationship, contributor class, and educational safety wording.
+- Updated the anatomy panel with concise Study focus, Electrical state, Wavefront timing, Contributor class, and safety-note blocks.
+- Kept selected-region explanations synchronized with the current selected lead.
+- Documented lead-region relationship and active/refractory/recovered tissue language in safety and glossary docs.
+- Added deterministic engine tests for the new selected-lead explanation fields.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke for selected-region study-focus copy at `http://127.0.0.1:5187/`

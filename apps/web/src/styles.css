@@ -1187,6 +1187,51 @@ h3 {
   line-height: 1.45;
 }
 
+.region-study-card {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  background: #eff6ff;
+}
+
+.region-study-card h4 {
+  margin: 0;
+  color: #1e3a8a;
+  font-size: 0.9rem;
+}
+
+.region-state-explainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(138px, 1fr));
+  gap: 8px;
+}
+
+.region-state-explainer span {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d7dee5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.region-state-explainer strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #17202a;
+}
+
+.region-safety-note {
+  padding-top: 2px;
+  color: #667085;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .region-timing-grid,
 .region-lead-groups {
   display: grid;
