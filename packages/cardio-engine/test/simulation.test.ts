@@ -2,9 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   computeLeadVoltage,
   computeWilsonCentralTerminal,
+  advanceClock,
+  createClockState,
+  cycleMsToNormalized,
   evaluateScenario,
+  frameStepMs,
   generateSyntheticReferenceTrace,
+  millisecondStepMs,
+  normalizedToCycleMs,
+  playbackSpeeds,
   scenarioLibrary,
+  stepClock,
   type ElectrodePotentials,
   leadOrder,
   normalSinusRhythmScenario,
@@ -84,6 +92,36 @@ describe("cardio-engine simulation", () => {
 
     expect(state.phase).toBe("st-segment");
     expect(Math.abs(state.leadVoltages.II)).toBeLessThan(0.08);
+  });
+
+  it("converts continuous millisecond clock time to normalized cycle time", () => {
+    const cycleMs = normalSinusRhythmScenario.timing.cycleMs;
+
+    expect(cycleMsToNormalized(340, cycleMs)).toBeCloseTo(0.425);
+    expect(cycleMsToNormalized(1140, cycleMs)).toBeCloseTo(0.425);
+    expect(normalizedToCycleMs(1.425, cycleMs)).toBeCloseTo(340);
+  });
+
+  it("advances the cardiac clock by playback speed and wraps by cycle", () => {
+    expect(playbackSpeeds).toContain(0.05);
+
+    const advanced = advanceClock(normalSinusRhythmScenario, 790, 400, 0.05);
+    expect(advanced.timeMs).toBeCloseTo(10);
+    expect(advanced.normalizedTime).toBeCloseTo(10 / 800);
+
+    const realTime = advanceClock(normalSinusRhythmScenario, 300, 40, 1);
+    expect(realTime.timeMs).toBeCloseTo(340);
+  });
+
+  it("steps the cardiac clock by millisecond and frame increments", () => {
+    const msStep = stepClock(normalSinusRhythmScenario, 340, millisecondStepMs);
+    const frameStep = stepClock(normalSinusRhythmScenario, 340, frameStepMs);
+    const backward = stepClock(normalSinusRhythmScenario, 0, -millisecondStepMs);
+
+    expect(createClockState(normalSinusRhythmScenario, 340).normalizedTime).toBeCloseTo(0.425);
+    expect(msStep.timeMs).toBeCloseTo(341);
+    expect(frameStep.timeMs).toBeCloseTo(356);
+    expect(backward.timeMs).toBeCloseTo(799);
   });
 
   it("orders normal activation from atria through septum, apex, and base", () => {

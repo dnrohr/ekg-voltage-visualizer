@@ -24,7 +24,7 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 | Task | Status | Title | Depends on | File |
 |---|---|---|---|---|
 | V2-00 | Done | Roadmap and V2 task scaffold | `V2_VISION.md` | `TASK_V2_00.md` |
-| V2-01 | Not started | Continuous cardiac clock and precision playback | V2-00 | `TASK_V2_01.md` |
+| V2-01 | Done | Continuous cardiac clock and precision playback | V2-00 | `TASK_V2_01.md` |
 | V2-02 | Not started | Educational heart surface model | V2-01 | `TASK_V2_02.md` |
 | V2-03 | Not started | Live activation and transmembrane maps | V2-02 | `TASK_V2_03.md` |
 | V2-04 | Not started | Isochrone contour map layer | V2-03 | `TASK_V2_04.md` |
@@ -39,9 +39,10 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 
 ## Current Next Task
 
-`TASK_V2_01.md`
+`TASK_V2_02.md`
 
 ## Notes
 
 - V2-00 generated `ROADMAP_V2.md`, this index, and task files from `V2_VISION.md`.
+- V2-01 added continuous millisecond clock helpers, 20x slowdown playback, millisecond/frame stepping, clock docs, tests, and UI controls.
 - V2 work should preserve the V1 educational disclaimer and avoid clinical diagnostic claims.

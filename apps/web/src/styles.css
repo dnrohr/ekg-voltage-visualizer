@@ -352,7 +352,8 @@ h3 {
 }
 
 .lead-picker button,
-.speed-control button {
+.speed-control button,
+.step-button {
   min-height: 34px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -622,6 +623,7 @@ h3 {
 
 .transport-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
@@ -658,8 +660,23 @@ h3 {
 
 .speed-control {
   display: grid;
-  grid-template-columns: repeat(3, 46px);
+  grid-template-columns: repeat(6, minmax(58px, auto));
   gap: 5px;
+}
+
+.speed-control button {
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.step-button {
+  min-width: 58px;
+  padding: 0 8px;
+  background: #ffffff;
+  color: #243041;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .scrubber-wrap {
@@ -910,6 +927,11 @@ input[type="range"] {
   .transport-controls {
     align-items: stretch;
     flex-wrap: wrap;
+  }
+
+  .speed-control {
+    grid-template-columns: repeat(3, minmax(58px, 1fr));
+    width: 100%;
   }
 }
 

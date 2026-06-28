@@ -2,13 +2,20 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Camera, Contrast, Pause, Play, RotateCcw, Save, SkipBack, SkipForward } from "lucide-react";
 import {
+  advanceClock,
+  createClockState,
   evaluateScenario,
   explainLead,
+  frameStepMs,
   generateSyntheticReferenceTrace,
   getScenarioById,
   leadOrder,
+  millisecondStepMs,
+  playbackSpeeds,
   scenarioLibrary,
+  stepClock,
   validateScenario,
+  type PlaybackSpeed,
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic } from "@ekg/cardio-render-2d";
@@ -19,24 +26,25 @@ const formatPotential = (value: number) =>
   `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
 
 function App() {
-  const [time, setTime] = React.useState(0.425);
+  const [timeMs, setTimeMs] = React.useState(340);
   const [selectedLead, setSelectedLead] = React.useState<LeadName>("II");
   const [scenarioId, setScenarioId] = React.useState("normal-sinus-rhythm");
   const [comparisonId, setComparisonId] = React.useState("right-bundle-branch-block");
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [speed, setSpeed] = React.useState(1);
+  const [speed, setSpeed] = React.useState<PlaybackSpeed>(1);
   const [highContrast, setHighContrast] = React.useState(false);
   const [reducedMotion, setReducedMotion] = React.useState(false);
   const lastFrame = React.useRef<number | null>(null);
   const scenario = React.useMemo(() => getScenarioById(scenarioId), [scenarioId]);
   const comparisonScenario = React.useMemo(() => getScenarioById(comparisonId), [comparisonId]);
+  const clock = React.useMemo(() => createClockState(scenario, timeMs), [scenario, timeMs]);
   const state = React.useMemo(
-    () => evaluateScenario(scenario, time),
-    [scenario, time]
+    () => evaluateScenario(scenario, clock.normalizedTime),
+    [clock.normalizedTime, scenario]
   );
   const comparisonState = React.useMemo(
-    () => evaluateScenario(comparisonScenario, time),
-    [comparisonScenario, time]
+    () => evaluateScenario(comparisonScenario, clock.normalizedTime),
+    [clock.normalizedTime, comparisonScenario]
   );
   const explanation = React.useMemo(
     () => explainLead(state, selectedLead),
@@ -73,7 +81,7 @@ function App() {
     const tick = (now: number) => {
       if (lastFrame.current !== null) {
         const elapsedMs = now - lastFrame.current;
-        setTime((current) => (current + (elapsedMs / scenario.timing.cycleMs) * speed) % 1);
+        setTimeMs((current) => advanceClock(scenario, current, elapsedMs, speed).timeMs);
       }
 
       lastFrame.current = now;
@@ -83,6 +91,10 @@ function App() {
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
   }, [isPlaying, reducedMotion, scenario, speed]);
+
+  React.useEffect(() => {
+    setTimeMs((current) => createClockState(scenario, current).timeMs);
+  }, [scenario]);
 
   React.useEffect(() => {
     const stored = window.localStorage.getItem("ekg-view-preset");
@@ -115,9 +127,9 @@ function App() {
         event.preventDefault();
         setIsPlaying((value) => !value);
       } else if (event.key === "ArrowRight") {
-        setTime((current) => (current + 0.01) % 1);
+        setTimeMs((current) => stepClock(scenario, current, millisecondStepMs).timeMs);
       } else if (event.key === "ArrowLeft") {
-        setTime((current) => (current - 0.01 + 1) % 1);
+        setTimeMs((current) => stepClock(scenario, current, -millisecondStepMs).timeMs);
       } else if (event.key.toLowerCase() === "l") {
         setSelectedLead((current) => leadOrder[(leadOrder.indexOf(current) + 1) % leadOrder.length]);
       }
@@ -125,7 +137,7 @@ function App() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [scenario]);
 
   const savePreset = () => {
     window.localStorage.setItem(
@@ -153,7 +165,7 @@ function App() {
               <p className="eyebrow">Synthetic teaching beat</p>
               <h1>EKG Voltage Visualizer</h1>
             </div>
-            <p className="time-readout">{Math.round(state.timeMs)} ms</p>
+            <p className="time-readout">{Math.round(clock.timeMs)} / {clock.cycleMs} ms</p>
           </div>
           <div className="scenario-controls" aria-label="Scenario controls">
             <label htmlFor="scenario-select">
@@ -268,24 +280,30 @@ function App() {
           <button className="icon-button" type="button" onClick={() => setIsPlaying((value) => !value)} aria-label={isPlaying ? "Pause beat animation" : "Play beat animation"}>
             {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
-          <button className="icon-button" type="button" onClick={() => setTime(0)} aria-label="Reset to start">
+          <button className="icon-button" type="button" onClick={() => setTimeMs(0)} aria-label="Reset to start">
             <RotateCcw size={18} />
           </button>
-          <button className="icon-button" type="button" onClick={() => setTime((value) => (value - 0.02 + 1) % 1)} aria-label="Step backward">
+          <button className="icon-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, -frameStepMs).timeMs)} aria-label="Step backward one frame">
             <SkipBack size={18} />
           </button>
-          <button className="icon-button" type="button" onClick={() => setTime((value) => (value + 0.02) % 1)} aria-label="Step forward">
+          <button className="icon-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, frameStepMs).timeMs)} aria-label="Step forward one frame">
             <SkipForward size={18} />
           </button>
+          <button className="step-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, -millisecondStepMs).timeMs)}>
+            -1 ms
+          </button>
+          <button className="step-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, millisecondStepMs).timeMs)}>
+            +1 ms
+          </button>
           <div className="speed-control" aria-label="Playback speed">
-            {[0.5, 1, 2].map((value) => (
+            {playbackSpeeds.map((value) => (
               <button
                 key={value}
                 type="button"
                 className={speed === value ? "active" : ""}
                 onClick={() => setSpeed(value)}
               >
-                {value}x
+                {value === 0.05 ? "20x slow" : `${value}x`}
               </button>
             ))}
           </div>
@@ -307,10 +325,10 @@ function App() {
             aria-label="Scrub through cardiac cycle"
             type="range"
             min="0"
-            max="1"
-            step="0.001"
-            value={time}
-            onChange={(event) => setTime(Number(event.target.value))}
+            max={clock.cycleMs}
+            step="1"
+            value={clock.timeMs}
+            onChange={(event) => setTimeMs(Number(event.target.value))}
           />
           <div className="phase-markers" aria-hidden="true">
             <span style={{ left: `${(scenario.timing.pPeakMs / scenario.timing.cycleMs) * 100}%` }}>P</span>

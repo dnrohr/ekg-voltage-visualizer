@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -39,4 +39,11 @@ Introduce a V2 cardiac clock model that supports continuous millisecond time, re
 
 ## Verification Notes
 
-Record tests, browser checks, and any timing assumptions.
+Implemented `packages/cardio-engine/src/clock.ts` with millisecond wrapping, normalized conversion, playback advancement, and exact stepping helpers. The UI now stores cardiac time in milliseconds, derives normalized time for simulation, supports `0.05x` playback for 20x slowdown, exposes `1 ms` and `16 ms` frame steps, and displays current/total cycle time.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke at `http://127.0.0.1:5187`: verified 20x slowdown button, millisecond/frame step controls, millisecond scrubber, cycle readout, and no horizontal overflow.
