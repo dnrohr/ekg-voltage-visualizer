@@ -122,6 +122,105 @@ const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Elect
   { key: "contributionHighlights", label: "Region highlights", group: "ECG" }
 ];
 
+type Lesson = {
+  id: string;
+  title: string;
+  focus: string;
+  lead: LeadName;
+  regionId: string;
+  timeMs: number;
+  mode: LearnerMode;
+  prompt: string;
+  options: Array<{ id: string; label: string; correct: boolean; feedback: string }>;
+};
+
+const lessons: Lesson[] = [
+  {
+    id: "directional-view",
+    title: "Lead as directional view",
+    focus: "A lead rises when the dominant vector points toward its positive side.",
+    lead: "II",
+    regionId: "apical-ventricles",
+    timeMs: 340,
+    mode: "probe-to-heart",
+    prompt: "At this moment, why is Lead II positive?",
+    options: [
+      { id: "toward", label: "The vector points toward Lead II's positive side.", correct: true, feedback: "Yes. Lead II is acting like a directional view of the dominant vector." },
+      { id: "electrode", label: "Electricity travels down the Lead II wire.", correct: false, feedback: "Not quite. A lead is a voltage measurement, not a path that electricity travels along." }
+    ]
+  },
+  {
+    id: "limb-leads",
+    title: "Limb leads",
+    focus: "I, II, III, aVR, aVL, and aVF compare limb-electrode potentials from different frontal views.",
+    lead: "aVR",
+    regionId: "apical-ventricles",
+    timeMs: 340,
+    mode: "probe-to-heart",
+    prompt: "Why is aVR often negative during this simplified QRS moment?",
+    options: [
+      { id: "away", label: "The main vector points away from aVR's positive side.", correct: true, feedback: "Right. aVR views from the right-arm positive side, opposite the dominant ventricular vector here." },
+      { id: "broken", label: "The aVR electrode is inactive.", correct: false, feedback: "No. aVR is an augmented lead derived from limb electrodes; it is still a computed voltage." }
+    ]
+  },
+  {
+    id: "precordial",
+    title: "Precordial leads",
+    focus: "Chest leads compare local chest electrodes to the Wilson central terminal, so V1 and V5 can see different sides of ventricular activation.",
+    lead: "V5",
+    regionId: "lv-lateral",
+    timeMs: 348,
+    mode: "heart-to-probe",
+    prompt: "Which selected-region leads should notice the LV lateral wall most directly?",
+    options: [
+      { id: "lateral", label: "I, aVL, V5, and V6.", correct: true, feedback: "Correct. The selected region metadata marks these as best-seen leads for the LV lateral wall." },
+      { id: "right", label: "V1 and aVR only.", correct: false, feedback: "Those are opposite-side views for this selected region in the teaching model." }
+    ]
+  },
+  {
+    id: "qrs-propagation",
+    title: "Normal ventricular depolarization",
+    focus: "The wavefront moves from septum and apex toward later ventricular regions while ECG traces update continuously.",
+    lead: "V1",
+    regionId: "septal-right-facing",
+    timeMs: 310,
+    mode: "heart-to-probe",
+    prompt: "What activates before the lateral LV wall in this model?",
+    options: [
+      { id: "septum", label: "The right-facing septum.", correct: true, feedback: "Yes. Septal activation begins early, before lateral LV activation." },
+      { id: "late", label: "The basal ventricular ring only.", correct: false, feedback: "The basal ring is a later ventricular region in this teaching sequence." }
+    ]
+  },
+  {
+    id: "mechanical-delay",
+    title: "Mechanical delay",
+    focus: "Electrical activation precedes visible squeeze; isovolumetric phases can have closed valves with little volume change.",
+    lead: "II",
+    regionId: "septal-right-facing",
+    timeMs: 364,
+    mode: "advanced",
+    prompt: "At isovolumetric contraction, what is the key mechanical lesson?",
+    options: [
+      { id: "delay", label: "Valves can be closed while volume stays nearly fixed.", correct: true, feedback: "Exactly. The visible squeeze and flow do not happen at the same instant as depolarization." },
+      { id: "instant", label: "The ventricles instantly empty at QRS onset.", correct: false, feedback: "No. The model keeps ventricular volume high until ejection timing begins." }
+    ]
+  },
+  {
+    id: "reconstruct",
+    title: "Reconstructing from leads",
+    focus: "Use multiple lead views plus the region panel to infer which heart regions are active.",
+    lead: "V6",
+    regionId: "lv-lateral",
+    timeMs: 350,
+    mode: "advanced",
+    prompt: "If V5/V6 are positive while V1 is opposite, what is the safest teaching inference?",
+    options: [
+      { id: "region", label: "The dominant view favors left/lateral ventricular regions in this model.", correct: true, feedback: "Good. Keep the inference model-scoped and educational, not diagnostic." },
+      { id: "diagnosis", label: "This proves a specific clinical diagnosis.", correct: false, feedback: "No. The app is synthetic and educational; it does not diagnose." }
+    ]
+  }
+];
+
 function App() {
   const [timeMs, setTimeMs] = React.useState(340);
   const [selectedLead, setSelectedLead] = React.useState<LeadName>("II");
@@ -130,6 +229,8 @@ function App() {
   const [selectedRegionId, setSelectedRegionId] = React.useState("lv-lateral");
   const [learnerMode, setLearnerMode] = React.useState<LearnerMode>("probe-to-heart");
   const [visualLayers, setVisualLayers] = React.useState<VisualLayers>(layerPresets["probe-to-heart"]);
+  const [selectedLessonId, setSelectedLessonId] = React.useState(lessons[0].id);
+  const [quizChoiceId, setQuizChoiceId] = React.useState<string | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState<PlaybackSpeed>(1);
   const [highContrast, setHighContrast] = React.useState(false);
@@ -167,6 +268,11 @@ function App() {
     [scenario, selectedLead]
   );
   const validationReport = React.useMemo(() => validateScenario(scenario), [scenario]);
+  const selectedLesson = React.useMemo(
+    () => lessons.find((lesson) => lesson.id === selectedLessonId) ?? lessons[0],
+    [selectedLessonId]
+  );
+  const selectedQuizChoice = selectedLesson.options.find((option) => option.id === quizChoiceId);
   const tissueCounts = React.useMemo(
     () =>
       state.tissueNodes.reduce(
@@ -267,6 +373,15 @@ function App() {
 
   const toggleLayer = (key: keyof VisualLayers) => {
     setVisualLayers((current) => ({ ...current, [key]: !current[key] }));
+  };
+
+  const startLesson = (lesson: Lesson) => {
+    setSelectedLessonId(lesson.id);
+    setQuizChoiceId(null);
+    setSelectedLead(lesson.lead);
+    setSelectedRegionId(lesson.regionId);
+    setTimeMs(lesson.timeMs);
+    applyLearnerMode(lesson.mode);
   };
 
   const exportScreenshot = async () => {
@@ -542,6 +657,52 @@ function App() {
               ))}
             </fieldset>
           ))}
+        </div>
+      </section>
+
+      <section className="lesson-panel" aria-label="Guided lessons and quizzes">
+        <div className="lesson-list" aria-label="Lesson navigation">
+          {lessons.map((lesson, index) => (
+            <button
+              key={lesson.id}
+              type="button"
+              className={lesson.id === selectedLesson.id ? "active" : ""}
+              onClick={() => startLesson(lesson)}
+            >
+              <span>Lesson {index + 1}</span>
+              <strong>{lesson.title}</strong>
+            </button>
+          ))}
+        </div>
+        <div className="lesson-card">
+          <p className="eyebrow">Guided lesson</p>
+          <h2>{selectedLesson.title}</h2>
+          <p>{selectedLesson.focus}</p>
+          <div className="lesson-context">
+            <span><strong>Lead</strong>{selectedLesson.lead}</span>
+            <span><strong>Region</strong>{state.surfaceRegions.find((region) => region.id === selectedLesson.regionId)?.label ?? selectedLesson.regionId}</span>
+            <span><strong>Time</strong>{selectedLesson.timeMs} ms</span>
+          </div>
+          <div className="quiz-card" aria-label="Lesson quiz prompt">
+            <p>{selectedLesson.prompt}</p>
+            <div className="quiz-options">
+              {selectedLesson.options.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={quizChoiceId === option.id ? "selected" : ""}
+                  onClick={() => setQuizChoiceId(option.id)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            {selectedQuizChoice && (
+              <p className={`quiz-feedback ${selectedQuizChoice.correct ? "correct" : "try-again"}`}>
+                {selectedQuizChoice.feedback}
+              </p>
+            )}
+          </div>
         </div>
       </section>
 

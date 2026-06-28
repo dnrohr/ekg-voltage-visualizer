@@ -32,14 +32,14 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 | V2-06 | Done | Region-to-lead inspection mode | V2-05 | `TASK_V2_06.md` |
 | V2-07 | Done | Layer controls and learner modes | V2-06 | `TASK_V2_07.md` |
 | V2-08 | Done | Mesh-aware mechanical contraction and chambers | V2-04 | `TASK_V2_08.md` |
-| V2-09 | Not started | Guided lessons and quizzes | V2-07 | `TASK_V2_09.md` |
+| V2-09 | Done | Guided lessons and quizzes | V2-07 | `TASK_V2_09.md` |
 | V2-10 | Not started | Heart-first abnormal scenario extensions | V2-08 | `TASK_V2_10.md` |
 | V2-11 | Not started | V2 polish, performance, accessibility, and export | V2-10 | `TASK_V2_11.md` |
 | V2-12 | Not started | V2 validation audit and release handoff | V2-11 | `TASK_V2_12.md` |
 
 ## Current Next Task
 
-`TASK_V2_09.md`
+`TASK_V2_10.md`
 
 ## Notes
 
@@ -52,4 +52,5 @@ Status index for V2 work derived from `V2_VISION.md` and `ROADMAP_V2.md`.
 - V2-06 added selected surface-region inspection, pointer selection in 3D, keyboard-accessible region selection, region timing and lead-signature panels, ECG trace indicators, tests, browser smoke, and documentation.
 - V2-07 added learner mode presets, electrical/mechanical/ECG layer toggles, saved layer presets, renderer layer props, desktop/mobile browser smoke, and documentation.
 - V2-08 added region-level electromechanical delay, local wall deformation cues, per-chamber volume fractions, translucent 3D chamber volumes, tests for delayed contraction/no premature QRS volume loss, browser smoke, and mechanical documentation.
+- V2-09 added six live guided lessons, non-blocking lesson navigation, immediate quiz feedback, mode/time/lead/region synchronization, browser smoke, and lesson documentation.
 - V2 work should preserve the V1 educational disclaimer and avoid clinical diagnostic claims.

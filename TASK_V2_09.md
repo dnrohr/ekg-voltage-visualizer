@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,24 @@ Add a structured learning sequence that guides users from lead direction basics 
 
 ## Verification Notes
 
-Record lesson coverage and UX checks.
+Implemented six live lessons:
+
+- Lead as directional view.
+- Limb leads.
+- Precordial leads and R-wave progression concepts.
+- Normal ventricular depolarization.
+- Mechanical delay.
+- Reconstructing heart activity from leads.
+
+UX notes:
+
+- Lesson selection updates time, selected lead, selected region, and learner mode.
+- Free exploration remains available after a lesson is selected.
+- Quiz feedback is immediate, educational, and non-clinical.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke: selected Lesson 5, verified time/mode context, answered one correct quiz option and one incorrect option with immediate feedback.
