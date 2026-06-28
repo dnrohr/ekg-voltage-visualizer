@@ -261,10 +261,16 @@ function potentialContribution(source: RegionalCardiacSource, electrode: Electro
   return source.strength * dot(source.moment, displacement) / distance ** 3;
 }
 
-export function computeElectrodePotentials(sources: RegionalCardiacSource[]): ElectrodePotentials {
+export function computeElectrodePotentials(
+  sources: RegionalCardiacSource[],
+  electrodeOverrides: Partial<Record<ElectrodeName, Vec3>> = {}
+): ElectrodePotentials {
   return Object.fromEntries(
     electrodeOrder.map((electrodeName) => {
-      const electrode = electrodeDefinitions[electrodeName];
+      const electrode = {
+        ...electrodeDefinitions[electrodeName],
+        position: electrodeOverrides[electrodeName] ?? electrodeDefinitions[electrodeName].position
+      };
       const potential = sources.reduce(
         (total, source) => total + potentialContribution(source, electrode),
         0

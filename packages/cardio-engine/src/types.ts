@@ -209,6 +209,7 @@ export type CardiacScenario = {
   timing: ScenarioTiming;
   waveVectors: WaveVectorConfig;
   activationModel: ActivationModel;
+  electrodeOverrides?: Partial<Record<ElectrodeName, Vec3>>;
 };
 
 export type LeadDefinition = {

@@ -354,4 +354,25 @@ describe("cardio-engine simulation", () => {
     expect(delayedBasal?.activationTimeMs).toBeGreaterThan(normalBasal?.activationTimeMs ?? 0);
     expect(delayedBasal?.state).toBe("resting");
   });
+
+  it("derives V2 abnormal teaching scenarios from heart or electrode changes first", () => {
+    const normal = evaluateScenario(normalSinusRhythmScenario, normalSinusRhythmScenario.timing.qrsPeakMs / normalSinusRhythmScenario.timing.cycleMs);
+    const conductionDelay = scenarioLibrary.find((scenario) => scenario.id === "prolonged-av-conduction");
+    const ectopic = scenarioLibrary.find((scenario) => scenario.id === "ventricular-ectopic-focus");
+    const reversed = scenarioLibrary.find((scenario) => scenario.id === "reversed-arm-leads");
+
+    expect(conductionDelay?.timing.qrsStartMs).toBeGreaterThan(normalSinusRhythmScenario.timing.qrsStartMs);
+    expect(conductionDelay?.activationModel.nodes.find((node) => node.id === "his-bundle")?.activationTimeMs).toBeGreaterThan(360);
+
+    expect(ectopic).toBeDefined();
+    const ectopicSurface = evaluateHeartSurface(ectopic!, ectopic!.timing.qrsStartMs + 8);
+    const ectopicRv = ectopicSurface.find((region) => region.id === "rv-free-wall");
+    const ectopicSeptum = ectopicSurface.find((region) => region.id === "septal-right-facing");
+    expect(ectopicRv?.state).toBe("depolarizing");
+    expect((ectopicRv?.activationTimeMs ?? 0)).toBeLessThan(ectopicSeptum?.activationTimeMs ?? 0);
+
+    expect(reversed?.electrodeOverrides?.RA).toEqual(expect.objectContaining(normalSinusRhythmScenario.electrodeOverrides?.LA ?? { x: 0.75 }));
+    const reversedState = evaluateScenario(reversed!, reversed!.timing.qrsPeakMs / reversed!.timing.cycleMs);
+    expect(Math.sign(reversedState.leadVoltages.I)).toBe(-Math.sign(normal.leadVoltages.I));
+  });
 });

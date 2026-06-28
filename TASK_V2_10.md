@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,22 @@ Extend simplified abnormal scenarios by changing activation timing, origin, dire
 
 ## Verification Notes
 
-Record scenarios added and validation results.
+Implemented and verified:
+
+- Refined bundle branch block notes around altered activation timing.
+- Existing left/right axis deviation scenarios remain vector-first teaching scenarios.
+- `prolonged-av-conduction`: delayed AV-to-His timing before ventricular activation.
+- `ventricular-ectopic-focus`: early right ventricular free-wall activation with widened generated QRS.
+- `reversed-arm-leads`: RA/LA electrode positions swapped before electrode potentials and lead voltages are computed.
+
+Validation:
+
+- Schema validation covers all curated scenarios.
+- Tests verify delayed conduction timing, ectopic region activation order, and reversed Lead I polarity.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke: scenario picker and comparison picker both include new scenarios; switching to ventricular ectopic focus and comparing reversed arm leads updates the comparison panel.

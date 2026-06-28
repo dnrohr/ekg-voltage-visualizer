@@ -26,6 +26,18 @@ Each scenario contains:
 
 The altered scenarios are intentionally selected for visual clarity. They are simplified vector/timing examples, not clinical diagnostic criteria.
 
+## V2 Heart-First Scenario Checks
+
+V2 abnormal teaching scenarios must alter heart, source, timing, or electrode inputs before the ECG is derived.
+
+- Bundle branch block scenarios widen QRS timing by delaying authored ventricular activation nodes and terminal vectors.
+- Axis deviation scenarios alter ventricular source vectors before limb-lead voltages are computed.
+- Adjustable conduction delay moves AV-to-His timing later before ventricular activation begins.
+- Ventricular ectopic focus starts early ventricular activation from the right ventricular free wall and broadens the generated QRS.
+- Reversed arm leads swaps RA and LA electrode positions before electrode potentials and lead voltages are computed.
+
+Validation tests cover ordered schemas, delayed conduction timing, ectopic surface activation order, reversed Lead I polarity, normal QRS polarity anchors, and baseline plausibility. These checks are educational sanity checks, not diagnostic performance metrics.
+
 ## Reference Overlay
 
 Task 09 adds an authored synthetic reference envelope through `generateSyntheticReferenceTrace`. The overlay is labeled as `synthetic-reference` and is derived from the same teaching scenario with slight amplitude scaling.

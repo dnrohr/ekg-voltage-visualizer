@@ -259,7 +259,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
   const netVector = cardiacSources
     .map((source) => scale(source.moment, source.strength))
     .reduce(add, zeroVector);
-  const electrodePotentials = computeElectrodePotentials(cardiacSources);
+  const electrodePotentials = computeElectrodePotentials(cardiacSources, scenario.electrodeOverrides);
   const leadVoltages = computeLeadVoltages(electrodePotentials);
 
   const phase = phaseAtMs(scenario, timeMs);

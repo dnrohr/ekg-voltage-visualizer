@@ -37,6 +37,21 @@
       "id": "left-bundle-branch-block",
       "category": "conduction",
       "summary": "Delayed leftward terminal activation with widened QRS timing."
+    },
+    {
+      "id": "prolonged-av-conduction",
+      "category": "conduction",
+      "summary": "Delayed AV-to-His timing with longer PR interval before ventricular activation."
+    },
+    {
+      "id": "ventricular-ectopic-focus",
+      "category": "ectopic",
+      "summary": "Broad beat beginning from a right ventricular free-wall focus."
+    },
+    {
+      "id": "reversed-arm-leads",
+      "category": "electrode-placement",
+      "summary": "RA and LA electrode positions swapped before ECG lead voltages are derived."
     }
   ]
 }

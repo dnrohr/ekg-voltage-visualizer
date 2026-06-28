@@ -1,4 +1,5 @@
 import { normalSinusRhythmScenario } from "./scenario";
+import { electrodeDefinitions } from "./leads";
 import type { ActivationModel, CardiacScenario, ScenarioTiming, WaveVectorConfig } from "./types";
 
 type ScenarioOverrides = Omit<Partial<CardiacScenario>, "timing" | "waveVectors" | "activationModel"> & {
@@ -38,6 +39,17 @@ function shiftedActivation(multiplier: number, terminalDelay = 0) {
       };
     }),
     depolarizationDurationMs: normalSinusRhythmScenario.activationModel.depolarizationDurationMs * multiplier
+  };
+}
+
+function activationWithNodeUpdates(updates: Record<string, Partial<ActivationModel["nodes"][number]>>): ActivationModel {
+  return {
+    ...normalSinusRhythmScenario.activationModel,
+    nodes: normalSinusRhythmScenario.activationModel.nodes.map((node) => ({
+      ...node,
+      ...(updates[node.id] ?? {})
+    })),
+    edges: normalSinusRhythmScenario.activationModel.edges.map((edge) => ({ ...edge }))
   };
 }
 
@@ -151,7 +163,7 @@ export const scenarioLibrary: CardiacScenario[] = [
       terminalDepolarization: { x: -0.48, y: 0.03, z: 0.34 }
     },
     whatChanged: [
-      "Terminal ventricular activation is delayed and directed rightward.",
+      "Terminal ventricular activation is delayed and directed rightward from the altered activation model.",
       "The generated QRS widens relative to the normal baseline.",
       "The pattern is intentionally stylized for learning timing and direction."
     ]
@@ -174,9 +186,84 @@ export const scenarioLibrary: CardiacScenario[] = [
       terminalDepolarization: { x: 0.54, y: 0.02, z: -0.2 }
     },
     whatChanged: [
-      "Septal activation is no longer the normal left-to-right teaching vector.",
+      "Septal and left-ventricular activation timing are altered before the ECG is generated.",
       "Left ventricular activation is delayed, widening the QRS.",
       "This supports comparison of direction and timing, not clinical diagnosis."
+    ]
+  }),
+  cloneScenario({
+    id: "prolonged-av-conduction",
+    name: "Adjustable conduction delay",
+    category: "conduction",
+    description: "A teaching scenario with delayed AV-to-His timing and a longer PR interval before an otherwise familiar ventricular route.",
+    timing: {
+      qrsStartMs: 390,
+      qrsPeakMs: 432,
+      qrsEndMs: 486,
+      tStartMs: 584,
+      tPeakMs: 662,
+      tEndMs: 744
+    },
+    activationModel: activationWithNodeUpdates({
+      "av-node": { activationTimeMs: 240, repolarizationTimeMs: 355 },
+      "his-bundle": { activationTimeMs: 386, repolarizationTimeMs: 520 },
+      "septum-left-to-right": { activationTimeMs: 398, repolarizationTimeMs: 620 },
+      apex: { activationTimeMs: 414, repolarizationTimeMs: 560 },
+      "right-ventricle": { activationTimeMs: 428, repolarizationTimeMs: 580 },
+      "left-ventricle": { activationTimeMs: 436, repolarizationTimeMs: 628 },
+      "basal-ventricles": { activationTimeMs: 458, repolarizationTimeMs: 662 }
+    }),
+    whatChanged: [
+      "The AV-to-His delay is prolonged before ventricular activation begins.",
+      "The ventricular route is otherwise similar, so the main lesson is timing rather than morphology.",
+      "This is a controllable conduction-delay teaching case, not a diagnosis."
+    ]
+  }),
+  cloneScenario({
+    id: "ventricular-ectopic-focus",
+    name: "Ventricular ectopic focus",
+    category: "ectopic",
+    description: "A broad ventricular beat beginning from the right ventricular free wall instead of the normal His-Purkinje sequence.",
+    timing: {
+      qrsStartMs: 260,
+      qrsPeakMs: 330,
+      qrsEndMs: 430,
+      tStartMs: 548,
+      tPeakMs: 640,
+      tEndMs: 735
+    },
+    activationModel: activationWithNodeUpdates({
+      "his-bundle": { activationTimeMs: 380, repolarizationTimeMs: 540 },
+      "septum-left-to-right": { activationTimeMs: 340, repolarizationTimeMs: 620 },
+      "right-ventricle": { activationTimeMs: 262, repolarizationTimeMs: 570 },
+      apex: { activationTimeMs: 306, repolarizationTimeMs: 590 },
+      "left-ventricle": { activationTimeMs: 364, repolarizationTimeMs: 650 },
+      "basal-ventricles": { activationTimeMs: 402, repolarizationTimeMs: 690 }
+    }),
+    waveVectors: {
+      septalDepolarization: { x: -0.16, y: 0.08, z: 0.18 },
+      ventricularDepolarization: { x: 0.42, y: -0.18, z: 0.72 },
+      terminalDepolarization: { x: 0.62, y: 0.04, z: -0.16 }
+    },
+    whatChanged: [
+      "The earliest ventricular surface activation starts in the right ventricular free wall.",
+      "Activation then spreads cell-to-cell across the ventricles, widening the generated QRS.",
+      "The P wave remains synthetic context; the ventricular beat is the teaching focus."
+    ]
+  }),
+  cloneScenario({
+    id: "reversed-arm-leads",
+    name: "Reversed arm leads",
+    category: "electrode-placement",
+    description: "A teaching case where the RA and LA electrode positions are swapped before lead voltages are derived.",
+    electrodeOverrides: {
+      RA: electrodeDefinitions.LA.position,
+      LA: electrodeDefinitions.RA.position
+    },
+    whatChanged: [
+      "The physical right-arm and left-arm electrode positions are swapped in the electrode model.",
+      "Lead voltages are recomputed from the altered electrode potentials instead of manually flipped.",
+      "This demonstrates electrode configuration effects, not a heart activation abnormality."
     ]
   })
 ];
