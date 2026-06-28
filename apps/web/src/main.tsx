@@ -33,6 +33,15 @@ const formatRegionWeight = (value: number) =>
 const formatDelta = (value: number) =>
   value >= 0 ? `${Math.round(value)} ms ago` : `in ${Math.abs(Math.round(value))} ms`;
 
+const activeRegionSummary = (state: ReturnType<typeof evaluateScenario>) =>
+  state.surfaceRegions
+    .filter((region) => region.state === "depolarizing" || region.state === "repolarizing" || region.state === "active")
+    .sort((a, b) => Math.abs(state.timeMs - a.activationTimeMs) - Math.abs(state.timeMs - b.activationTimeMs))
+    .slice(0, 4);
+
+const leadPolarityLabel = (voltage: number) =>
+  voltage > 0.04 ? "positive" : voltage < -0.04 ? "negative" : "near baseline";
+
 type LearnerMode = "probe-to-heart" | "heart-to-probe" | "advanced";
 
 type VisualLayers = TorsoScene3DLayers & {
@@ -242,6 +251,7 @@ function App() {
   const lastFrame = React.useRef<number | null>(null);
   const scenarioRef = React.useRef(getScenarioById(scenarioId));
   const surfaceRegionsRef = React.useRef<ReturnType<typeof evaluateScenario>["surfaceRegions"]>([]);
+  const normalComparisonScenario = React.useMemo(() => getScenarioById("normal-sinus-rhythm"), []);
   const scenario = React.useMemo(() => getScenarioById(scenarioId), [scenarioId]);
   const comparisonScenario = React.useMemo(() => getScenarioById(comparisonId), [comparisonId]);
   const clock = React.useMemo(() => createClockState(scenario, timeMs), [scenario, timeMs]);
@@ -252,6 +262,10 @@ function App() {
   const comparisonState = React.useMemo(
     () => evaluateScenario(comparisonScenario, clock.normalizedTime),
     [clock.normalizedTime, comparisonScenario]
+  );
+  const normalComparisonState = React.useMemo(
+    () => evaluateScenario(normalComparisonScenario, clock.normalizedTime),
+    [clock.normalizedTime, normalComparisonScenario]
   );
   const explanation = React.useMemo(
     () => explainLead(state, selectedLead),
@@ -269,11 +283,19 @@ function App() {
     () => explainLead(comparisonState, selectedLead),
     [comparisonState, selectedLead]
   );
+  const normalComparisonExplanation = React.useMemo(
+    () => explainLead(normalComparisonState, selectedLead),
+    [normalComparisonState, selectedLead]
+  );
   const referenceTrace = React.useMemo(
     () => generateSyntheticReferenceTrace(scenario, selectedLead),
     [scenario, selectedLead]
   );
   const validationReport = React.useMemo(() => validateScenario(scenario), [scenario]);
+  const normalActiveRegions = React.useMemo(() => activeRegionSummary(normalComparisonState), [normalComparisonState]);
+  const comparisonActiveRegions = React.useMemo(() => activeRegionSummary(comparisonState), [comparisonState]);
+  const comparisonVoltageDelta = comparisonState.leadVoltages[selectedLead] - normalComparisonState.leadVoltages[selectedLead];
+  const qrsEndDeltaMs = comparisonScenario.timing.qrsEndMs - normalComparisonScenario.timing.qrsEndMs;
   const selectedLesson = React.useMemo(
     () => lessons.find((lesson) => lesson.id === selectedLessonId) ?? lessons[0],
     [selectedLessonId]
@@ -767,15 +789,49 @@ function App() {
       <section className="comparison-panel" aria-label="Scenario comparison">
         <div>
           <p className="eyebrow">What changed?</p>
-          <h2>{scenario.name} vs {comparisonScenario.name}</h2>
+          <h2>{normalComparisonScenario.name} vs {comparisonScenario.name}</h2>
+          <p className="comparison-copy">
+            Compare the heart state first, then the {selectedLead} trace. Both scenarios are sampled at the same point in their cardiac cycle so timing shifts stay visible.
+          </p>
           <div className="change-list">
             {(comparisonScenario.whatChanged ?? []).map((item) => <span key={item}>{item}</span>)}
           </div>
+          <div className="scenario-compare-viewer" aria-label="Normal and comparison scenario heart-state viewer">
+            <div className="scenario-compare-card baseline">
+              <p className="eyebrow">Normal anchor</p>
+              <h3>{normalComparisonScenario.name}</h3>
+              <div className="scenario-heart-strip" aria-label="Normal active regions">
+                {normalActiveRegions.map((region) => (
+                  <span className={`tissue-pill ${region.state}`} key={region.id}>
+                    {region.chamber} {region.state}
+                  </span>
+                ))}
+              </div>
+              <p>{normalComparisonState.phaseLabel}: {normalComparisonExplanation.polarity} {selectedLead} at {normalComparisonExplanation.voltage.toFixed(2)} mV.</p>
+            </div>
+            <div className="scenario-compare-card selected">
+              <p className="eyebrow">Selected comparison</p>
+              <h3>{comparisonScenario.name}</h3>
+              <div className="scenario-heart-strip" aria-label="Comparison active regions">
+                {comparisonActiveRegions.map((region) => (
+                  <span className={`tissue-pill ${region.state}`} key={region.id}>
+                    {region.chamber} {region.state}
+                  </span>
+                ))}
+              </div>
+              <p>{comparisonState.phaseLabel}: {comparisonExplanation.polarity} {selectedLead} at {comparisonExplanation.voltage.toFixed(2)} mV.</p>
+            </div>
+          </div>
         </div>
         <div className="comparison-metrics">
-          <span><strong>{scenario.name}</strong>{state.leadVoltages[selectedLead].toFixed(2)} mV in {selectedLead}</span>
-          <span><strong>{comparisonScenario.name}</strong>{comparisonState.leadVoltages[selectedLead].toFixed(2)} mV in {selectedLead}</span>
-          <span><strong>Delta</strong>{(comparisonExplanation.voltage - explanation.voltage).toFixed(2)} mV</span>
+          <span><strong>Normal {selectedLead}</strong>{normalComparisonState.leadVoltages[selectedLead].toFixed(2)} mV, {leadPolarityLabel(normalComparisonState.leadVoltages[selectedLead])}</span>
+          <span><strong>Comparison {selectedLead}</strong>{comparisonState.leadVoltages[selectedLead].toFixed(2)} mV, {leadPolarityLabel(comparisonState.leadVoltages[selectedLead])}</span>
+          <span><strong>ECG delta</strong>{comparisonVoltageDelta >= 0 ? "+" : ""}{comparisonVoltageDelta.toFixed(2)} mV</span>
+          <span><strong>QRS end shift</strong>{qrsEndDeltaMs >= 0 ? "+" : ""}{Math.round(qrsEndDeltaMs)} ms</span>
+          <div className="lead-delta-meter" aria-label={`${selectedLead} comparison voltage delta`}>
+            <span style={{ width: `${Math.min(100, Math.abs(comparisonVoltageDelta) * 80)}%` }} />
+          </div>
+          <p className="comparison-safety-note">Synthetic comparison only. These differences show how authored heart timing or vectors change generated leads; they are not clinical diagnostic criteria.</p>
         </div>
       </section>
 

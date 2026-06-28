@@ -38,6 +38,17 @@ V2 abnormal teaching scenarios must alter heart, source, timing, or electrode in
 
 Validation tests cover ordered schemas, delayed conduction timing, ectopic surface activation order, reversed Lead I polarity, normal QRS polarity anchors, and baseline plausibility. These checks are educational sanity checks, not diagnostic performance metrics.
 
+## V3 Scenario Comparison Viewer
+
+V3-09 anchors the comparison workflow to the normal sinus rhythm scenario and compares it with the selected teaching scenario at the same normalized cardiac-cycle position. The viewer presents heart-state changes before ECG differences:
+
+- normal and selected scenarios are shown in side-by-side cards
+- active, depolarizing, and repolarizing region chips summarize what the heart model is doing now
+- selected-lead voltage, polarity, delta, and QRS-end shift remain synchronized to the same cardiac-cycle position
+- comparison copy explicitly labels the view as synthetic and educational, not diagnostic
+
+This workflow is intended to help learners ask "what changed in the heart model before the lead changed?" It is not a clinical normal/abnormal classifier.
+
 ## V2 Polish Smoke Coverage
 
 V2-11 verification includes desktop and mobile browser smoke checks for:

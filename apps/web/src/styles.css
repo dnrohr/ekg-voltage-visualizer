@@ -1393,13 +1393,20 @@ input[type="range"] {
 .comparison-panel {
   padding: 16px;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
   gap: 14px;
   align-items: start;
   border: 1px solid #d7dee5;
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 12px 36px rgba(31, 41, 55, 0.07);
+}
+
+.comparison-copy {
+  max-width: 760px;
+  margin: 6px 0 0;
+  color: #344054;
+  line-height: 1.45;
 }
 
 .change-list,
@@ -1414,8 +1421,81 @@ input[type="range"] {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.scenario-compare-viewer {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scenario-compare-card {
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid #d7dee5;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.scenario-compare-card.baseline {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.scenario-compare-card.selected {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+}
+
+.scenario-compare-card h3,
+.scenario-compare-card p {
+  margin: 0;
+}
+
+.scenario-compare-card h3 {
+  color: #17202a;
+  font-size: 1rem;
+}
+
+.scenario-compare-card p:last-child {
+  color: #344054;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.scenario-heart-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .comparison-metrics span {
   font-variant-numeric: tabular-nums;
+}
+
+.lead-delta-meter {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+.lead-delta-meter span {
+  height: 100%;
+  display: block;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #f59e0b);
+}
+
+.comparison-safety-note {
+  margin: 0;
+  color: #667085;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .safety-note {
@@ -1594,6 +1674,7 @@ input[type="range"] {
   }
 
   .change-list,
+  .scenario-compare-viewer,
   .layer-groups,
   .lesson-context,
   .region-timing-grid,

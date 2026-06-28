@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -36,4 +36,17 @@ Add a workflow for comparing normal propagation against an abnormal teaching sce
 
 ## Verification Notes
 
-Pending.
+Completed:
+
+- Added a normal sinus rhythm anchor for scenario comparison independent of the primary scenario selection.
+- Added side-by-side normal and selected comparison cards synchronized to the same normalized cardiac-cycle time.
+- Added active-region tissue chips, selected-lead polarity, selected-lead voltage delta, QRS-end shift, and a compact delta meter.
+- Added teaching copy that emphasizes heart-model changes before ECG changes.
+- Added non-diagnostic comparison wording and validation documentation.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke for scenario comparison viewer at `http://127.0.0.1:5187/`
