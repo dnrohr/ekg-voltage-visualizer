@@ -3,6 +3,7 @@ import {
   computeLeadVoltage,
   computeWilsonCentralTerminal,
   advanceClock,
+  buildHeartMeshField,
   createClockState,
   cycleMsToNormalized,
   educationalHeartSurface,
@@ -286,6 +287,33 @@ describe("cardio-engine simulation", () => {
     expect(ventricularMap.contours.map((contour) => contour.label)).toContain("20 ms");
     expect(atrialMap.anchorTimeMs).toBe(normalSinusRhythmScenario.timing.pStartMs);
     expect(atrialMap.bands.every((band) => band.chamber === "RA" || band.chamber === "LA")).toBe(true);
+  });
+
+  it("builds a deterministic mesh field from the educational surface", () => {
+    const field = buildHeartMeshField(normalSinusRhythmScenario, 322);
+    const expectedVertices = educationalHeartSurface.regions.reduce((total, region) => total + region.vertices.length + 1, 0);
+    const expectedFaces = educationalHeartSurface.regions.reduce((total, region) => total + region.vertices.length, 0);
+    const chambers = new Set(field.segments.map((segment) => segment.chamber));
+
+    expect(field.sourceSurfaceId).toBe(educationalHeartSurface.id);
+    expect(field.vertices.length).toBe(expectedVertices);
+    expect(field.faces.length).toBe(expectedFaces);
+    expect(field.segments.length).toBe(educationalHeartSurface.regions.length);
+    expect(chambers).toEqual(new Set(["RA", "LA", "RV", "LV"]));
+    expect(field.faces.every((face) => face.vertexIds.length === 3)).toBe(true);
+  });
+
+  it("exposes per-vertex level-set values around the current wavefront", () => {
+    const field = buildHeartMeshField(normalSinusRhythmScenario, 322);
+    const septum = field.vertices.find((vertex) => vertex.id === "septal-right-facing:center");
+    const apex = field.vertices.find((vertex) => vertex.id === "apical-ventricles:center");
+    const basal = field.vertices.find((vertex) => vertex.id === "basal-lv-rv:center");
+
+    expect(septum?.phiActivationMs ?? 0).toBeGreaterThan(0);
+    expect(apex?.phiActivationMs).toBeCloseTo(0);
+    expect(basal?.phiActivationMs ?? 0).toBeLessThan(0);
+    expect(apex?.state).toBe("depolarizing");
+    expect(apex?.phiRepolarizationMs ?? 0).toBeLessThan(0);
   });
 
   it("explains lead probe polarity and regional alignment at the QRS peak", () => {

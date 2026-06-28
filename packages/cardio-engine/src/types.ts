@@ -285,6 +285,52 @@ export type HeartSurfaceRegionState = HeartSurfaceRegion & {
   repolarizationProgress: number;
 };
 
+export type HeartMeshVertexField = {
+  id: string;
+  regionId: string;
+  chamber: HeartChamber;
+  anatomicalRegion: string;
+  position: Vec3;
+  normal: Vec3;
+  activationTimeMs: number;
+  repolarizationTimeMs: number;
+  state: TissueState;
+  activationProgress: number;
+  repolarizationProgress: number;
+  phiActivationMs: number;
+  phiRepolarizationMs: number;
+  bestSeenLeads: LeadName[];
+  oppositeLeads: LeadName[];
+};
+
+export type HeartMeshFace = {
+  id: string;
+  regionId: string;
+  chamber: HeartChamber;
+  vertexIds: [string, string, string];
+};
+
+export type HeartMeshSegment = {
+  id: string;
+  label: string;
+  chamber: HeartChamber;
+  anatomicalRegion: string;
+  vertexIds: string[];
+  faceIds: string[];
+  activationTimeMs: number;
+  repolarizationTimeMs: number;
+};
+
+export type HeartMeshField = {
+  id: string;
+  label: string;
+  sourceSurfaceId: string;
+  timeMs: number;
+  vertices: HeartMeshVertexField[];
+  faces: HeartMeshFace[];
+  segments: HeartMeshSegment[];
+};
+
 export type IsochroneScope = "whole-heart" | "atria" | "ventricles";
 
 export type IsochroneBand = {
