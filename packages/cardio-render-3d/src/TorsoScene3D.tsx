@@ -320,6 +320,28 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
     );
     dynamicGroup.add(leadArrow);
 
+    const leadVoltage = state.leadVoltages[selectedLead];
+    const projectionAxis = toScene(selectedDefinition.axis).normalize();
+    const projectionDirection = leadVoltage >= 0 ? projectionAxis : projectionAxis.clone().multiplyScalar(-1);
+    const projectionColor = leadVoltage > 0.04 ? 0x16a34a : leadVoltage < -0.04 ? 0xdc2626 : 0x64748b;
+    const projectionOrigin = new THREE.Vector3(0, 0.04, 0.18);
+    const projectionLength = 0.2 + Math.min(0.46, Math.abs(leadVoltage) * 0.32);
+    if (projectionDirection.lengthSq() > 0.001) {
+      dynamicGroup.add(
+        new THREE.ArrowHelper(projectionDirection, projectionOrigin, projectionLength, projectionColor, 0.11, 0.07)
+      );
+
+      const projectionLabel = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: createLabelTexture(`${selectedLead} ${leadVoltage.toFixed(2)} mV`, leadVoltage >= 0 ? "#dcfce7" : "#fee2e2"),
+          transparent: true
+        })
+      );
+      projectionLabel.position.copy(projectionOrigin).addScaledVector(projectionDirection, projectionLength + 0.08);
+      projectionLabel.scale.set(0.38, 0.16, 1);
+      dynamicGroup.add(projectionLabel);
+    }
+
     for (const electrodeName of electrodeOrder) {
       const electrode = electrodeDefinitions[electrodeName];
       const position = toScene(electrode.position);

@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -41,4 +41,18 @@ Build the central teaching mode for the question: "What is this lead seeing righ
 
 ## Verification Notes
 
-Record checked leads and projection behavior.
+Implemented `explainLeadProbe`, an enlarged selected-lead trace with live projection marker, a 3D selected-lead projection arrow, and a region contribution summary synchronized to the current timestamp.
+
+Checked leads:
+
+- Lead II: toward classification, positive projection marker at QRS peak.
+- aVR: away classification, negative projection marker at QRS peak.
+- V5: toward classification, positive projection marker at QRS peak.
+- V1: negative marker at QRS peak with active-region explanation for the small/right-precordial view.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke: lead picker updates II, V1, V5, V6, and aVR probe text; enlarged trace cursor and marker update; 3D canvas remains visible with selected lead probe.

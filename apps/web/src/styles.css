@@ -410,6 +410,178 @@ h3 {
   gap: 8px;
 }
 
+.probe-panel {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.probe-panel.toward {
+  border-color: #14b8a6;
+}
+
+.probe-panel.away {
+  border-color: #f87171;
+}
+
+.probe-panel.sideways,
+.probe-panel.mixed {
+  border-color: #f59e0b;
+}
+
+.probe-summary {
+  display: grid;
+  gap: 4px;
+}
+
+.probe-summary p {
+  margin: 0;
+  color: #344054;
+  line-height: 1.45;
+}
+
+.selected-lead-trace {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.selected-lead-trace-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #243041;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.lead-probe-svg {
+  width: 100%;
+  aspect-ratio: 500 / 156;
+  display: block;
+  overflow: visible;
+  border: 1px solid #f2c8c4;
+  border-radius: 6px;
+  background: #fff9f8;
+}
+
+.selected-lead-trace.high-contrast .lead-probe-svg {
+  background: #ffffff;
+}
+
+.selected-lead-trace.high-contrast .minor-grid {
+  stroke: #9f1239;
+}
+
+.projection-marker {
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+.projection-marker.positive,
+.projection-stem.positive {
+  fill: #16a34a;
+  stroke: #16a34a;
+}
+
+.projection-marker.negative,
+.projection-stem.negative {
+  fill: #dc2626;
+  stroke: #dc2626;
+}
+
+.projection-marker.flat,
+.projection-stem.flat {
+  fill: #64748b;
+  stroke: #64748b;
+}
+
+.projection-stem {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.projection-label {
+  fill: #1f2937;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.probe-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.probe-metrics span {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d7dee5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.probe-metrics strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #17202a;
+}
+
+.probe-region-list {
+  display: grid;
+  gap: 6px;
+}
+
+.probe-region-row {
+  min-height: 40px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.probe-region-row span:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.probe-region-row strong,
+.probe-region-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.probe-region-row strong {
+  color: #263445;
+  font-size: 0.8rem;
+}
+
+.probe-region-row small {
+  color: #667085;
+  font-size: 0.72rem;
+}
+
+.probe-region-row span:last-child {
+  color: #0f766e;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 .tissue-summary {
   display: grid;
   gap: 8px;
@@ -982,7 +1154,8 @@ input[type="range"] {
   }
 
   .scenario-controls,
-  .valve-grid {
+  .valve-grid,
+  .probe-metrics {
     grid-template-columns: 1fr;
   }
 

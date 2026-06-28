@@ -6,6 +6,7 @@ import {
   createClockState,
   evaluateScenario,
   explainLead,
+  explainLeadProbe,
   frameStepMs,
   generateSyntheticReferenceTrace,
   getScenarioById,
@@ -18,11 +19,14 @@ import {
   type PlaybackSpeed,
   type LeadName
 } from "@ekg/cardio-engine";
-import { EcgLeadGrid, HeartSchematic } from "@ekg/cardio-render-2d";
+import { EcgLeadGrid, HeartSchematic, SelectedLeadTrace } from "@ekg/cardio-render-2d";
 import { TorsoScene3D } from "@ekg/cardio-render-3d";
 import "./styles.css";
 
 const formatPotential = (value: number) =>
+  `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
+
+const formatRegionWeight = (value: number) =>
   `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
 
 function App() {
@@ -48,6 +52,10 @@ function App() {
   );
   const explanation = React.useMemo(
     () => explainLead(state, selectedLead),
+    [selectedLead, state]
+  );
+  const probeExplanation = React.useMemo(
+    () => explainLeadProbe(state, selectedLead),
     [selectedLead, state]
   );
   const comparisonExplanation = React.useMemo(
@@ -234,6 +242,46 @@ function App() {
               </div>
             </dl>
             <p>{explanation.summary}</p>
+            <div className={`probe-panel ${probeExplanation.alignment}`} aria-label="Lead probe teaching mode">
+              <div className="probe-summary">
+                <p className="eyebrow">Lead probe</p>
+                <h3>{probeExplanation.alignmentLabel}</h3>
+                <p>{probeExplanation.summary}</p>
+              </div>
+              <SelectedLeadTrace
+                scenario={scenario}
+                state={state}
+                selectedLead={selectedLead}
+                probe={probeExplanation}
+                referenceTrace={referenceTrace}
+                highContrast={highContrast}
+              />
+              <div className="probe-metrics" aria-label="Lead probe projection values">
+                <span>
+                  <strong>Alignment</strong>
+                  {probeExplanation.alignment}
+                </span>
+                <span>
+                  <strong>Projection</strong>
+                  {probeExplanation.normalizedProjection.toFixed(2)}
+                </span>
+                <span>
+                  <strong>Marker</strong>
+                  {probeExplanation.markerVoltage.toFixed(2)} mV
+                </span>
+              </div>
+              <div className="probe-region-list" aria-label="Surface region probe contribution summary">
+                {probeExplanation.regions.map((region) => (
+                  <div className="probe-region-row" key={region.regionId}>
+                    <span>
+                      <strong>{region.label}</strong>
+                      <small>{region.chamber}, {region.state}, {region.relationship}</small>
+                    </span>
+                    <span>{formatRegionWeight(region.signedWeight)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="mechanical-summary" aria-label="Current mechanical state">
               <p className="eyebrow">Mechanical phase</p>
               <h3>{state.mechanical.phaseLabel}</h3>

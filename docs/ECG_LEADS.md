@@ -71,6 +71,21 @@ The Task 02 implementation uses five regional sources for the normal teaching be
 
 Each source has a schematic position, a moment vector, and a time-varying strength. The app can show a selected lead's current contribution breakdown by these source regions. These values are calibrated for explanatory polarity and timing, not for clinical millivolt accuracy.
 
+## Lead Probe Teaching Mode
+
+V2 adds a selected-lead probe that answers "what is this lead seeing right now?" for the current millisecond of the teaching beat. The engine projects the current net vector onto the selected lead's positive axis and pairs that projection with the lead voltage that was computed from electrode potentials. The enlarged trace shows the same time cursor as the 12-lead grid, plus a projection marker whose sign and magnitude match the selected lead's current displayed voltage.
+
+The probe classifies the current view as:
+
+| Alignment | Meaning |
+|---|---|
+| toward | The dominant vector points toward the lead's positive side and the lead reads positive. |
+| away | The dominant vector points away from the lead's positive side and the lead reads negative. |
+| sideways | The dominant vector is close to perpendicular or the voltage is near baseline. |
+| mixed | Active regions pull in competing directions and partly cancel. |
+
+The region contribution list is a simplified surface-region summary. It uses each active region's current tissue state plus its lead metadata (`bestSeenLeads`, `oppositeLeads`, or indirect) to explain why that lead is rising, falling, or staying small. It is a teaching aid tied to the surface model, not an inverse solution from a real ECG.
+
 ## Lead Families
 
 ### Limb Leads
@@ -103,6 +118,7 @@ These are educational sanity checks, not diagnostic criteria.
 - Label generated waveforms as synthetic teaching signals.
 - Prefer "positive electrode", "negative reference", and "computed voltage" over vague phrases.
 - When selecting a lead, show both its formula and the current explanation.
+- In lead probe mode, keep the enlarged trace, 3D probe arrow, projection marker, and text explanation synchronized to the same selected lead and timestamp.
 - Keep Wilson central terminal visible in explanations of V1 through V6.
 - Make it clear that lead axes are explanatory aids, while electrode potentials are the modeled measurements.
 - When a lead is selected, highlight its positive electrode or terminal and its negative/reference terminal. For precordial leads, show RA, LA, and LL as the Wilson central terminal contributors rather than implying a hidden physical electrode.

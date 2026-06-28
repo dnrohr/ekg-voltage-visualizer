@@ -8,6 +8,7 @@ import {
   educationalHeartSurface,
   evaluateScenario,
   evaluateHeartSurface,
+  explainLeadProbe,
   frameStepMs,
   generateIsochroneMap,
   getSurfaceRegionById,
@@ -262,6 +263,37 @@ describe("cardio-engine simulation", () => {
     expect(ventricularMap.contours.map((contour) => contour.label)).toContain("20 ms");
     expect(atrialMap.anchorTimeMs).toBe(normalSinusRhythmScenario.timing.pStartMs);
     expect(atrialMap.bands.every((band) => band.chamber === "RA" || band.chamber === "LA")).toBe(true);
+  });
+
+  it("explains lead probe polarity and regional alignment at the QRS peak", () => {
+    const state = evaluateScenario(normalSinusRhythmScenario, 340 / 800);
+    const leadII = explainLeadProbe(state, "II");
+    const avr = explainLeadProbe(state, "aVR");
+    const v5 = explainLeadProbe(state, "V5");
+    const v1 = explainLeadProbe(state, "V1");
+
+    expect(leadII.alignment).toBe("toward");
+    expect(leadII.markerVoltage).toBeGreaterThan(0);
+    expect(leadII.projection).toBeGreaterThan(0);
+    expect(leadII.regions.length).toBeGreaterThan(0);
+
+    expect(avr.alignment).toBe("away");
+    expect(avr.markerVoltage).toBeLessThan(0);
+    expect(avr.projection).toBeLessThan(0);
+
+    expect(v5.alignment).toBe("toward");
+    expect(v5.markerVoltage).toBeGreaterThan(0);
+    expect(v5.projection).toBeGreaterThan(0);
+
+    expect(v1.markerVoltage).toBeLessThan(0);
+    expect(v1.regions.length).toBeGreaterThan(0);
+    expect(["away", "mixed", "sideways"]).toContain(v1.alignment);
+
+    for (const probe of [leadII, avr, v5]) {
+      expect(Math.sign(probe.projection)).toBe(Math.sign(probe.markerVoltage));
+      expect(probe.summary).toContain(`${probe.lead}`);
+      expect(probe.alignmentLabel.length).toBeGreaterThan(8);
+    }
   });
 
   it("uses scenario-specific activation timing for surface evaluation", () => {

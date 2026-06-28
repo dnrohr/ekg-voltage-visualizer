@@ -332,6 +332,28 @@ export type LeadExplanation = {
   summary: string;
 };
 
+export type LeadProbeAlignment = "toward" | "away" | "sideways" | "mixed";
+
+export type RegionProbeContribution = {
+  regionId: string;
+  label: string;
+  chamber: HeartChamber;
+  state: TissueState;
+  relationship: "best-seen" | "opposite" | "indirect";
+  signedWeight: number;
+};
+
+export type LeadProbeExplanation = {
+  lead: LeadName;
+  projection: number;
+  normalizedProjection: number;
+  markerVoltage: number;
+  alignment: LeadProbeAlignment;
+  alignmentLabel: string;
+  regions: RegionProbeContribution[];
+  summary: string;
+};
+
 export type TraceSample = {
   normalizedTime: number;
   timeMs: number;

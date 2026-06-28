@@ -1,6 +1,7 @@
 export * from "./clock";
 export * from "./leads";
 export * from "./mechanics";
+export * from "./probe";
 export * from "./scenario";
 export * from "./scenarios";
 export * from "./simulation";
