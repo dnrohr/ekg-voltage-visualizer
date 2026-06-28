@@ -17,9 +17,9 @@ import {
   type Vec3
 } from "@ekg/cardio-engine";
 
-type CameraPreset = "frontal" | "transverse" | "left-lateral" | "heart-close";
+export type CameraPreset = "frontal" | "transverse" | "left-lateral" | "heart-close";
 type SurfaceMapMode = "wavefront" | "electrical-state";
-type AnatomyViewMode = "external" | "cutaway" | "chambers";
+export type AnatomyViewMode = "external" | "cutaway" | "chambers";
 
 type TorsoScene3DProps = {
   state: SimulationState;
@@ -27,6 +27,8 @@ type TorsoScene3DProps = {
   selectedRegionId?: string;
   onSelectRegion?: (regionId: string) => void;
   layers?: Partial<TorsoScene3DLayers>;
+  cameraPreset?: CameraPreset;
+  anatomyViewMode?: AnatomyViewMode;
 };
 
 export type TorsoScene3DLayers = {
@@ -483,7 +485,7 @@ function disposeObject(object: THREE.Object3D) {
   });
 }
 
-export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRegion, layers }: TorsoScene3DProps) {
+export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRegion, layers, cameraPreset, anatomyViewMode: preferredAnatomyViewMode }: TorsoScene3DProps) {
   const mountRef = React.useRef<HTMLDivElement | null>(null);
   const sceneRef = React.useRef<THREE.Scene | null>(null);
   const rendererRef = React.useRef<THREE.WebGLRenderer | null>(null);
@@ -499,6 +501,14 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
   React.useEffect(() => {
     onSelectRegionRef.current = onSelectRegion;
   }, [onSelectRegion]);
+
+  React.useEffect(() => {
+    if (cameraPreset) setPreset(cameraPreset);
+  }, [cameraPreset]);
+
+  React.useEffect(() => {
+    if (preferredAnatomyViewMode) setAnatomyViewMode(preferredAnatomyViewMode);
+  }, [preferredAnatomyViewMode]);
 
   React.useEffect(() => {
     if (!mountRef.current) return;

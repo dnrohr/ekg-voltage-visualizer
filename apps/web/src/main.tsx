@@ -21,7 +21,7 @@ import {
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic, SelectedLeadTrace } from "@ekg/cardio-render-2d";
-import { TorsoScene3D, type TorsoScene3DLayers } from "@ekg/cardio-render-3d";
+import { TorsoScene3D, type AnatomyViewMode, type CameraPreset, type TorsoScene3DLayers } from "@ekg/cardio-render-3d";
 import "./styles.css";
 
 const formatPotential = (value: number) =>
@@ -143,33 +143,48 @@ type Lesson = {
   regionId: string;
   timeMs: number;
   mode: LearnerMode;
+  scenarioId: string;
+  comparisonId: string;
+  cameraPreset: CameraPreset;
+  anatomyViewMode: AnatomyViewMode;
+  meshFocus: string;
   prompt: string;
   options: Array<{ id: string; label: string; correct: boolean; feedback: string }>;
 };
 
 const lessons: Lesson[] = [
   {
-    id: "directional-view",
-    title: "Lead as directional view",
-    focus: "A lead rises when the dominant vector points toward its positive side.",
+    id: "normal-qrs-mesh",
+    title: "Normal QRS propagation",
+    focus: "Use the V3 mesh wavefront to follow septal and apical ventricular activation before later free-wall activation.",
     lead: "II",
     regionId: "apical-ventricles",
-    timeMs: 340,
+    timeMs: 322,
     mode: "probe-to-heart",
-    prompt: "At this moment, why is Lead II positive?",
+    scenarioId: "normal-sinus-rhythm",
+    comparisonId: "right-bundle-branch-block",
+    cameraPreset: "heart-close",
+    anatomyViewMode: "external",
+    meshFocus: "Watch the orange depolarization band and current isochrone contour cross the ventricular mesh.",
+    prompt: "Which region should be active early in a normal teaching QRS?",
     options: [
-      { id: "toward", label: "The vector points toward Lead II's positive side.", correct: true, feedback: "Yes. Lead II is acting like a directional view of the dominant vector." },
-      { id: "electrode", label: "Electricity travels down the Lead II wire.", correct: false, feedback: "Not quite. A lead is a voltage measurement, not a path that electricity travels along." }
+      { id: "apex", label: "Septum/apex before later free-wall regions.", correct: true, feedback: "Yes. The authored route starts through the His/septal-apical path before later ventricular regions." },
+      { id: "basal", label: "Basal ventricles only.", correct: false, feedback: "The basal region is later in this teaching activation sequence." }
     ]
   },
   {
     id: "limb-leads",
-    title: "Limb leads",
-    focus: "I, II, III, aVR, aVL, and aVF compare limb-electrode potentials from different frontal views.",
+    title: "Limb lead axes",
+    focus: "Limb leads compare frontal-plane body-surface potentials, so the same QRS vector can look positive in II and negative in aVR.",
     lead: "aVR",
     regionId: "apical-ventricles",
     timeMs: 340,
     mode: "probe-to-heart",
+    scenarioId: "normal-sinus-rhythm",
+    comparisonId: "left-axis-deviation",
+    cameraPreset: "frontal",
+    anatomyViewMode: "external",
+    meshFocus: "Use the lead probe arrow and mesh contributor halos to connect axis direction with the active ventricular regions.",
     prompt: "Why is aVR often negative during this simplified QRS moment?",
     options: [
       { id: "away", label: "The main vector points away from aVR's positive side.", correct: true, feedback: "Right. aVR views from the right-arm positive side, opposite the dominant ventricular vector here." },
@@ -178,12 +193,17 @@ const lessons: Lesson[] = [
   },
   {
     id: "precordial",
-    title: "Precordial leads",
-    focus: "Chest leads compare local chest electrodes to the Wilson central terminal, so V1 and V5 can see different sides of ventricular activation.",
+    title: "Precordial lead views",
+    focus: "Chest leads compare each precordial electrode with the Wilson central terminal, making V1 and V6 sensitive to different mesh regions.",
     lead: "V5",
     regionId: "lv-lateral",
     timeMs: 348,
     mode: "heart-to-probe",
+    scenarioId: "normal-sinus-rhythm",
+    comparisonId: "right-axis-deviation",
+    cameraPreset: "left-lateral",
+    anatomyViewMode: "external",
+    meshFocus: "Select the LV lateral wall and compare the best-seen/opposite lead chips with the contributor halos.",
     prompt: "Which selected-region leads should notice the LV lateral wall most directly?",
     options: [
       { id: "lateral", label: "I, aVL, V5, and V6.", correct: true, feedback: "Correct. The selected region metadata marks these as best-seen leads for the LV lateral wall." },
@@ -191,45 +211,79 @@ const lessons: Lesson[] = [
     ]
   },
   {
-    id: "qrs-propagation",
-    title: "Normal ventricular depolarization",
-    focus: "The wavefront moves from septum and apex toward later ventricular regions while ECG traces update continuously.",
+    id: "bundle-delay-comparison",
+    title: "Bundle-branch delay comparison",
+    focus: "Compare normal propagation with a bundle-branch-delay teaching scenario to see timing changes before ECG widening.",
     lead: "V1",
-    regionId: "septal-right-facing",
-    timeMs: 310,
-    mode: "heart-to-probe",
-    prompt: "What activates before the lateral LV wall in this model?",
-    options: [
-      { id: "septum", label: "The right-facing septum.", correct: true, feedback: "Yes. Septal activation begins early, before lateral LV activation." },
-      { id: "late", label: "The basal ventricular ring only.", correct: false, feedback: "The basal ring is a later ventricular region in this teaching sequence." }
-    ]
-  },
-  {
-    id: "mechanical-delay",
-    title: "Mechanical delay",
-    focus: "Electrical activation precedes visible squeeze; isovolumetric phases can have closed valves with little volume change.",
-    lead: "II",
-    regionId: "septal-right-facing",
-    timeMs: 364,
+    regionId: "rv-free-wall",
+    timeMs: 410,
     mode: "advanced",
-    prompt: "At isovolumetric contraction, what is the key mechanical lesson?",
+    scenarioId: "right-bundle-branch-block",
+    comparisonId: "left-bundle-branch-block",
+    cameraPreset: "heart-close",
+    anatomyViewMode: "cutaway",
+    meshFocus: "Use the comparison cards and cutaway mesh to ask what changed in activation timing before the QRS changed.",
+    prompt: "What is the safest interpretation of the wider generated QRS here?",
     options: [
-      { id: "delay", label: "Valves can be closed while volume stays nearly fixed.", correct: true, feedback: "Exactly. The visible squeeze and flow do not happen at the same instant as depolarization." },
-      { id: "instant", label: "The ventricles instantly empty at QRS onset.", correct: false, feedback: "No. The model keeps ventricular volume high until ejection timing begins." }
+      { id: "timing", label: "Authored ventricular activation timing changed first.", correct: true, feedback: "Exactly. The lesson is heart-model timing before ECG morphology." },
+      { id: "diagnosis", label: "The app has diagnosed bundle-branch block.", correct: false, feedback: "No. This is a synthetic teaching comparison, not clinical diagnosis." }
     ]
   },
   {
-    id: "reconstruct",
-    title: "Reconstructing from leads",
-    focus: "Use multiple lead views plus the region panel to infer which heart regions are active.",
+    id: "ectopic-focus",
+    title: "Ectopic ventricular focus",
+    focus: "Start from a ventricular focus and inspect how an abnormal activation origin changes the mesh wavefront and selected leads.",
+    lead: "II",
+    regionId: "rv-free-wall",
+    timeMs: 280,
+    mode: "advanced",
+    scenarioId: "ventricular-ectopic-focus",
+    comparisonId: "ventricular-ectopic-focus",
+    cameraPreset: "heart-close",
+    anatomyViewMode: "chambers",
+    meshFocus: "The chamber view makes the early RV free-wall source easier to inspect while the ECG cursor stays synchronized.",
+    prompt: "What makes this ectopic-focus lesson different from normal QRS propagation?",
+    options: [
+      { id: "origin", label: "The earliest ventricular activation starts away from the normal His-Purkinje route.", correct: true, feedback: "Right. The model begins ventricular activation in the RV free wall for this teaching case." },
+      { id: "wire", label: "The lead wire triggers the ventricle.", correct: false, feedback: "No. Leads measure body-surface potential differences; they do not trigger activation." }
+    ]
+  },
+  {
+    id: "repolarization",
+    title: "Repolarization and T wave",
+    focus: "Use the blue repolarization band to separate recovery from depolarization and connect it to the teaching T wave.",
     lead: "V6",
     regionId: "lv-lateral",
-    timeMs: 350,
+    timeMs: 610,
     mode: "advanced",
-    prompt: "If V5/V6 are positive while V1 is opposite, what is the safest teaching inference?",
+    scenarioId: "normal-sinus-rhythm",
+    comparisonId: "left-bundle-branch-block",
+    cameraPreset: "heart-close",
+    anatomyViewMode: "external",
+    meshFocus: "Look for repolarizing/recovered tissue labels and remember that the recovery wave is not just depolarization running backward.",
+    prompt: "What does the T-wave lesson emphasize in this model?",
     options: [
-      { id: "region", label: "The dominant view favors left/lateral ventricular regions in this model.", correct: true, feedback: "Good. Keep the inference model-scoped and educational, not diagnostic." },
-      { id: "diagnosis", label: "This proves a specific clinical diagnosis.", correct: false, feedback: "No. The app is synthetic and educational; it does not diagnose." }
+      { id: "recovery", label: "Regional recovery shapes the signal after depolarization.", correct: true, feedback: "Yes. The T wave comes from authored regional repolarization timing." },
+      { id: "reverse", label: "It is simply the QRS wave running backward.", correct: false, feedback: "Not in this teaching model. Repolarization has its own regional timing and vector." }
+    ]
+  },
+  {
+    id: "comparison-workflow",
+    title: "Normal vs abnormal comparison",
+    focus: "Use the V3 comparison viewer to compare normal sinus rhythm with an abnormal teaching scenario without losing the shared time cursor.",
+    lead: "V1",
+    regionId: "rv-free-wall",
+    timeMs: 410,
+    mode: "advanced",
+    scenarioId: "right-bundle-branch-block",
+    comparisonId: "right-bundle-branch-block",
+    cameraPreset: "transverse",
+    anatomyViewMode: "cutaway",
+    meshFocus: "Read the normal anchor and selected-comparison cards before looking at the voltage delta.",
+    prompt: "In the comparison viewer, what should you inspect before the ECG delta?",
+    options: [
+      { id: "heart-first", label: "The authored heart timing and active regions.", correct: true, feedback: "Exactly. The viewer is designed heart-first, then ECG." },
+      { id: "diagnostic", label: "A diagnostic normal/abnormal decision.", correct: false, feedback: "No. The viewer is an educational comparison, not a classifier." }
     ]
   }
 ];
@@ -241,6 +295,8 @@ function App() {
   const [comparisonId, setComparisonId] = React.useState("right-bundle-branch-block");
   const [selectedRegionId, setSelectedRegionId] = React.useState("lv-lateral");
   const [learnerMode, setLearnerMode] = React.useState<LearnerMode>("probe-to-heart");
+  const [lessonCameraPreset, setLessonCameraPreset] = React.useState<CameraPreset>(lessons[0].cameraPreset);
+  const [lessonAnatomyViewMode, setLessonAnatomyViewMode] = React.useState<AnatomyViewMode>(lessons[0].anatomyViewMode);
   const [visualLayers, setVisualLayers] = React.useState<VisualLayers>(layerPresets["probe-to-heart"]);
   const [selectedLessonId, setSelectedLessonId] = React.useState(lessons[0].id);
   const [quizChoiceId, setQuizChoiceId] = React.useState<string | null>(null);
@@ -401,6 +457,10 @@ function App() {
           setSelectedLead(nextLesson.lead);
           setSelectedRegionId(nextLesson.regionId);
           setTimeMs(nextLesson.timeMs);
+          setScenarioId(nextLesson.scenarioId);
+          setComparisonId(nextLesson.comparisonId);
+          setLessonCameraPreset(nextLesson.cameraPreset);
+          setLessonAnatomyViewMode(nextLesson.anatomyViewMode);
           setLearnerMode(nextLesson.mode);
           setVisualLayers(layerPresets[nextLesson.mode]);
           return nextLesson.id;
@@ -434,6 +494,10 @@ function App() {
     setSelectedLead(lesson.lead);
     setSelectedRegionId(lesson.regionId);
     setTimeMs(lesson.timeMs);
+    setScenarioId(lesson.scenarioId);
+    setComparisonId(lesson.comparisonId);
+    setLessonCameraPreset(lesson.cameraPreset);
+    setLessonAnatomyViewMode(lesson.anatomyViewMode);
     applyLearnerMode(lesson.mode);
   };
 
@@ -762,7 +826,10 @@ function App() {
             <span><strong>Lead</strong>{selectedLesson.lead}</span>
             <span><strong>Region</strong>{state.surfaceRegions.find((region) => region.id === selectedLesson.regionId)?.label ?? selectedLesson.regionId}</span>
             <span><strong>Time</strong>{selectedLesson.timeMs} ms</span>
+            <span><strong>Scenario</strong>{getScenarioById(selectedLesson.scenarioId).name}</span>
+            <span><strong>3D view</strong>{selectedLesson.cameraPreset}, {selectedLesson.anatomyViewMode}</span>
           </div>
+          <p className="lesson-mesh-focus">{selectedLesson.meshFocus}</p>
           <div className="quiz-card" aria-label="Lesson quiz prompt">
             <p>{selectedLesson.prompt}</p>
             <div className="quiz-options">
@@ -849,6 +916,8 @@ function App() {
           selectedRegionId={regionInspection?.regionId}
           onSelectRegion={setSelectedRegionId}
           layers={visualLayers}
+          cameraPreset={lessonCameraPreset}
+          anatomyViewMode={lessonAnatomyViewMode}
         />
         {regionInspection && (
           <div className="region-inspector" aria-label="Selected surface region inspection">

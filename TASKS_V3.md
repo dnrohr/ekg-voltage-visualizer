@@ -33,13 +33,13 @@ Status index for V3 visual/anatomical-heart work derived from `ROADMAP_V3.md`.
 | V3-07 | Done | Lead contribution overlays on mesh | V3-04 | `TASK_V3_07.md` |
 | V3-08 | Done | Med-student inspection panels and explanations | V3-07 | `TASK_V3_08.md` |
 | V3-09 | Done | Scenario comparison viewer | V3-07 | `TASK_V3_09.md` |
-| V3-10 | Not started | V3 guided lessons for propagation and leads | V3-08 | `TASK_V3_10.md` |
+| V3-10 | Done | V3 guided lessons for propagation and leads | V3-08 | `TASK_V3_10.md` |
 | V3-11 | Not started | Performance, accessibility, and export pass | V3-10 | `TASK_V3_11.md` |
 | V3-12 | Not started | V3 validation audit and release handoff | V3-11 | `TASK_V3_12.md` |
 
 ## Current Next Task
 
-V3-10 is next.
+V3-11 is next.
 
 ## Notes
 
@@ -55,3 +55,4 @@ V3-10 is next.
 - V3-07 added deterministic selected-lead contributor classification, mesh contributor halos, enlarged-trace contributor timing markers, layer controls, browser smoke, and lead-overlay documentation.
 - V3-08 added med-student selected-region explanation fields, selected-lead relationship copy, tissue-state teaching text, concise study-focus UI blocks, safety/glossary documentation, tests, and browser smoke.
 - V3-09 added a normal-vs-selected scenario comparison viewer, synchronized active-region cards, selected-lead delta and QRS-shift cues, non-diagnostic comparison copy, responsive browser smoke, and validation documentation.
+- V3-10 added V3-driven guided lessons, lesson-controlled scenarios, 3D camera/anatomy presets, mesh-focus prompts, immediate quiz feedback, browser smoke, and guided-lesson documentation.
