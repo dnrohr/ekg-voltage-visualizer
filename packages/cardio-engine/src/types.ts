@@ -143,6 +143,8 @@ export type TissueState =
   | "repolarizing"
   | "recovered";
 
+export type HeartChamber = "RA" | "LA" | "RV" | "LV";
+
 export type ActivationNodeRole =
   | "pacemaker"
   | "atria"
@@ -236,6 +238,35 @@ export type PhaseProgress = {
 };
 
 export type TissueNodeState = ActivationNode & {
+  state: TissueState;
+  activationProgress: number;
+  repolarizationProgress: number;
+};
+
+export type HeartSurfaceRegion = {
+  id: string;
+  label: string;
+  chamber: HeartChamber;
+  anatomicalRegion: string;
+  activationNodeId: string;
+  center: Vec3;
+  vertices: Vec3[];
+  sourceId: keyof WaveVectorConfig;
+  baseActivationTimeMs: number;
+  baseRepolarizationTimeMs: number;
+  bestSeenLeads: LeadName[];
+  oppositeLeads: LeadName[];
+};
+
+export type HeartSurfaceModel = {
+  id: string;
+  label: string;
+  regions: HeartSurfaceRegion[];
+};
+
+export type HeartSurfaceRegionState = HeartSurfaceRegion & {
+  activationTimeMs: number;
+  repolarizationTimeMs: number;
   state: TissueState;
   activationProgress: number;
   repolarizationProgress: number;

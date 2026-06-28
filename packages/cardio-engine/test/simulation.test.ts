@@ -5,8 +5,11 @@ import {
   advanceClock,
   createClockState,
   cycleMsToNormalized,
+  educationalHeartSurface,
   evaluateScenario,
+  evaluateHeartSurface,
   frameStepMs,
+  getSurfaceRegionById,
   generateSyntheticReferenceTrace,
   millisecondStepMs,
   normalizedToCycleMs,
@@ -195,5 +198,54 @@ describe("cardio-engine simulation", () => {
     expect(report.checks.some((check) => check.level === "reference-agreement")).toBe(true);
     expect(reference.provenance).toBe("synthetic-reference");
     expect(reference.samples.some((sample) => sample.annotation === "QRS")).toBe(true);
+  });
+
+  it("defines an educational heart surface across all four chambers", () => {
+    const chambers = new Set(educationalHeartSurface.regions.map((region) => region.chamber));
+
+    expect(chambers).toEqual(new Set(["RA", "LA", "RV", "LV"]));
+    expect(educationalHeartSurface.regions.length).toBeGreaterThanOrEqual(10);
+
+    for (const region of educationalHeartSurface.regions) {
+      expect(region.vertices.length).toBeGreaterThanOrEqual(4);
+      expect(region.bestSeenLeads.length).toBeGreaterThan(0);
+      expect(region.oppositeLeads.length).toBeGreaterThan(0);
+      expect(region.baseActivationTimeMs).toBeLessThan(region.baseRepolarizationTimeMs);
+    }
+  });
+
+  it("keeps surface activation in the expected teaching order", () => {
+    const regions = Object.fromEntries(educationalHeartSurface.regions.map((region) => [region.id, region]));
+
+    expect(regions["ra-high-lateral"].baseActivationTimeMs).toBeLessThan(regions["la-lateral"].baseActivationTimeMs);
+    expect(regions["septal-right-facing"].baseActivationTimeMs).toBeLessThan(regions["apical-ventricles"].baseActivationTimeMs);
+    expect(regions["apical-ventricles"].baseActivationTimeMs).toBeLessThan(regions["lv-lateral"].baseActivationTimeMs);
+    expect(regions["lv-lateral"].baseActivationTimeMs).toBeLessThan(regions["basal-lv-rv"].baseActivationTimeMs);
+  });
+
+  it("evaluates surface region state at arbitrary cardiac time", () => {
+    const earlyQrs = evaluateHeartSurface(normalSinusRhythmScenario, 310);
+    const lateQrs = evaluateHeartSurface(normalSinusRhythmScenario, 370);
+    const tWave = evaluateHeartSurface(normalSinusRhythmScenario, 620);
+    const septum = earlyQrs.find((region) => region.id === "septal-right-facing");
+    const basal = lateQrs.find((region) => region.id === "basal-lv-rv");
+    const lateralTWave = tWave.find((region) => region.id === "lv-lateral");
+
+    expect(septum?.state).toBe("depolarizing");
+    expect(basal?.state).toBe("depolarizing");
+    expect(lateralTWave?.state).toBe("repolarizing");
+    expect(getSurfaceRegionById("lv-lateral")?.bestSeenLeads).toContain("V6");
+  });
+
+  it("uses scenario-specific activation timing for surface evaluation", () => {
+    const rbbb = scenarioLibrary.find((scenario) => scenario.id === "right-bundle-branch-block");
+    expect(rbbb).toBeDefined();
+
+    const normalBasal = evaluateHeartSurface(normalSinusRhythmScenario, 430).find((region) => region.id === "basal-lv-rv");
+    const delayedBasal = evaluateHeartSurface(rbbb!, 430).find((region) => region.id === "basal-lv-rv");
+
+    expect(normalBasal?.state).toBe("active");
+    expect(delayedBasal?.activationTimeMs).toBeGreaterThan(normalBasal?.activationTimeMs ?? 0);
+    expect(delayedBasal?.state).toBe("resting");
   });
 });

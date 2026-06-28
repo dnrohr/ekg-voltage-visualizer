@@ -47,6 +47,32 @@ At a given cycle time, each node is evaluated as one of:
 
 Depolarizing nodes create depolarization source activity. Repolarizing ventricular nodes create repolarization source activity. The ECG signal is still synthetic, but it now comes from tissue state rather than a standalone waveform label.
 
+## V2 Educational Surface Model
+
+V2 adds a compact surface-region layer in `packages/cardio-engine/src/surface.ts`. This is still an authored educational model, not a patient-specific mesh or electrophysiology solution.
+
+Each `HeartSurfaceRegion` has:
+
+- a chamber label: `RA`, `LA`, `RV`, or `LV`
+- an anatomical region label
+- an approximate center and small set of vertices for later 3D rendering
+- an activation-node link so scenario timing changes can affect the surface
+- base activation and repolarization times
+- source-vector family
+- `bestSeenLeads` and `oppositeLeads` metadata for region-to-lead teaching
+
+The initial surface includes high right atrium, right atrial free wall, left atrial lateral wall, AV junction, right-facing septum, apical ventricles, right ventricular free wall, left ventricular anterior wall, left ventricular lateral wall, and basal ventricular ring.
+
+At any cardiac time, `evaluateHeartSurface` classifies each surface region as:
+
+- `resting`
+- `depolarizing`
+- `active`
+- `repolarizing`
+- `recovered`
+
+Surface timing is resolved from the current scenario's activation nodes when an activation-node match exists. This means a conduction-delay scenario can delay surface regions without duplicating a separate surface timeline.
+
 ## Normal Activation Sequence
 
 The normal sinus rhythm scenario uses this authored path:

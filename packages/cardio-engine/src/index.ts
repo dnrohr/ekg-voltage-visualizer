@@ -4,6 +4,7 @@ export * from "./mechanics";
 export * from "./scenario";
 export * from "./scenarios";
 export * from "./simulation";
+export * from "./surface";
 export * from "./types";
 export * from "./validation";
 export * from "./vector";

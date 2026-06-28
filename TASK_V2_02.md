@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -39,4 +39,12 @@ Add a compact educational heart surface data model with regions, chambers, appro
 
 ## Verification Notes
 
-Record region list, timing assumptions, and validation checks.
+Implemented `packages/cardio-engine/src/surface.ts` with a 10-region educational surface model covering RA, LA, RV, and LV. Regions include approximate vertices, activation-node links, base activation/repolarization times, source families, best-seen leads, and opposite leads.
+
+Verification:
+
+- `npm test` - 21 passing tests, including chamber coverage, surface timing order, arbitrary-time state evaluation, and scenario-specific delayed activation.
+- `npm run typecheck`
+- `npm run build`
+
+Documentation updated in `docs/ACTIVATION_MODEL.md`.
