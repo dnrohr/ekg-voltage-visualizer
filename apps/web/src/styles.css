@@ -612,6 +612,18 @@ h3 {
   gap: 7px;
 }
 
+.isochrone-scope-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.isochrone-caption {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .surface-map-legend {
   display: flex;
   flex-wrap: wrap;

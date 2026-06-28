@@ -84,6 +84,18 @@ Two display modes are available:
 
 This is the first V2 rendering step toward an ECGSIM-style surface map. The regions are still coarse authored patches, but the state is continuous and recomputed from the scenario clock at every scrub/playback time.
 
+## V2 Isochrone Contours
+
+V2 adds `generateIsochroneMap` for authored activation-time bands. The initial interval is 20 ms. The map can be scoped to:
+
+- `whole-heart`: all surface regions, anchored to cycle start
+- `atria`: right and left atrial surface regions, anchored to P-wave onset
+- `ventricles`: right and left ventricular surface regions, anchored to QRS onset
+
+The 3D view draws thin contour rings around the scoped surface patches and highlights the current wavefront. Labels use milliseconds relative to the selected scope anchor, so ventricular labels describe time after QRS onset while atrial labels describe time after P-wave onset.
+
+This is an educational contour layer over coarse patches rather than a true interpolated mesh isoline solver. It is designed to make activation order inspectable when paused and visually connected to the live activation-wave mode.
+
 ## Normal Activation Sequence
 
 The normal sinus rhythm scenario uses this authored path:

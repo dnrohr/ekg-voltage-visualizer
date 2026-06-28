@@ -272,6 +272,34 @@ export type HeartSurfaceRegionState = HeartSurfaceRegion & {
   repolarizationProgress: number;
 };
 
+export type IsochroneScope = "whole-heart" | "atria" | "ventricles";
+
+export type IsochroneBand = {
+  regionId: string;
+  label: string;
+  chamber: HeartChamber;
+  activationTimeMs: number;
+  relativeActivationMs: number;
+  bandStartMs: number;
+  bandEndMs: number;
+  isCurrentWavefront: boolean;
+};
+
+export type IsochroneContour = {
+  relativeTimeMs: number;
+  label: string;
+  regionIds: string[];
+  isCurrent: boolean;
+};
+
+export type IsochroneMap = {
+  scope: IsochroneScope;
+  intervalMs: number;
+  anchorTimeMs: number;
+  bands: IsochroneBand[];
+  contours: IsochroneContour[];
+};
+
 export type SimulationState = {
   normalizedTime: number;
   timeMs: number;
@@ -282,6 +310,8 @@ export type SimulationState = {
   netVector: Vec3;
   cardiacSources: RegionalCardiacSource[];
   surfaceRegions: HeartSurfaceRegionState[];
+  isochroneMap: IsochroneMap;
+  isochroneMaps: Record<IsochroneScope, IsochroneMap>;
   electrodePotentials: ElectrodePotentials;
   wilsonCentralTerminal: number;
   leadVoltages: LeadVoltages;

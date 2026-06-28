@@ -5,6 +5,7 @@ import {
   electrodeOrder,
   leadDefinitions,
   type ElectrodeName,
+  type IsochroneScope,
   type LeadName,
   type SimulationState,
   type TissueState,
@@ -38,6 +39,12 @@ const surfaceStateColors: Record<TissueState, number> = {
 const surfaceMapModes: Record<SurfaceMapMode, string> = {
   wavefront: "Activation wave",
   "electrical-state": "Electrical state"
+};
+
+const isochroneScopes: Record<IsochroneScope, string> = {
+  "whole-heart": "Whole",
+  atria: "Atria",
+  ventricles: "Ventricles"
 };
 
 const cameraPresets: Record<CameraPreset, { label: string; position: THREE.Vector3; target: THREE.Vector3 }> = {
@@ -140,6 +147,13 @@ function surfaceRegionColor(stateName: TissueState, mode: SurfaceMapMode): numbe
   return 0xf8fafc;
 }
 
+function contourColor(relativeTimeMs: number): number {
+  if (relativeTimeMs < 0) return 0x64748b;
+  if (relativeTimeMs < 40) return 0xf59e0b;
+  if (relativeTimeMs < 80) return 0xdc2626;
+  return 0x7c3aed;
+}
+
 function disposeObject(object: THREE.Object3D) {
   object.traverse((child) => {
     if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof THREE.Sprite) {
@@ -165,6 +179,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
   const [preset, setPreset] = React.useState<CameraPreset>("frontal");
   const [cutaway, setCutaway] = React.useState(false);
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
+  const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
 
   React.useEffect(() => {
     if (!mountRef.current) return;
@@ -366,6 +381,43 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
       dynamicGroup.add(marker);
     }
 
+    const activeIsochroneMap = state.isochroneMaps[isochroneScope];
+    const scopedRegionIds = new Set(activeIsochroneMap.bands.map((band) => band.regionId));
+    const bandsByRegion = new Map(activeIsochroneMap.bands.map((band) => [band.regionId, band]));
+
+    for (const region of state.surfaceRegions) {
+      if (!scopedRegionIds.has(region.id)) continue;
+      const band = bandsByRegion.get(region.id);
+      if (!band) continue;
+
+      const position = toScene(region.center).add(new THREE.Vector3(0, 0.003, 0.18));
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(band.isCurrentWavefront ? 0.105 : 0.092, band.isCurrentWavefront ? 0.006 : 0.0035, 8, 36),
+        new THREE.MeshBasicMaterial({
+          color: contourColor(band.bandStartMs),
+          transparent: true,
+          opacity: band.isCurrentWavefront ? 0.95 : 0.62
+        })
+      );
+      ring.name = `isochrone contour ${region.id}`;
+      ring.position.copy(position);
+      ring.rotation.x = Math.PI / 2;
+      dynamicGroup.add(ring);
+
+      const shouldLabel = band.isCurrentWavefront || band.relativeActivationMs % 40 === 0;
+      if (shouldLabel) {
+        const label = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: createLabelTexture(`${Math.round(band.relativeActivationMs)} ms`, band.isCurrentWavefront ? "#fef3c7" : "#ffffff"),
+            transparent: true
+          })
+        );
+        label.position.copy(position).add(new THREE.Vector3(0, 0.11, 0.04));
+        label.scale.set(0.2, 0.1, 1);
+        dynamicGroup.add(label);
+      }
+    }
+
     const valveMaterial = new THREE.MeshStandardMaterial({
       color: 0x0f766e,
       emissive: 0x0f766e,
@@ -413,7 +465,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
     }
 
     renderer.render(scene, camera);
-  }, [cutaway, selectedLead, state, surfaceMapMode]);
+  }, [cutaway, isochroneScope, selectedLead, state, surfaceMapMode]);
 
   return (
     <div className="scene3d">
@@ -448,6 +500,21 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
             </button>
           ))}
         </div>
+        <div className="isochrone-scope-toggle" aria-label="Isochrone contour scope">
+          {Object.entries(isochroneScopes).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={isochroneScope === key ? "active" : ""}
+              onClick={() => setIsochroneScope(key as IsochroneScope)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="isochrone-caption" aria-label="Isochrone contour summary">
+        Isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current wavefront highlighted.
       </div>
       <div className="surface-map-legend" aria-label="Surface state legend">
         <span><i className="legend-dot resting" />Not activated</span>

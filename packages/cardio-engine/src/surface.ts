@@ -3,6 +3,8 @@ import type {
   HeartSurfaceModel,
   HeartSurfaceRegion,
   HeartSurfaceRegionState,
+  IsochroneMap,
+  IsochroneScope,
   LeadName,
   TissueState,
   Vec3
@@ -252,4 +254,66 @@ export function getSurfaceRegionById(
   surface: HeartSurfaceModel = educationalHeartSurface
 ): HeartSurfaceRegion | undefined {
   return surface.regions.find((region) => region.id === id);
+}
+
+function scopeAnchorTime(scenario: CardiacScenario, scope: IsochroneScope): number {
+  if (scope === "atria") return scenario.timing.pStartMs;
+  if (scope === "ventricles") return scenario.timing.qrsStartMs;
+  return 0;
+}
+
+function regionInScope(region: HeartSurfaceRegionState, scope: IsochroneScope): boolean {
+  if (scope === "atria") return region.chamber === "RA" || region.chamber === "LA";
+  if (scope === "ventricles") return region.chamber === "RV" || region.chamber === "LV";
+  return true;
+}
+
+export function generateIsochroneMap(
+  scenario: CardiacScenario,
+  timeMs: number,
+  scope: IsochroneScope = "whole-heart",
+  intervalMs = 20,
+  regions = evaluateHeartSurface(scenario, timeMs)
+): IsochroneMap {
+  const safeInterval = Math.max(1, intervalMs);
+  const anchorTimeMs = scopeAnchorTime(scenario, scope);
+  const scopedRegions = regions.filter((region) => regionInScope(region, scope));
+  const bands = scopedRegions
+    .map((region) => {
+      const relativeActivationMs = region.activationTimeMs - anchorTimeMs;
+      const bandStartMs = Math.floor(relativeActivationMs / safeInterval) * safeInterval;
+
+      return {
+        regionId: region.id,
+        label: region.label,
+        chamber: region.chamber,
+        activationTimeMs: region.activationTimeMs,
+        relativeActivationMs,
+        bandStartMs,
+        bandEndMs: bandStartMs + safeInterval,
+        isCurrentWavefront: Math.abs(timeMs - region.activationTimeMs) <= scenario.activationModel.depolarizationDurationMs / 2
+      };
+    })
+    .sort((a, b) => a.relativeActivationMs - b.relativeActivationMs);
+  const contourTimes = [...new Set(bands.map((band) => band.bandStartMs))].sort((a, b) => a - b);
+  const currentRelative = timeMs - anchorTimeMs;
+
+  return {
+    scope,
+    intervalMs: safeInterval,
+    anchorTimeMs,
+    bands,
+    contours: contourTimes.map((relativeTimeMs) => {
+      const regionIds = bands
+        .filter((band) => band.bandStartMs === relativeTimeMs)
+        .map((band) => band.regionId);
+
+      return {
+        relativeTimeMs,
+        label: `${Math.round(relativeTimeMs)} ms`,
+        regionIds,
+        isCurrent: Math.abs(currentRelative - relativeTimeMs) <= safeInterval / 2
+      };
+    })
+  };
 }

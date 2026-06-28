@@ -7,7 +7,7 @@ import {
   resolveTerminalPotential
 } from "./leads";
 import { evaluateMechanicalState } from "./mechanics";
-import { evaluateHeartSurface } from "./surface";
+import { evaluateHeartSurface, generateIsochroneMap } from "./surface";
 import type {
   ActivationNode,
   CardiacPhase,
@@ -265,6 +265,12 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
   const phase = phaseAtMs(scenario, timeMs);
   const mechanical = evaluateMechanicalState(scenario, timeMs);
   const surfaceRegions = evaluateHeartSurface(scenario, timeMs);
+  const isochroneMaps = {
+    "whole-heart": generateIsochroneMap(scenario, timeMs, "whole-heart", 20, surfaceRegions),
+    atria: generateIsochroneMap(scenario, timeMs, "atria", 20, surfaceRegions),
+    ventricles: generateIsochroneMap(scenario, timeMs, "ventricles", 20, surfaceRegions)
+  };
+  const isochroneMap = isochroneMaps.ventricles;
 
   return {
     normalizedTime: normalized,
@@ -276,6 +282,8 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
     netVector,
     cardiacSources,
     surfaceRegions,
+    isochroneMap,
+    isochroneMaps,
     electrodePotentials,
     wilsonCentralTerminal: computeWilsonCentralTerminal(electrodePotentials),
     leadVoltages,

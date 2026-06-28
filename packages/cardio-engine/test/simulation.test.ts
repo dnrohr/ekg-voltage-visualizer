@@ -9,6 +9,7 @@ import {
   evaluateScenario,
   evaluateHeartSurface,
   frameStepMs,
+  generateIsochroneMap,
   getSurfaceRegionById,
   generateSyntheticReferenceTrace,
   millisecondStepMs,
@@ -242,8 +243,25 @@ describe("cardio-engine simulation", () => {
     const septalRegion = state.surfaceRegions.find((region) => region.id === "septal-right-facing");
 
     expect(state.surfaceRegions.length).toBe(educationalHeartSurface.regions.length);
+    expect(state.isochroneMap.scope).toBe("ventricles");
+    expect(state.isochroneMaps["whole-heart"].bands.length).toBe(educationalHeartSurface.regions.length);
+    expect(state.isochroneMaps.atria.bands.every((band) => band.chamber === "RA" || band.chamber === "LA")).toBe(true);
+    expect(state.isochroneMap.bands.length).toBeGreaterThan(0);
     expect(septalRegion?.state).toBe("depolarizing");
     expect(septalRegion?.activationTimeMs).toBeCloseTo(306);
+  });
+
+  it("generates scoped isochrone maps with current contour highlights", () => {
+    const surfaceRegions = evaluateHeartSurface(normalSinusRhythmScenario, 322);
+    const ventricularMap = generateIsochroneMap(normalSinusRhythmScenario, 322, "ventricles", 20, surfaceRegions);
+    const atrialMap = generateIsochroneMap(normalSinusRhythmScenario, 126, "atria", 20, surfaceRegions);
+
+    expect(ventricularMap.anchorTimeMs).toBe(normalSinusRhythmScenario.timing.qrsStartMs);
+    expect(ventricularMap.bands.every((band) => band.chamber === "RV" || band.chamber === "LV")).toBe(true);
+    expect(ventricularMap.contours.some((contour) => contour.isCurrent)).toBe(true);
+    expect(ventricularMap.contours.map((contour) => contour.label)).toContain("20 ms");
+    expect(atrialMap.anchorTimeMs).toBe(normalSinusRhythmScenario.timing.pStartMs);
+    expect(atrialMap.bands.every((band) => band.chamber === "RA" || band.chamber === "LA")).toBe(true);
   });
 
   it("uses scenario-specific activation timing for surface evaluation", () => {
