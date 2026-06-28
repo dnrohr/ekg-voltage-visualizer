@@ -86,6 +86,17 @@ The probe classifies the current view as:
 
 The region contribution list is a simplified surface-region summary. It uses each active region's current tissue state plus its lead metadata (`bestSeenLeads`, `oppositeLeads`, or indirect) to explain why that lead is rising, falling, or staying small. It is a teaching aid tied to the surface model, not an inverse solution from a real ECG.
 
+## Region-To-Lead Inspection
+
+The inverse teaching path starts from an inspectable heart surface region and asks which ECG leads should notice that region most clearly. Each surface region carries deterministic lead metadata:
+
+- `bestSeenLeads`: leads expected to show that region most directly.
+- `oppositeLeads`: leads expected to view the region from the opposite side.
+
+The selected region panel shows activation time, recovery time, a simplified contraction cue, current tissue state, best-seen leads, and opposite leads. The ECG grid marks relevant traces and draws a dashed activation-time indicator on those leads. The 3D view supports pointer selection on surface markers, while the region list provides a keyboard-accessible fallback.
+
+The contraction cue is an educational timing estimate derived from the region chamber after electrical activation. It should be described as a cue, not as a patient-specific mechanical measurement.
+
 ## Lead Families
 
 ### Limb Leads
@@ -119,6 +130,7 @@ These are educational sanity checks, not diagnostic criteria.
 - Prefer "positive electrode", "negative reference", and "computed voltage" over vague phrases.
 - When selecting a lead, show both its formula and the current explanation.
 - In lead probe mode, keep the enlarged trace, 3D probe arrow, projection marker, and text explanation synchronized to the same selected lead and timestamp.
+- In region-to-lead mode, keep the 3D selected surface region, region panel, keyboard picker, and ECG trace indicators synchronized to the same selected region.
 - Keep Wilson central terminal visible in explanations of V1 through V6.
 - Make it clear that lead axes are explanatory aids, while electrode potentials are the modeled measurements.
 - When a lead is selected, highlight its positive electrode or terminal and its negative/reference terminal. For precordial leads, show RA, LA, and LL as the Wilson central terminal contributors rather than implying a hidden physical electrode.

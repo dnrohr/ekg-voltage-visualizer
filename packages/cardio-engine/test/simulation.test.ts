@@ -9,6 +9,7 @@ import {
   evaluateScenario,
   evaluateHeartSurface,
   explainLeadProbe,
+  explainSurfaceRegion,
   frameStepMs,
   generateIsochroneMap,
   getSurfaceRegionById,
@@ -293,6 +294,30 @@ describe("cardio-engine simulation", () => {
       expect(Math.sign(probe.projection)).toBe(Math.sign(probe.markerVoltage));
       expect(probe.summary).toContain(`${probe.lead}`);
       expect(probe.alignmentLabel.length).toBeGreaterThan(8);
+    }
+  });
+
+  it("explains selected surface regions with deterministic lead signatures", () => {
+    const state = evaluateScenario(normalSinusRhythmScenario, 340 / 800);
+    const lv = explainSurfaceRegion(state, "lv-lateral");
+    const rv = explainSurfaceRegion(state, "rv-free-wall");
+    const septum = explainSurfaceRegion(state, "septal-right-facing");
+    const atrium = explainSurfaceRegion(state, "ra-high-lateral");
+
+    expect(lv?.bestSeenLeads).toEqual(["I", "aVL", "V5", "V6"]);
+    expect(lv?.oppositeLeads).toEqual(["aVR", "V1"]);
+    expect(lv?.leadIndicators.map((item) => item.lead)).toContain("V6");
+    expect(lv?.contractionOnsetMs).toBeGreaterThan(lv?.activationTimeMs ?? 0);
+
+    expect(rv?.bestSeenLeads).toContain("V1");
+    expect(septum?.bestSeenLeads).toEqual(["V1", "V2"]);
+    expect(atrium?.chamber).toBe("RA");
+    expect(atrium?.contractionOnsetMs).toBeGreaterThan(atrium?.activationTimeMs ?? 0);
+
+    for (const inspection of [lv, rv, septum, atrium]) {
+      expect(inspection).toBeDefined();
+      expect(inspection?.leadIndicators.length).toBeGreaterThan(1);
+      expect(inspection?.summary).toContain(inspection?.label);
     }
   });
 

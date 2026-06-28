@@ -7,6 +7,7 @@ import {
   evaluateScenario,
   explainLead,
   explainLeadProbe,
+  explainSurfaceRegion,
   frameStepMs,
   generateSyntheticReferenceTrace,
   getScenarioById,
@@ -29,11 +30,15 @@ const formatPotential = (value: number) =>
 const formatRegionWeight = (value: number) =>
   `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
 
+const formatDelta = (value: number) =>
+  value >= 0 ? `${Math.round(value)} ms ago` : `in ${Math.abs(Math.round(value))} ms`;
+
 function App() {
   const [timeMs, setTimeMs] = React.useState(340);
   const [selectedLead, setSelectedLead] = React.useState<LeadName>("II");
   const [scenarioId, setScenarioId] = React.useState("normal-sinus-rhythm");
   const [comparisonId, setComparisonId] = React.useState("right-bundle-branch-block");
+  const [selectedRegionId, setSelectedRegionId] = React.useState("lv-lateral");
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState<PlaybackSpeed>(1);
   const [highContrast, setHighContrast] = React.useState(false);
@@ -57,6 +62,10 @@ function App() {
   const probeExplanation = React.useMemo(
     () => explainLeadProbe(state, selectedLead),
     [selectedLead, state]
+  );
+  const regionInspection = React.useMemo(
+    () => explainSurfaceRegion(state, selectedRegionId) ?? explainSurfaceRegion(state, state.surfaceRegions[0]?.id ?? ""),
+    [selectedRegionId, state]
   );
   const comparisonExplanation = React.useMemo(
     () => explainLead(comparisonState, selectedLead),
@@ -111,12 +120,14 @@ function App() {
     try {
       const preset = JSON.parse(stored) as {
         selectedLead?: LeadName;
+        selectedRegionId?: string;
         scenarioId?: string;
         comparisonId?: string;
         highContrast?: boolean;
         reducedMotion?: boolean;
       };
       if (preset.selectedLead && leadOrder.includes(preset.selectedLead)) setSelectedLead(preset.selectedLead);
+      if (preset.selectedRegionId) setSelectedRegionId(preset.selectedRegionId);
       if (preset.scenarioId) setScenarioId(preset.scenarioId);
       if (preset.comparisonId) setComparisonId(preset.comparisonId);
       if (typeof preset.highContrast === "boolean") setHighContrast(preset.highContrast);
@@ -150,7 +161,7 @@ function App() {
   const savePreset = () => {
     window.localStorage.setItem(
       "ekg-view-preset",
-      JSON.stringify({ selectedLead, scenarioId, comparisonId, highContrast, reducedMotion })
+      JSON.stringify({ selectedLead, selectedRegionId, scenarioId, comparisonId, highContrast, reducedMotion })
     );
   };
 
@@ -412,7 +423,56 @@ function App() {
           </div>
           <p className="safety-note">Procedural anatomy, synchronized to the same teaching simulation as the 2D view.</p>
         </div>
-        <TorsoScene3D state={state} selectedLead={selectedLead} />
+        <TorsoScene3D
+          state={state}
+          selectedLead={selectedLead}
+          selectedRegionId={regionInspection?.regionId}
+          onSelectRegion={setSelectedRegionId}
+        />
+        {regionInspection && (
+          <div className="region-inspector" aria-label="Selected surface region inspection">
+            <div className="region-panel">
+              <p className="eyebrow">Selected region</p>
+              <h3>{regionInspection.label}</h3>
+              <p>{regionInspection.summary}</p>
+              <div className="region-timing-grid">
+                <span>
+                  <strong>Activation</strong>
+                  {Math.round(regionInspection.activationTimeMs)} ms ({formatDelta(regionInspection.activationDeltaMs)})
+                </span>
+                <span>
+                  <strong>Recovery</strong>
+                  {Math.round(regionInspection.repolarizationTimeMs)} ms ({formatDelta(regionInspection.repolarizationDeltaMs)})
+                </span>
+                <span>
+                  <strong>Contraction cue</strong>
+                  {Math.round(regionInspection.contractionOnsetMs)} ms
+                </span>
+                <span>
+                  <strong>Current state</strong>
+                  {regionInspection.chamber}, {regionInspection.state}
+                </span>
+              </div>
+              <div className="region-lead-groups">
+                <span><strong>Best seen</strong>{regionInspection.bestSeenLeads.join(", ")}</span>
+                <span><strong>Opposite</strong>{regionInspection.oppositeLeads.join(", ")}</span>
+              </div>
+            </div>
+            <div className="region-picker" aria-label="Keyboard surface region selection">
+              {state.surfaceRegions.map((region) => (
+                <button
+                  key={region.id}
+                  type="button"
+                  className={region.id === regionInspection.regionId ? "active" : ""}
+                  onClick={() => setSelectedRegionId(region.id)}
+                >
+                  <span>{region.label}</span>
+                  <small>{region.chamber}, {Math.round(region.activationTimeMs)} ms</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="ecg-panel">
@@ -429,6 +489,7 @@ function App() {
           selectedLead={selectedLead}
           onSelectLead={setSelectedLead}
           referenceTrace={referenceTrace}
+          regionInspection={regionInspection}
           highContrast={highContrast}
         />
         <div className="validation-panel" aria-label="Reference and validation summary">

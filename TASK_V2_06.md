@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,24 @@ Support the inverse learning path from selected heart region to expected ECG sig
 
 ## Verification Notes
 
-Record region selection checks and accessibility notes.
+Implemented deterministic region inspection with activation, recovery, contraction cue, current tissue state, best-seen leads, opposite leads, and ECG trace indicators.
+
+Selection checks:
+
+- LV: Left ventricular lateral wall shows I, aVL, V5, and V6 as best-seen leads.
+- RV: Right ventricular free wall shows V1/V2/III visibility and opposite I/V6.
+- Septal: Right-facing septum shows V1/V2 visibility and opposite V5/V6.
+- Atrial: High right atrium shows II/aVF/V1 visibility and opposite aVR.
+
+Accessibility notes:
+
+- 3D surface markers can be selected by pointer.
+- The region picker exposes every surface region as a keyboard-focusable button.
+- ECG lead cards mark relevant traces and show dashed activation-time indicators for the selected region.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke: region picker verified LV, RV, septal, and atrial selections; ECG indicators updated; 3D canvas remained visible.

@@ -354,6 +354,32 @@ export type LeadProbeExplanation = {
   summary: string;
 };
 
+export type RegionLeadRelationship = "best-seen" | "opposite";
+
+export type RegionLeadIndicator = {
+  lead: LeadName;
+  relationship: RegionLeadRelationship;
+  voltage: number;
+  expectedDeflection: "positive" | "negative" | "near-flat";
+};
+
+export type RegionLeadInspection = {
+  regionId: string;
+  label: string;
+  chamber: HeartChamber;
+  anatomicalRegion: string;
+  state: TissueState;
+  activationTimeMs: number;
+  repolarizationTimeMs: number;
+  contractionOnsetMs: number;
+  activationDeltaMs: number;
+  repolarizationDeltaMs: number;
+  bestSeenLeads: LeadName[];
+  oppositeLeads: LeadName[];
+  leadIndicators: RegionLeadIndicator[];
+  summary: string;
+};
+
 export type TraceSample = {
   normalizedTime: number;
   timeMs: number;

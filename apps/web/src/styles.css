@@ -855,6 +855,97 @@ h3 {
   display: block;
 }
 
+.region-inspector {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.region-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fbfb;
+}
+
+.region-panel p {
+  margin: 0;
+  color: #344054;
+  line-height: 1.45;
+}
+
+.region-timing-grid,
+.region-lead-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.region-timing-grid span,
+.region-lead-groups span {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d7dee5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #263445;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.region-timing-grid strong,
+.region-lead-groups strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #17202a;
+}
+
+.region-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.region-picker button {
+  min-height: 54px;
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+  align-content: center;
+  border: 1px solid #d7dee5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #243041;
+  text-align: left;
+}
+
+.region-picker button.active {
+  border-color: #0f766e;
+  background: #dff4ef;
+  box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.14);
+}
+
+.region-picker span,
+.region-picker small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.region-picker span {
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.region-picker small {
+  color: #667085;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 .transport-controls {
   display: flex;
   flex-wrap: wrap;
@@ -1005,6 +1096,14 @@ input[type="range"] {
   box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.16);
 }
 
+.lead-card.region-best-seen {
+  border-color: #14b8a6;
+}
+
+.lead-card.region-opposite {
+  border-color: #f87171;
+}
+
 .lead-header {
   display: flex;
   justify-content: space-between;
@@ -1077,6 +1176,20 @@ input[type="range"] {
   stroke-width: 1.6;
 }
 
+.region-activation-marker {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 5 4;
+}
+
+.region-activation-marker.best-seen {
+  stroke: #14b8a6;
+}
+
+.region-activation-marker.opposite {
+  stroke: #dc2626;
+}
+
 .validation-panel {
   margin-top: 14px;
   padding: 12px;
@@ -1118,11 +1231,14 @@ input[type="range"] {
 
   .timeline-panel,
   .comparison-panel,
-  .validation-panel {
+  .validation-panel,
+  .region-inspector {
     grid-template-columns: 1fr;
   }
 
   .change-list,
+  .region-timing-grid,
+  .region-lead-groups,
   .validation-checks {
     grid-template-columns: 1fr;
   }
@@ -1154,6 +1270,7 @@ input[type="range"] {
   }
 
   .scenario-controls,
+  .region-picker,
   .valve-grid,
   .probe-metrics {
     grid-template-columns: 1fr;

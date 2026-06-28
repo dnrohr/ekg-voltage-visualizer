@@ -18,6 +18,8 @@ type SurfaceMapMode = "wavefront" | "electrical-state";
 type TorsoScene3DProps = {
   state: SimulationState;
   selectedLead: LeadName;
+  selectedRegionId?: string;
+  onSelectRegion?: (regionId: string) => void;
 };
 
 const tissueColors: Record<TissueState, number> = {
@@ -170,16 +172,21 @@ function disposeObject(object: THREE.Object3D) {
   });
 }
 
-export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
+export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRegion }: TorsoScene3DProps) {
   const mountRef = React.useRef<HTMLDivElement | null>(null);
   const sceneRef = React.useRef<THREE.Scene | null>(null);
   const rendererRef = React.useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = React.useRef<THREE.PerspectiveCamera | null>(null);
   const dynamicGroupRef = React.useRef<THREE.Group | null>(null);
+  const onSelectRegionRef = React.useRef<TorsoScene3DProps["onSelectRegion"]>(onSelectRegion);
   const [preset, setPreset] = React.useState<CameraPreset>("frontal");
   const [cutaway, setCutaway] = React.useState(false);
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
   const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
+
+  React.useEffect(() => {
+    onSelectRegionRef.current = onSelectRegion;
+  }, [onSelectRegion]);
 
   React.useEffect(() => {
     if (!mountRef.current) return;
@@ -231,6 +238,24 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
 
     const dynamicGroup = new THREE.Group();
     scene.add(dynamicGroup);
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!onSelectRegionRef.current) return;
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
+      pointer.y = -(((event.clientY - rect.top) / Math.max(1, rect.height)) * 2 - 1);
+      raycaster.setFromCamera(pointer, camera);
+
+      const regionTargets = dynamicGroup.children.filter((child) => typeof child.userData.regionId === "string");
+      const [hit] = raycaster.intersectObjects(regionTargets, false);
+      const regionId = hit?.object.userData.regionId as string | undefined;
+      if (regionId) onSelectRegionRef.current(regionId);
+    };
+
+    renderer.domElement.addEventListener("pointerdown", handlePointerDown);
 
     sceneRef.current = scene;
     rendererRef.current = renderer;
@@ -258,6 +283,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
 
     return () => {
       observer.disconnect();
+      renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
       disposeObject(scene);
       renderer.dispose();
       renderer.domElement.remove();
@@ -387,20 +413,33 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
       const position = toScene(region.center).add(new THREE.Vector3(0, 0, 0.18));
       const color = surfaceRegionColor(region.state, surfaceMapMode);
       const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
+      const isSelectedRegion = region.id === selectedRegionId;
       const marker = new THREE.Mesh(
-        new THREE.SphereGeometry(isCurrentWave ? 0.082 : 0.065, 24, 16),
+        new THREE.SphereGeometry(isSelectedRegion ? 0.105 : isCurrentWave ? 0.082 : 0.065, 24, 16),
         new THREE.MeshStandardMaterial({
-          color,
-          emissive: isCurrentWave ? color : 0x000000,
-          emissiveIntensity: isCurrentWave ? 0.25 : 0.04,
+          color: isSelectedRegion ? 0x0f766e : color,
+          emissive: isSelectedRegion ? 0x0f766e : isCurrentWave ? color : 0x000000,
+          emissiveIntensity: isSelectedRegion ? 0.38 : isCurrentWave ? 0.25 : 0.04,
           roughness: 0.48,
           transparent: true,
-          opacity: surfaceMapMode === "wavefront" && region.state === "resting" ? 0.38 : 0.82
+          opacity: isSelectedRegion ? 0.98 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.38 : 0.82
         })
       );
       marker.name = `surface region ${region.id}`;
+      marker.userData.regionId = region.id;
       marker.position.copy(position);
       dynamicGroup.add(marker);
+
+      if (isSelectedRegion) {
+        const selectionRing = new THREE.Mesh(
+          new THREE.TorusGeometry(0.13, 0.007, 8, 36),
+          new THREE.MeshBasicMaterial({ color: 0x0f766e })
+        );
+        selectionRing.name = `selected region ring ${region.id}`;
+        selectionRing.position.copy(position);
+        selectionRing.rotation.x = Math.PI / 2;
+        dynamicGroup.add(selectionRing);
+      }
     }
 
     const activeIsochroneMap = state.isochroneMaps[isochroneScope];
@@ -487,7 +526,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
     }
 
     renderer.render(scene, camera);
-  }, [cutaway, isochroneScope, selectedLead, state, surfaceMapMode]);
+  }, [cutaway, isochroneScope, selectedLead, selectedRegionId, state, surfaceMapMode]);
 
   return (
     <div className="scene3d">
@@ -545,7 +584,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
         <span><i className="legend-dot repolarizing" />Repolarizing</span>
         <span><i className="legend-dot recovered" />Recovered</span>
       </div>
-      <div ref={mountRef} className="scene3d-canvas" role="img" aria-label="3D torso, heart, electrode, and selected lead visualization" />
+      <div ref={mountRef} className="scene3d-canvas" role="img" aria-label="3D torso, heart, electrode, selected lead, and selectable surface region visualization" />
     </div>
   );
 }

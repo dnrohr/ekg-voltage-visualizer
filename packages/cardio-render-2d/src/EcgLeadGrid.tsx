@@ -5,6 +5,7 @@ import {
   type LeadName,
   type LeadProbeExplanation,
   type ReferenceLeadTrace,
+  type RegionLeadInspection,
   type SimulationState
 } from "@ekg/cardio-engine";
 
@@ -14,6 +15,7 @@ type EcgLeadGridProps = {
   selectedLead: LeadName;
   onSelectLead: (lead: LeadName) => void;
   referenceTrace?: ReferenceLeadTrace;
+  regionInspection?: RegionLeadInspection;
   highContrast?: boolean;
 };
 
@@ -112,18 +114,31 @@ export function SelectedLeadTrace({
   );
 }
 
-export function EcgLeadGrid({ scenario, state, selectedLead, onSelectLead, referenceTrace, highContrast = false }: EcgLeadGridProps) {
+export function EcgLeadGrid({
+  scenario,
+  state,
+  selectedLead,
+  onSelectLead,
+  referenceTrace,
+  regionInspection,
+  highContrast = false
+}: EcgLeadGridProps) {
   const cursorX = state.normalizedTime * width;
+  const regionActivationX = regionInspection && scenario.timing.cycleMs > 0
+    ? (regionInspection.activationTimeMs / scenario.timing.cycleMs) * width
+    : 0;
 
   return (
     <div className={`ecg-grid ${highContrast ? "high-contrast" : ""}`} aria-label="Synthetic 12 lead ECG grid">
       {leadOrder.map((lead) => {
         const isSelected = lead === selectedLead;
         const voltage = state.leadVoltages[lead];
+        const indicator = regionInspection?.leadIndicators.find((item) => item.lead === lead);
+        const regionClass = indicator ? `region-${indicator.relationship}` : "";
 
         return (
           <button
-            className={`lead-card ${isSelected ? "selected" : ""}`}
+            className={`lead-card ${isSelected ? "selected" : ""} ${regionClass}`}
             key={lead}
             onClick={() => onSelectLead(lead)}
             type="button"
@@ -131,13 +146,14 @@ export function EcgLeadGrid({ scenario, state, selectedLead, onSelectLead, refer
           >
             <span className="lead-header">
               <span>{lead}</span>
-              <span>{voltage.toFixed(2)} mV</span>
+              <span>{indicator ? indicator.relationship : `${voltage.toFixed(2)} mV`}</span>
             </span>
             <svg viewBox={`0 0 ${width} ${height}`} className="lead-trace" aria-hidden="true">
               <path className="minor-grid" d="M 0 23 H 220 M 0 46 H 220 M 0 69 H 220 M 44 0 V 92 M 88 0 V 92 M 132 0 V 92 M 176 0 V 92" />
               <line className="baseline" x1="0" y1={midline} x2={width} y2={midline} />
               {referenceTrace?.lead === lead && <path className="reference-trace" d={referencePath(referenceTrace)} />}
               <path className="trace" d={tracePath(scenario, lead)} />
+              {indicator && <line className={`region-activation-marker ${indicator.relationship}`} x1={regionActivationX} y1="0" x2={regionActivationX} y2={height} />}
               <line className="cursor" x1={cursorX} y1="0" x2={cursorX} y2={height} />
             </svg>
           </button>
