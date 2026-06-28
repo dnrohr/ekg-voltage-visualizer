@@ -406,7 +406,9 @@ function App() {
               {visualLayers.phaseLabels && <h3>{state.mechanical.phaseLabel}</h3>}
               {visualLayers.phaseLabels && <p>{state.mechanical.phaseExplanation}</p>}
               {visualLayers.chamberVolume && (
-                <p className="flow-line">Ventricular volume: {Math.round(state.mechanical.chamber.ventricularVolumeFraction * 100)}%</p>
+                <p className="flow-line">
+                  LV/RV volume: {Math.round(state.mechanical.chamberVolumes.LV * 100)}%; atrial volume: {Math.round(state.mechanical.chamberVolumes.LA * 100)}%
+                </p>
               )}
               {visualLayers.valveState && <div className="valve-grid">
                 {Object.values(state.mechanical.valves).map((valve) => (

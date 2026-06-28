@@ -30,6 +30,7 @@ export type TorsoScene3DLayers = {
   vector: boolean;
   leadProjection: boolean;
   contraction: boolean;
+  chamberVolume: boolean;
   valveState: boolean;
   flow: boolean;
   phaseLabels: boolean;
@@ -42,6 +43,7 @@ const defaultLayers: TorsoScene3DLayers = {
   vector: true,
   leadProjection: true,
   contraction: true,
+  chamberVolume: false,
   valveState: true,
   flow: true,
   phaseLabels: true
@@ -342,6 +344,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     dynamicGroup.clear();
 
     const selectedDefinition = leadDefinitions[selectedLead];
+    const regionMechanics = new Map(state.mechanical.regionMechanics.map((region) => [region.regionId, region]));
     const heart = scene.getObjectByName("procedural heart");
     heart?.children.forEach((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -423,6 +426,32 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       dynamicGroup.add(label);
     }
 
+    if (activeLayers.chamberVolume) {
+      const volumeCues = [
+        { chamber: "RA", position: new THREE.Vector3(-0.2, 0.34, 0.14), scale: new THREE.Vector3(0.12, 0.11, 0.11), color: 0x2563eb },
+        { chamber: "LA", position: new THREE.Vector3(0.22, 0.34, 0.12), scale: new THREE.Vector3(0.13, 0.11, 0.11), color: 0xdc2626 },
+        { chamber: "RV", position: new THREE.Vector3(-0.15, -0.08, 0.2), scale: new THREE.Vector3(0.15, 0.28, 0.13), color: 0x2563eb },
+        { chamber: "LV", position: new THREE.Vector3(0.18, -0.11, 0.18), scale: new THREE.Vector3(0.18, 0.32, 0.15), color: 0xdc2626 }
+      ] as const;
+
+      for (const cue of volumeCues) {
+        const fraction = state.mechanical.chamberVolumes[cue.chamber];
+        const volumeMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(1, 28, 18),
+          new THREE.MeshStandardMaterial({
+            color: cue.color,
+            transparent: true,
+            opacity: 0.18 + fraction * 0.18,
+            roughness: 0.5
+          })
+        );
+        volumeMesh.name = `chamber volume ${cue.chamber}`;
+        volumeMesh.position.copy(cue.position);
+        volumeMesh.scale.copy(cue.scale).multiplyScalar(0.52 + fraction * 0.58);
+        dynamicGroup.add(volumeMesh);
+      }
+    }
+
     for (const node of state.tissueNodes) {
       const nodePosition = toScene(node.position).add(new THREE.Vector3(0, 0, 0.15));
       const size = node.state === "depolarizing" || node.state === "repolarizing" ? 0.075 : 0.055;
@@ -444,6 +473,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       const color = surfaceRegionColor(region.state, activeLayers.stateMap ? "electrical-state" : surfaceMapMode);
       const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
       const isSelectedRegion = region.id === selectedRegionId;
+      const mechanicalRegion = regionMechanics.get(region.id);
       const marker = new THREE.Mesh(
         new THREE.SphereGeometry(isSelectedRegion ? 0.105 : isCurrentWave ? 0.082 : 0.065, 24, 16),
         new THREE.MeshStandardMaterial({
@@ -458,6 +488,9 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       marker.name = `surface region ${region.id}`;
       marker.userData.regionId = region.id;
       marker.position.copy(position);
+      if (activeLayers.contraction && mechanicalRegion) {
+        marker.scale.setScalar(1 + mechanicalRegion.wallDeformation);
+      }
       dynamicGroup.add(marker);
 
       if (isSelectedRegion) {

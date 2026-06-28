@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,18 @@ Refine the mechanical model so contraction, chamber volume, valves, and flow can
 
 ## Verification Notes
 
-Record delay values, chamber behavior, and visual checks.
+Implemented region-aware mechanical state with:
+
+- Atrial electromechanical delay: 55 ms.
+- Ventricular electromechanical delay: 42 ms.
+- Local contraction progress and wall deformation for each surface region.
+- RA, LA, RV, and LV chamber volume fractions.
+- Optional translucent 3D chamber volume cues.
+- Flow and valve overlays still controlled by layer toggles.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke: Advanced mode shows chamber volume cues; QRS onset preserves high ventricular volume; isovolumetric contraction shows no forward flow while valves/flow overlays remain synchronized.

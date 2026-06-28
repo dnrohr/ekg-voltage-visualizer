@@ -263,8 +263,8 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
   const leadVoltages = computeLeadVoltages(electrodePotentials);
 
   const phase = phaseAtMs(scenario, timeMs);
-  const mechanical = evaluateMechanicalState(scenario, timeMs);
   const surfaceRegions = evaluateHeartSurface(scenario, timeMs);
+  const mechanical = evaluateMechanicalState(scenario, timeMs, surfaceRegions);
   const isochroneMaps = {
     "whole-heart": generateIsochroneMap(scenario, timeMs, "whole-heart", 20, surfaceRegions),
     atria: generateIsochroneMap(scenario, timeMs, "atria", 20, surfaceRegions),

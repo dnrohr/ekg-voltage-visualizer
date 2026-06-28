@@ -55,6 +55,16 @@ export type ChamberMechanics = {
   electromechanicalDelayMs: number;
 };
 
+export type RegionMechanicalState = {
+  regionId: string;
+  chamber: HeartChamber;
+  activationTimeMs: number;
+  contractionOnsetMs: number;
+  contractionProgress: number;
+  wallDeformation: number;
+  chamberVolumeFraction: number;
+};
+
 export type FlowState = {
   region: FlowRegion;
   label: string;
@@ -71,6 +81,8 @@ export type MechanicalState = {
   sounds: HeartSoundMarker[];
   activeSound: HeartSoundMarker | null;
   chamber: ChamberMechanics;
+  chamberVolumes: Record<HeartChamber, number>;
+  regionMechanics: RegionMechanicalState[];
   flow: FlowState;
 };
 

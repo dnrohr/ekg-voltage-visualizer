@@ -35,8 +35,25 @@ Contraction is represented by smooth authored curves:
 - Ventricular contraction follows QRS with a 42 ms electromechanical delay.
 - Ventricular volume falls during ejection and recovers during rapid filling.
 - Wall thickening is a visual cue proportional to ventricular contraction.
+- V2 local region contraction follows each surface region's activation time plus electromechanical delay.
 
 The visual goal is timing clarity: electrical activation visibly precedes mechanical contraction.
+
+## Region-Aware Contraction
+
+Each evaluated surface region now has a mechanical companion state:
+
+```text
+contraction_onset_ms = region_activation_ms + electromechanical_delay_ms
+local_contraction = pulse(time - contraction_onset_ms)
+wall_deformation = local_contraction * chamber_scale
+```
+
+Atrial regions use a 55 ms teaching delay. Ventricular regions use the existing 42 ms delay. The 3D renderer uses local wall deformation to make mechanical regions subtly thicken after electrical activation. This is a synchronized teaching cue on the educational surface model, not a finite-element mesh simulation.
+
+## Chamber Volume Cues
+
+The mechanical state exposes RA, LA, RV, and LV volume fractions. The 3D renderer can show them as optional translucent chamber volumes. Ventricular volume remains high at QRS onset and falls during modeled ejection, avoiding the misleading impression that electrical depolarization instantly empties the ventricles.
 
 ## Flow Encoding
 

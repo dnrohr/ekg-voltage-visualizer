@@ -1,6 +1,7 @@
 import type {
   CardiacScenario,
   FlowState,
+  HeartSurfaceRegionState,
   HeartSoundMarker,
   MechanicalPhase,
   MechanicalState,
@@ -166,7 +167,26 @@ function flowForPhase(phase: MechanicalPhase, timeMs: number, scenario: CardiacS
   };
 }
 
-export function evaluateMechanicalState(scenario: CardiacScenario, timeMs: number): MechanicalState {
+function chamberVolume(chamber: HeartSurfaceRegionState["chamber"], atrialVolumeFraction: number, ventricularVolumeFraction: number): number {
+  return chamber === "RA" || chamber === "LA" ? atrialVolumeFraction : ventricularVolumeFraction;
+}
+
+function regionContractionDelayMs(chamber: HeartSurfaceRegionState["chamber"]): number {
+  return chamber === "RA" || chamber === "LA" ? 55 : 42;
+}
+
+function localContraction(region: HeartSurfaceRegionState, timeMs: number): number {
+  const onset = region.activationTimeMs + regionContractionDelayMs(region.chamber);
+  const peak = onset + (region.chamber === "RA" || region.chamber === "LA" ? 54 : 82);
+  const end = Math.max(peak + 40, region.repolarizationTimeMs + 42);
+  return pulse(onset, peak, end, timeMs);
+}
+
+export function evaluateMechanicalState(
+  scenario: CardiacScenario,
+  timeMs: number,
+  surfaceRegions: HeartSurfaceRegionState[] = []
+): MechanicalState {
   const { timing } = scenario;
   const s1 = timing.qrsStartMs + 42;
   const semilunarOpen = timing.qrsEndMs + 24;
@@ -189,6 +209,12 @@ export function evaluateMechanicalState(scenario: CardiacScenario, timeMs: numbe
   const rapidFilling = phase === "rapid-filling" ? pulse(avOpen, avOpen + 45, avOpen + 112, timeMs) : 0;
   const atrialVolumeFraction = clamp01(0.9 - atrialContraction * 0.22 + rapidFilling * 0.12);
   const ventricularVolumeFraction = clamp01(0.92 - ventricularContraction * 0.34 + rapidFilling * 0.24);
+  const chamberVolumes = {
+    RA: atrialVolumeFraction,
+    LA: atrialVolumeFraction,
+    RV: ventricularVolumeFraction,
+    LV: ventricularVolumeFraction
+  };
 
   return {
     phase,
@@ -210,6 +236,19 @@ export function evaluateMechanicalState(scenario: CardiacScenario, timeMs: numbe
       wallThickening: ventricularContraction * 0.42,
       electromechanicalDelayMs: 42
     },
+    chamberVolumes,
+    regionMechanics: surfaceRegions.map((region) => {
+      const contractionProgress = localContraction(region, timeMs);
+      return {
+        regionId: region.id,
+        chamber: region.chamber,
+        activationTimeMs: region.activationTimeMs,
+        contractionOnsetMs: region.activationTimeMs + regionContractionDelayMs(region.chamber),
+        contractionProgress,
+        wallDeformation: contractionProgress * (region.chamber === "RA" || region.chamber === "LA" ? 0.18 : 0.32),
+        chamberVolumeFraction: chamberVolume(region.chamber, atrialVolumeFraction, ventricularVolumeFraction)
+      };
+    }),
     flow: flowForPhase(phase, timeMs, scenario)
   };
 }

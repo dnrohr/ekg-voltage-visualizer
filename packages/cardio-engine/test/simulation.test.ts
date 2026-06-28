@@ -187,6 +187,28 @@ describe("cardio-engine simulation", () => {
     expect(isoRelaxation.mechanical.flow.region).toBe("no-flow");
   });
 
+  it("delays local mechanical contraction after regional activation", () => {
+    const earlySeptum = evaluateScenario(normalSinusRhythmScenario, 320 / 800);
+    const contractedSeptum = evaluateScenario(normalSinusRhythmScenario, 395 / 800);
+    const earlyMechanical = earlySeptum.mechanical.regionMechanics.find((region) => region.regionId === "septal-right-facing");
+    const contractedMechanical = contractedSeptum.mechanical.regionMechanics.find((region) => region.regionId === "septal-right-facing");
+
+    expect(earlyMechanical?.activationTimeMs).toBeLessThan(earlySeptum.timeMs);
+    expect(earlyMechanical?.contractionOnsetMs).toBeGreaterThan(earlySeptum.timeMs);
+    expect(earlyMechanical?.contractionProgress).toBe(0);
+    expect(contractedMechanical?.contractionProgress ?? 0).toBeGreaterThan(0.2);
+  });
+
+  it("keeps ventricular volume high at QRS onset before ejection timing", () => {
+    const qrsOnset = evaluateScenario(normalSinusRhythmScenario, 300 / 800);
+    const ejection = evaluateScenario(normalSinusRhythmScenario, 450 / 800);
+
+    expect(qrsOnset.mechanical.chamberVolumes.LV).toBeGreaterThan(0.88);
+    expect(qrsOnset.mechanical.chamberVolumes.RV).toBeGreaterThan(0.88);
+    expect(ejection.mechanical.chamberVolumes.LV).toBeLessThan(qrsOnset.mechanical.chamberVolumes.LV);
+    expect(ejection.mechanical.regionMechanics.some((region) => region.wallDeformation > 0.12)).toBe(true);
+  });
+
   it("validates all curated scenario schemas", () => {
     for (const scenario of scenarioLibrary) {
       expect(validateScenarioSchema(scenario)).toEqual([]);
