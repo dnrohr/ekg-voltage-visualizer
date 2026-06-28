@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,24 @@ Make the V2 app dependable for repeated study, including responsive layout, cont
 
 ## Verification Notes
 
-Record performance observations, viewport checks, and remaining limits.
+Implemented:
+
+- Disposed dynamic 3D objects before each synchronized redraw.
+- Memoized 3D layer props and stabilized global keyboard handling during playback.
+- Added `R`/`Shift+R` region cycling and `G`/`Shift+G` lesson cycling.
+- Broadened high-contrast styling across V2 panels and controls.
+- Added reduced-motion CSS suppression in addition to autoplay stopping.
+- Added JSON study snapshot export alongside existing 3D PNG export.
+- Confirmed PWA manifest, icon, theme color, standalone display, and viewport metadata.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke desktop: keyboard lead/region/lesson cycling, high contrast, reduced motion, export controls, and 3D canvas.
+- Browser smoke mobile: responsive layout without horizontal overflow; layer/lesson/export controls reachable.
+
+Remaining limit:
+
+- Short animation capture is not implemented; V2-11 exports still PNG and reproducible JSON study snapshots.

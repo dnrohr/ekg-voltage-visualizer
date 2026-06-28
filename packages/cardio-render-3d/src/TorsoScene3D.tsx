@@ -210,7 +210,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
   const [cutaway, setCutaway] = React.useState(false);
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
   const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
-  const activeLayers = { ...defaultLayers, ...layers };
+  const activeLayers = React.useMemo(() => ({ ...defaultLayers, ...layers }), [layers]);
 
   React.useEffect(() => {
     onSelectRegionRef.current = onSelectRegion;
@@ -341,6 +341,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
     const dynamicGroup = dynamicGroupRef.current;
     if (!scene || !renderer || !camera || !dynamicGroup) return;
 
+    disposeObject(dynamicGroup);
     dynamicGroup.clear();
 
     const selectedDefinition = leadDefinitions[selectedLead];

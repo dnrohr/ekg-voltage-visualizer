@@ -27,11 +27,63 @@ button {
   cursor: pointer;
 }
 
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 18px;
   display: grid;
   gap: 14px;
+}
+
+.app-shell.high-contrast-mode {
+  color: #0b1220;
+  background: #ffffff;
+}
+
+.app-shell.high-contrast-mode .heart-panel,
+.app-shell.high-contrast-mode .explanation-panel,
+.app-shell.high-contrast-mode .timeline-panel,
+.app-shell.high-contrast-mode .layer-panel,
+.app-shell.high-contrast-mode .lesson-panel,
+.app-shell.high-contrast-mode .comparison-panel,
+.app-shell.high-contrast-mode .anatomy-panel,
+.app-shell.high-contrast-mode .ecg-panel,
+.app-shell.high-contrast-mode .region-panel,
+.app-shell.high-contrast-mode .probe-panel,
+.app-shell.high-contrast-mode .mechanical-summary,
+.app-shell.high-contrast-mode .quiz-card {
+  border-color: #111827;
+  box-shadow: none;
+}
+
+.app-shell.high-contrast-mode button,
+.app-shell.high-contrast-mode select,
+.app-shell.high-contrast-mode input[type="range"] {
+  border-color: #111827;
+}
+
+.app-shell.high-contrast-mode button.active,
+.app-shell.high-contrast-mode button.selected,
+.app-shell.high-contrast-mode .lead-card.selected,
+.app-shell.high-contrast-mode .region-picker button.active,
+.app-shell.high-contrast-mode .lesson-list button.active {
+  border-color: #000000;
+  background: #fef3c7;
+  color: #000000;
+}
+
+.app-shell.reduced-motion-mode *,
+.app-shell.reduced-motion-mode *::before,
+.app-shell.reduced-motion-mode *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }
 
 .simulator-top {

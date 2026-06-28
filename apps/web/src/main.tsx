@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Camera, Contrast, Pause, Play, RotateCcw, Save, SkipBack, SkipForward } from "lucide-react";
+import { Camera, Contrast, Download, Pause, Play, RotateCcw, Save, SkipBack, SkipForward } from "lucide-react";
 import {
   advanceClock,
   createClockState,
@@ -236,6 +236,8 @@ function App() {
   const [highContrast, setHighContrast] = React.useState(false);
   const [reducedMotion, setReducedMotion] = React.useState(false);
   const lastFrame = React.useRef<number | null>(null);
+  const scenarioRef = React.useRef(getScenarioById(scenarioId));
+  const surfaceRegionsRef = React.useRef<ReturnType<typeof evaluateScenario>["surfaceRegions"]>([]);
   const scenario = React.useMemo(() => getScenarioById(scenarioId), [scenarioId]);
   const comparisonScenario = React.useMemo(() => getScenarioById(comparisonId), [comparisonId]);
   const clock = React.useMemo(() => createClockState(scenario, timeMs), [scenario, timeMs]);
@@ -284,6 +286,11 @@ function App() {
       ),
     [state]
   );
+
+  React.useEffect(() => {
+    scenarioRef.current = scenario;
+    surfaceRegionsRef.current = state.surfaceRegions;
+  }, [scenario, state.surfaceRegions]);
 
   React.useEffect(() => {
     if (!isPlaying || reducedMotion) {
@@ -347,17 +354,37 @@ function App() {
         event.preventDefault();
         setIsPlaying((value) => !value);
       } else if (event.key === "ArrowRight") {
-        setTimeMs((current) => stepClock(scenario, current, millisecondStepMs).timeMs);
+        setTimeMs((current) => stepClock(scenarioRef.current, current, millisecondStepMs).timeMs);
       } else if (event.key === "ArrowLeft") {
-        setTimeMs((current) => stepClock(scenario, current, -millisecondStepMs).timeMs);
+        setTimeMs((current) => stepClock(scenarioRef.current, current, -millisecondStepMs).timeMs);
       } else if (event.key.toLowerCase() === "l") {
         setSelectedLead((current) => leadOrder[(leadOrder.indexOf(current) + 1) % leadOrder.length]);
+      } else if (event.key.toLowerCase() === "r") {
+        setSelectedRegionId((current) => {
+          const regions = surfaceRegionsRef.current;
+          const currentIndex = Math.max(0, regions.findIndex((region) => region.id === current));
+          const step = event.shiftKey ? -1 : 1;
+          return regions[(currentIndex + step + regions.length) % regions.length]?.id ?? current;
+        });
+      } else if (event.key.toLowerCase() === "g") {
+        setSelectedLessonId((current) => {
+          const currentIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === current));
+          const step = event.shiftKey ? -1 : 1;
+          const nextLesson = lessons[(currentIndex + step + lessons.length) % lessons.length];
+          setQuizChoiceId(null);
+          setSelectedLead(nextLesson.lead);
+          setSelectedRegionId(nextLesson.regionId);
+          setTimeMs(nextLesson.timeMs);
+          setLearnerMode(nextLesson.mode);
+          setVisualLayers(layerPresets[nextLesson.mode]);
+          return nextLesson.id;
+        });
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [scenario]);
+  }, []);
 
   const savePreset = () => {
     window.localStorage.setItem(
@@ -394,8 +421,31 @@ function App() {
     link.click();
   };
 
+  const exportStudySnapshot = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      scenarioId,
+      comparisonId,
+      timeMs: clock.timeMs,
+      selectedLead,
+      selectedRegionId: regionInspection?.regionId,
+      learnerMode,
+      visualLayers,
+      leadVoltage: state.leadVoltages[selectedLead],
+      phaseLabel: state.phaseLabel,
+      mechanicalPhase: state.mechanical.phaseLabel,
+      selectedLessonId
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.download = `ekg-study-${scenario.id}-${Math.round(clock.timeMs)}ms.json`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${highContrast ? "high-contrast-mode" : ""} ${reducedMotion ? "reduced-motion-mode" : ""}`}>
       <section className="simulator-top">
         <div className="heart-panel" aria-label="Heart electrical state">
           <div className="panel-heading">
@@ -564,16 +614,16 @@ function App() {
 
       <section className="timeline-panel" aria-label="Timeline controls">
         <div className="transport-controls">
-          <button className="icon-button" type="button" onClick={() => setIsPlaying((value) => !value)} aria-label={isPlaying ? "Pause beat animation" : "Play beat animation"}>
+          <button className="icon-button" type="button" onClick={() => setIsPlaying((value) => !value)} aria-label={isPlaying ? "Pause beat animation" : "Play beat animation"} aria-keyshortcuts="Space">
             {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
           <button className="icon-button" type="button" onClick={() => setTimeMs(0)} aria-label="Reset to start">
             <RotateCcw size={18} />
           </button>
-          <button className="icon-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, -frameStepMs).timeMs)} aria-label="Step backward one frame">
+          <button className="icon-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, -frameStepMs).timeMs)} aria-label="Step backward one frame" aria-keyshortcuts="ArrowLeft">
             <SkipBack size={18} />
           </button>
-          <button className="icon-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, frameStepMs).timeMs)} aria-label="Step forward one frame">
+          <button className="icon-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, frameStepMs).timeMs)} aria-label="Step forward one frame" aria-keyshortcuts="ArrowRight">
             <SkipForward size={18} />
           </button>
           <button className="step-button" type="button" onClick={() => setTimeMs((value) => stepClock(scenario, value, -millisecondStepMs).timeMs)}>
@@ -605,6 +655,9 @@ function App() {
           </button>
           <button className="icon-button" type="button" onClick={() => void exportScreenshot()} aria-label="Export 3D screenshot">
             <Camera size={18} />
+          </button>
+          <button className="icon-button" type="button" onClick={exportStudySnapshot} aria-label="Export study snapshot">
+            <Download size={18} />
           </button>
         </div>
         <div className="scrubber-wrap">

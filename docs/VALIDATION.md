@@ -38,6 +38,17 @@ V2 abnormal teaching scenarios must alter heart, source, timing, or electrode in
 
 Validation tests cover ordered schemas, delayed conduction timing, ectopic surface activation order, reversed Lead I polarity, normal QRS polarity anchors, and baseline plausibility. These checks are educational sanity checks, not diagnostic performance metrics.
 
+## V2 Polish Smoke Coverage
+
+V2-11 verification includes desktop and mobile browser smoke checks for:
+
+- Layer and lesson controls remaining keyboard-focusable native controls.
+- Global keyboard shortcuts for playback, stepping, lead cycling, region cycling, and lesson cycling.
+- High-contrast mode applying to major panels and selected controls.
+- Reduced-motion mode stopping autoplay and suppressing CSS motion.
+- 3D canvas PNG export and JSON study snapshot export controls.
+- PWA metadata presence.
+
 ## Reference Overlay
 
 Task 09 adds an authored synthetic reference envelope through `generateSyntheticReferenceTrace`. The overlay is labeled as `synthetic-reference` and is derived from the same teaching scenario with slight amplitude scaling.
