@@ -438,6 +438,7 @@ export type SimulationState = {
   netVector: Vec3;
   cardiacSources: RegionalCardiacSource[];
   surfaceRegions: HeartSurfaceRegionState[];
+  heartMeshField: HeartMeshField;
   isochroneMap: IsochroneMap;
   isochroneMaps: Record<IsochroneScope, IsochroneMap>;
   electrodePotentials: ElectrodePotentials;

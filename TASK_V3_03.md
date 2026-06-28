@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,13 @@ Add a V3 renderer path that displays a heart-shaped external mesh surface using 
 
 ## Verification Notes
 
-Pending.
+Threaded `HeartMeshField` into `SimulationState` and added a V3 external-heart rendering path in `packages/cardio-render-3d/src/TorsoScene3D.tsx`. The renderer now adapts mesh-field segments/faces into Three.js buffer geometries, colors external regions by chamber/electrical state, preserves `regionId` pointer picking, and keeps electrodes, lead projection, vector, contour, valve, flow, and ECG synchronization overlays active.
+
+The old V2 patch overlay remains as a lightweight wavefront/selection cue, while the V3 mesh-field surface is the primary heart object.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke at `http://127.0.0.1:5187/`: desktop and mobile viewport checks confirmed visible 3D canvas, no console errors, and no mobile horizontal overflow.

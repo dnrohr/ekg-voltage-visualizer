@@ -5,6 +5,9 @@ import {
   electrodeOrder,
   leadDefinitions,
   type ElectrodeName,
+  type HeartChamber,
+  type HeartMeshField,
+  type HeartMeshSegment,
   type IsochroneScope,
   type LeadName,
   type SimulationState,
@@ -70,6 +73,13 @@ const surfaceMapModes: Record<SurfaceMapMode, string> = {
   "electrical-state": "Electrical state"
 };
 
+const chamberSurfaceColors: Record<HeartChamber, number> = {
+  RA: 0x6bc4bb,
+  LA: 0xee9f93,
+  RV: 0x2f9b8f,
+  LV: 0xdc6f63
+};
+
 const isochroneScopes: Record<IsochroneScope, string> = {
   "whole-heart": "Whole",
   atria: "Atria",
@@ -100,6 +110,7 @@ const cameraPresets: Record<CameraPreset, { label: string; position: THREE.Vecto
 };
 
 const toScene = (point: Vec3) => new THREE.Vector3(point.x, point.z, point.y);
+const externalMeshOffset = new THREE.Vector3(0, 0, 0.26);
 const surfacePatchOffset = new THREE.Vector3(0, 0, 0.31);
 const surfacePatchScale = 2.05;
 
@@ -155,7 +166,7 @@ function makeChamber(
     roughness: 0.62,
     metalness: 0.02,
     transparent: true,
-    opacity: 0.9
+    opacity: 0.24
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = name;
@@ -183,6 +194,79 @@ function contourColor(relativeTimeMs: number): number {
   if (relativeTimeMs < 40) return 0xf59e0b;
   if (relativeTimeMs < 80) return 0xdc2626;
   return 0x7c3aed;
+}
+
+function externalMeshColor(chamber: HeartChamber, stateName: TissueState, isSelected: boolean, mode: SurfaceMapMode): number {
+  if (isSelected) return 0x0f766e;
+  if (mode === "electrical-state" || stateName === "depolarizing" || stateName === "repolarizing") {
+    return surfaceRegionColor(stateName, mode);
+  }
+
+  return chamberSurfaceColors[chamber];
+}
+
+function externalMeshPoint(point: Vec3, normal: Vec3, chamber: HeartChamber, center?: Vec3) {
+  const base = toScene(point);
+  const sceneNormal = toScene(normal).normalize();
+  const anteriorLift = chamber === "RA" || chamber === "LA" ? 0.09 : 0.14;
+  const lifted = new THREE.Vector3(base.x * 1.12, base.y * 1.04, base.z)
+    .add(externalMeshOffset)
+    .addScaledVector(sceneNormal, 0.065)
+    .add(new THREE.Vector3(0, 0, anteriorLift));
+
+  if (!center) return lifted;
+
+  const centerBase = toScene(center);
+  const centerLifted = new THREE.Vector3(centerBase.x * 1.12, centerBase.y * 1.04, centerBase.z)
+    .add(externalMeshOffset)
+    .addScaledVector(toScene(center).normalize(), 0.065)
+    .add(new THREE.Vector3(0, 0, anteriorLift));
+  const offset = lifted.clone().sub(centerLifted);
+  return new THREE.Vector3(
+    centerLifted.x + offset.x * 2.45,
+    centerLifted.y + offset.y * 2.2,
+    centerLifted.z + offset.z * 0.38 + (vertexDepthBias(chamber, point) * 0.025)
+  );
+}
+
+function vertexDepthBias(chamber: HeartChamber, point: Vec3) {
+  const ventricularBias = chamber === "LV" || chamber === "RV" ? 1.2 : 0.6;
+  return ventricularBias + Math.max(0, -point.z) * 0.7;
+}
+
+function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegment) {
+  const verticesById = new Map(field.vertices.map((vertex) => [vertex.id, vertex]));
+  const centerVertex = verticesById.get(`${segment.id}:center`);
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+  const indexByVertexId = new Map<string, number>();
+
+  for (const vertexId of segment.vertexIds) {
+    const vertex = verticesById.get(vertexId);
+    if (!vertex) continue;
+
+    const position = externalMeshPoint(vertex.position, vertex.normal, vertex.chamber, centerVertex?.position);
+    const normal = toScene(vertex.normal).normalize();
+    indexByVertexId.set(vertexId, positions.length / 3);
+    positions.push(position.x, position.y, position.z);
+    normals.push(normal.x, normal.y, normal.z);
+  }
+
+  for (const face of field.faces) {
+    if (face.regionId !== segment.id) continue;
+    const faceIndices = face.vertexIds.map((vertexId) => indexByVertexId.get(vertexId));
+    if (faceIndices.every((index) => index !== undefined)) {
+      indices.push(faceIndices[0]!, faceIndices[1]!, faceIndices[2]!);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geometry.setIndex(indices);
+  geometry.computeBoundingSphere();
+  return geometry;
 }
 
 function surfacePatchPoints(center: Vec3, vertices: Vec3[]) {
@@ -378,6 +462,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
 
     const selectedDefinition = leadDefinitions[selectedLead];
     const regionMechanics = new Map(state.mechanical.regionMechanics.map((region) => [region.regionId, region]));
+    const regionsById = new Map(state.surfaceRegions.map((region) => [region.id, region]));
     const heart = scene.getObjectByName("procedural heart");
     heart?.children.forEach((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -390,6 +475,53 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
           : 1;
       child.scale.copy(baseScale).multiplyScalar(chamberScale);
     });
+
+    if (activeLayers.wavefront || activeLayers.stateMap) {
+      for (const segment of state.heartMeshField.segments) {
+        const region = regionsById.get(segment.id);
+        if (!region) continue;
+
+        const isSelectedRegion = segment.id === selectedRegionId;
+        const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
+        const mesh = new THREE.Mesh(
+          makeExternalMeshGeometry(state.heartMeshField, segment),
+          new THREE.MeshStandardMaterial({
+            color: externalMeshColor(segment.chamber, region.state, isSelectedRegion, activeLayers.stateMap ? "electrical-state" : surfaceMapMode),
+            emissive: isCurrentWave || isSelectedRegion ? externalMeshColor(segment.chamber, region.state, isSelectedRegion, "electrical-state") : 0x000000,
+            emissiveIntensity: isSelectedRegion ? 0.38 : isCurrentWave ? 0.24 : 0.04,
+            roughness: 0.42,
+            metalness: 0.03,
+            transparent: true,
+            opacity: isSelectedRegion ? 0.97 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.72 : 0.9,
+            side: THREE.DoubleSide
+          })
+        );
+        mesh.name = `v3 external heart mesh ${segment.id}`;
+        mesh.userData.regionId = segment.id;
+        mesh.renderOrder = 8;
+        dynamicGroup.add(mesh);
+
+        const segmentCenter = state.heartMeshField.vertices.find((vertex) => vertex.id === `${segment.id}:center`);
+        const outlinePoints = segment.vertexIds
+          .filter((vertexId) => !vertexId.endsWith(":center"))
+          .map((vertexId) => state.heartMeshField.vertices.find((vertex) => vertex.id === vertexId))
+          .filter((vertex) => vertex !== undefined)
+          .map((vertex) => externalMeshPoint(vertex.position, vertex.normal, vertex.chamber, segmentCenter?.position).add(new THREE.Vector3(0, 0, 0.006)));
+        if (outlinePoints.length >= 3) {
+          const outline = new THREE.LineLoop(
+            new THREE.BufferGeometry().setFromPoints(outlinePoints),
+            new THREE.LineBasicMaterial({
+              color: isSelectedRegion ? 0x0f766e : isCurrentWave ? 0x111827 : 0x475569,
+              transparent: true,
+              opacity: isSelectedRegion || isCurrentWave ? 0.95 : 0.46
+            })
+          );
+          outline.name = `v3 external heart outline ${segment.id}`;
+          outline.renderOrder = 9;
+          dynamicGroup.add(outline);
+        }
+      }
+    }
 
     const positiveCenter = terminalCenter(selectedDefinition.positiveTerminal.weights);
     const negativeCenter = terminalCenter(selectedDefinition.negativeTerminal.weights);
@@ -514,7 +646,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
           color: isSelectedRegion ? 0x0f766e : color,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: isSelectedRegion ? 0.98 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.62 : 0.92,
+          opacity: isSelectedRegion ? 0.36 : isCurrentWave ? 0.3 : surfaceMapMode === "wavefront" && region.state === "resting" ? 0.08 : 0.18,
           depthTest: false
         })
       );
@@ -531,7 +663,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
         new THREE.LineBasicMaterial({
           color: isSelectedRegion ? 0x0f766e : isCurrentWave ? 0x111827 : 0x64748b,
           transparent: true,
-          opacity: isCurrentWave || isSelectedRegion ? 0.98 : 0.66,
+          opacity: isCurrentWave || isSelectedRegion ? 0.82 : 0.34,
           depthTest: false
         })
       );

@@ -271,6 +271,8 @@ describe("cardio-engine simulation", () => {
     const septalRegion = state.surfaceRegions.find((region) => region.id === "septal-right-facing");
 
     expect(state.surfaceRegions.length).toBe(educationalHeartSurface.regions.length);
+    expect(state.heartMeshField.segments.length).toBe(educationalHeartSurface.regions.length);
+    expect(state.heartMeshField.timeMs).toBeCloseTo(state.timeMs);
     expect(state.isochroneMap.scope).toBe("ventricles");
     expect(state.isochroneMaps["whole-heart"].bands.length).toBe(educationalHeartSurface.regions.length);
     expect(state.isochroneMaps.atria.bands.every((band) => band.chamber === "RA" || band.chamber === "LA")).toBe(true);

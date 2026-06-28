@@ -58,3 +58,18 @@ Every imported anatomical mesh must have an `AnatomicalAssetManifest`. The valid
 Use `references/anatomical-heart-asset-manifest.example.json` as the template. The example is a schema-style placeholder, not a bundled asset.
 
 Blocking issues mean the asset must not be bundled or loaded as the primary V3 anatomy. Warning issues require an explicit review note in the task file or release audit.
+
+## V3 External Mesh Renderer Foundation
+
+The first V3 renderer path consumes `SimulationState.heartMeshField` in `packages/cardio-render-3d/src/TorsoScene3D.tsx`. It adapts `HeartMeshField` segments and triangular faces into Three.js `BufferGeometry` objects, preserving `regionId` on each mesh for pointer selection.
+
+Current behavior:
+
+- the external heart surface is generated from the V2-derived mesh field
+- chambers receive distinct anatomical teaching colors
+- depolarizing/repolarizing regions can override chamber color with electrical-state colors
+- selected regions keep the existing region inspection workflow
+- the older V2 patch overlay is retained only as a lightweight wavefront/selection cue
+- electrodes, lead projection, net vector, contours, valve cues, flow cues, and ECG synchronization remain driven by the same `SimulationState`
+
+This is still a coarse educational surface. Its purpose is to prove the renderer contract before importing a licensed anatomical mesh.

@@ -1,3 +1,4 @@
+import { buildHeartMeshField } from "./anatomicalMesh";
 import {
   computeElectrodePotentials,
   computeLeadVoltages,
@@ -264,6 +265,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
 
   const phase = phaseAtMs(scenario, timeMs);
   const surfaceRegions = evaluateHeartSurface(scenario, timeMs);
+  const heartMeshField = buildHeartMeshField(scenario, timeMs);
   const mechanical = evaluateMechanicalState(scenario, timeMs, surfaceRegions);
   const isochroneMaps = {
     "whole-heart": generateIsochroneMap(scenario, timeMs, "whole-heart", 20, surfaceRegions),
@@ -282,6 +284,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
     netVector,
     cardiacSources,
     surfaceRegions,
+    heartMeshField,
     isochroneMap,
     isochroneMaps,
     electrodePotentials,
