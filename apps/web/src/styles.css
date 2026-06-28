@@ -606,6 +606,56 @@ h3 {
   font-weight: 800;
 }
 
+.surface-mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.surface-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.surface-map-legend span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border: 1px solid #475569;
+  border-radius: 50%;
+}
+
+.legend-dot.resting {
+  background: #e5e7eb;
+}
+
+.legend-dot.depolarizing {
+  background: #f59e0b;
+}
+
+.legend-dot.active {
+  background: #dc2626;
+}
+
+.legend-dot.repolarizing {
+  background: #2563eb;
+}
+
+.legend-dot.recovered {
+  background: #14b8a6;
+}
+
 .scene3d-canvas {
   width: 100%;
   height: clamp(300px, 42vw, 520px);

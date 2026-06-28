@@ -73,6 +73,17 @@ At any cardiac time, `evaluateHeartSurface` classifies each surface region as:
 
 Surface timing is resolved from the current scenario's activation nodes when an activation-node match exists. This means a conduction-delay scenario can delay surface regions without duplicating a separate surface timeline.
 
+## V2 Surface Map Display Modes
+
+The 3D view now consumes `SimulationState.surfaceRegions`, which are evaluated from the same cardiac time as the ECG traces.
+
+Two display modes are available:
+
+- Live activation wave: emphasizes the currently changing wavefront while keeping already-depolarized and recovered regions visually quieter.
+- Electrical state: colors every surface region by current state so activation, depolarized tissue, repolarization, and recovery can be distinguished.
+
+This is the first V2 rendering step toward an ECGSIM-style surface map. The regions are still coarse authored patches, but the state is continuous and recomputed from the scenario clock at every scrub/playback time.
+
 ## Normal Activation Sequence
 
 The normal sinus rhythm scenario uses this authored path:

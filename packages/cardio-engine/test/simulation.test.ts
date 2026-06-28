@@ -237,6 +237,15 @@ describe("cardio-engine simulation", () => {
     expect(getSurfaceRegionById("lv-lateral")?.bestSeenLeads).toContain("V6");
   });
 
+  it("includes synchronized surface regions in evaluated scenario state", () => {
+    const state = evaluateScenario(normalSinusRhythmScenario, 310 / 800);
+    const septalRegion = state.surfaceRegions.find((region) => region.id === "septal-right-facing");
+
+    expect(state.surfaceRegions.length).toBe(educationalHeartSurface.regions.length);
+    expect(septalRegion?.state).toBe("depolarizing");
+    expect(septalRegion?.activationTimeMs).toBeCloseTo(306);
+  });
+
   it("uses scenario-specific activation timing for surface evaluation", () => {
     const rbbb = scenarioLibrary.find((scenario) => scenario.id === "right-bundle-branch-block");
     expect(rbbb).toBeDefined();

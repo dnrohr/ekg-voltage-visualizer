@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,18 @@ Render a live activation wavefront and current electrical/transmembrane state ma
 
 ## Verification Notes
 
-Record visual checks, screenshots if useful, and known simplifications.
+Implemented synchronized `SimulationState.surfaceRegions` and rendered authored surface regions in the 3D view with two modes:
+
+- Live activation wave
+- Electrical state
+
+The legend distinguishes not activated, depolarizing, depolarized, repolarizing, and recovered regions.
+
+Verification:
+
+- `npm test` - 22 passing tests, including simulation-level surface region synchronization.
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke at `http://127.0.0.1:5187`: verified activation/electrical-state mode controls, legend, nonzero 3D canvas dimensions, and no horizontal overflow. Console history contained only Vite/React hot-reload warnings from repeated dev-session reloads.
+
+Known simplification: surface regions are coarse authored teaching patches, not a real anatomical mesh.

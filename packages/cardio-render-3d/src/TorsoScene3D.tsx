@@ -12,6 +12,7 @@ import {
 } from "@ekg/cardio-engine";
 
 type CameraPreset = "frontal" | "transverse" | "left-lateral" | "heart-close";
+type SurfaceMapMode = "wavefront" | "electrical-state";
 
 type TorsoScene3DProps = {
   state: SimulationState;
@@ -24,6 +25,19 @@ const tissueColors: Record<TissueState, number> = {
   active: 0xef4444,
   repolarizing: 0x3b82f6,
   recovered: 0x5eead4
+};
+
+const surfaceStateColors: Record<TissueState, number> = {
+  resting: 0xe5e7eb,
+  depolarizing: 0xf59e0b,
+  active: 0xdc2626,
+  repolarizing: 0x2563eb,
+  recovered: 0x14b8a6
+};
+
+const surfaceMapModes: Record<SurfaceMapMode, string> = {
+  wavefront: "Activation wave",
+  "electrical-state": "Electrical state"
 };
 
 const cameraPresets: Record<CameraPreset, { label: string; position: THREE.Vector3; target: THREE.Vector3 }> = {
@@ -114,6 +128,18 @@ function makeChamber(
   return mesh;
 }
 
+function surfaceRegionColor(stateName: TissueState, mode: SurfaceMapMode): number {
+  if (mode === "electrical-state") {
+    return surfaceStateColors[stateName];
+  }
+
+  if (stateName === "depolarizing") return 0xf59e0b;
+  if (stateName === "active") return 0xfca5a5;
+  if (stateName === "repolarizing") return 0x93c5fd;
+  if (stateName === "recovered") return 0x99f6e4;
+  return 0xf8fafc;
+}
+
 function disposeObject(object: THREE.Object3D) {
   object.traverse((child) => {
     if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof THREE.Sprite) {
@@ -138,6 +164,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
   const dynamicGroupRef = React.useRef<THREE.Group | null>(null);
   const [preset, setPreset] = React.useState<CameraPreset>("frontal");
   const [cutaway, setCutaway] = React.useState(false);
+  const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
 
   React.useEffect(() => {
     if (!mountRef.current) return;
@@ -319,6 +346,26 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
       dynamicGroup.add(tissue);
     }
 
+    for (const region of state.surfaceRegions) {
+      const position = toScene(region.center).add(new THREE.Vector3(0, 0, 0.18));
+      const color = surfaceRegionColor(region.state, surfaceMapMode);
+      const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
+      const marker = new THREE.Mesh(
+        new THREE.SphereGeometry(isCurrentWave ? 0.082 : 0.065, 24, 16),
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: isCurrentWave ? color : 0x000000,
+          emissiveIntensity: isCurrentWave ? 0.25 : 0.04,
+          roughness: 0.48,
+          transparent: true,
+          opacity: surfaceMapMode === "wavefront" && region.state === "resting" ? 0.38 : 0.82
+        })
+      );
+      marker.name = `surface region ${region.id}`;
+      marker.position.copy(position);
+      dynamicGroup.add(marker);
+    }
+
     const valveMaterial = new THREE.MeshStandardMaterial({
       color: 0x0f766e,
       emissive: 0x0f766e,
@@ -366,7 +413,7 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
     }
 
     renderer.render(scene, camera);
-  }, [cutaway, selectedLead, state]);
+  }, [cutaway, selectedLead, state, surfaceMapMode]);
 
   return (
     <div className="scene3d">
@@ -389,6 +436,25 @@ export function TorsoScene3D({ state, selectedLead }: TorsoScene3DProps) {
           />
           Cutaway
         </label>
+        <div className="surface-mode-toggle" aria-label="Surface map mode">
+          {Object.entries(surfaceMapModes).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={surfaceMapMode === key ? "active" : ""}
+              onClick={() => setSurfaceMapMode(key as SurfaceMapMode)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="surface-map-legend" aria-label="Surface state legend">
+        <span><i className="legend-dot resting" />Not activated</span>
+        <span><i className="legend-dot depolarizing" />Depolarizing</span>
+        <span><i className="legend-dot active" />Depolarized</span>
+        <span><i className="legend-dot repolarizing" />Repolarizing</span>
+        <span><i className="legend-dot recovered" />Recovered</span>
       </div>
       <div ref={mountRef} className="scene3d-canvas" role="img" aria-label="3D torso, heart, electrode, and selected lead visualization" />
     </div>

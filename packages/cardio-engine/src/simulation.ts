@@ -7,6 +7,7 @@ import {
   resolveTerminalPotential
 } from "./leads";
 import { evaluateMechanicalState } from "./mechanics";
+import { evaluateHeartSurface } from "./surface";
 import type {
   ActivationNode,
   CardiacPhase,
@@ -263,6 +264,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
 
   const phase = phaseAtMs(scenario, timeMs);
   const mechanical = evaluateMechanicalState(scenario, timeMs);
+  const surfaceRegions = evaluateHeartSurface(scenario, timeMs);
 
   return {
     normalizedTime: normalized,
@@ -273,6 +275,7 @@ export function evaluateScenario(scenario: CardiacScenario, normalizedTime: numb
     tissueNodes,
     netVector,
     cardiacSources,
+    surfaceRegions,
     electrodePotentials,
     wilsonCentralTerminal: computeWilsonCentralTerminal(electrodePotentials),
     leadVoltages,

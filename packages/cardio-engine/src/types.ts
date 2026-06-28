@@ -281,6 +281,7 @@ export type SimulationState = {
   tissueNodes: TissueNodeState[];
   netVector: Vec3;
   cardiacSources: RegionalCardiacSource[];
+  surfaceRegions: HeartSurfaceRegionState[];
   electrodePotentials: ElectrodePotentials;
   wilsonCentralTerminal: number;
   leadVoltages: LeadVoltages;
