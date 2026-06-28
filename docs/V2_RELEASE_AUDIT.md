@@ -19,7 +19,7 @@ This audit checks the V2 implementation against `V2_VISION.md`, `ROADMAP_V2.md`,
 
 ## V2 Task Completion Evidence
 
-All task files `TASK_V2_00.md` through `TASK_V2_11.md` are marked `Done` in `TASKS_V2.md`. `TASK_V2_12.md` records this final audit and handoff.
+All task files `TASK_V2_00.md` through `TASK_V2_12.md` are marked `Done` in `TASKS_V2.md`. `TASK_V2_12.md` records this final audit and handoff.
 
 ## Validation Evidence
 
