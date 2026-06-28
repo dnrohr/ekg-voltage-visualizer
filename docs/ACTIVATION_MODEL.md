@@ -92,9 +92,9 @@ V2 adds `generateIsochroneMap` for authored activation-time bands. The initial i
 - `atria`: right and left atrial surface regions, anchored to P-wave onset
 - `ventricles`: right and left ventricular surface regions, anchored to QRS onset
 
-The 3D view draws surface patch outlines, thin contour rings around the scoped patches, and active wavefront halos. Labels use milliseconds relative to the selected scope anchor, so ventricular labels describe time after QRS onset while atrial labels describe time after P-wave onset.
+The 3D view draws V3 mesh-surface contour loops, surface patch outlines, thin legacy contour rings around the scoped patches, and active wavefront highlights. Labels use milliseconds relative to the selected scope anchor, so ventricular labels describe time after QRS onset while atrial labels describe time after P-wave onset.
 
-This is an educational contour layer over coarse patches rather than a true interpolated mesh isoline solver. It is designed to make activation order inspectable when paused and visually connected to the live activation-wave mode.
+This is an educational contour layer over coarse mesh segments and patches rather than a true interpolated dense-mesh isoline solver. It is designed to make activation order inspectable when paused and visually connected to the live activation-wave mode.
 
 ## Normal Activation Sequence
 

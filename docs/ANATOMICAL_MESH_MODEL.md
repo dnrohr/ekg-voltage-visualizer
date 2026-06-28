@@ -90,3 +90,16 @@ The first tunable band widths are:
 - repolarization wavefront: 26 ms
 
 If the custom shader path is unavailable, the renderer falls back to a standard Three.js material colored by the region's evaluated tissue state. The fallback is less continuous, but it preserves the teaching state and selected-region behavior.
+
+## Mesh Isochrone Contours
+
+V3-05 renders contour outlines directly over the external mesh-field segments. The renderer uses `SimulationState.isochroneMaps` to choose the scoped activation-time band and `HeartMeshField` segment vertices to place contour loops on the same surface as the shader wavefront.
+
+Current behavior:
+
+- contour loops are drawn on V3 external mesh segment boundaries
+- the current `phiActivationMs ~= 0` wavefront band receives a darker, higher-opacity contour
+- contour labels are placed at mesh-surface centroids for current bands and selected interval labels
+- the older V2 ring contours remain as a secondary comparison layer while the mesh contour path matures
+
+Because the current mesh field is derived from coarse authored regions, the contours are segment-boundary overlays rather than fully interpolated isolines through dense vertex fields. Once imported anatomy provides varied per-vertex activation times, the same timing attributes can support smoother isoline extraction.

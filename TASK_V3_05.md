@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -36,4 +36,18 @@ Render activation-time contours and current level-set bands over the V3 mesh.
 
 ## Verification Notes
 
-Pending.
+Added V3 mesh-surface contour rendering in `packages/cardio-render-3d/src/TorsoScene3D.tsx`. External mesh geometry now also carries `activationTimeMs` and `repolarizationTimeMs` attributes, and contour loops are drawn on `HeartMeshField` segment outlines using scoped `SimulationState.isochroneMaps`.
+
+Current behavior:
+
+- V3 contour loops are placed on the external mesh surface.
+- Current wavefront/level-set contours render with stronger styling.
+- Mesh contour labels appear for current bands and selected interval labels.
+- Existing V2 contour rings remain as a secondary comparison/fallback layer.
+
+Verification:
+
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+- Browser smoke at `http://127.0.0.1:5187/`: desktop/mobile canvas visible, contour caption updated, no console errors, and no mobile horizontal overflow.

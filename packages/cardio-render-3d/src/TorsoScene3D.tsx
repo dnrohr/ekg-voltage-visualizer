@@ -343,6 +343,8 @@ function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegme
   const normals: number[] = [];
   const activationPhiValues: number[] = [];
   const repolarizationPhiValues: number[] = [];
+  const activationTimeValues: number[] = [];
+  const repolarizationTimeValues: number[] = [];
   const indices: number[] = [];
   const indexByVertexId = new Map<string, number>();
 
@@ -357,6 +359,8 @@ function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegme
     normals.push(normal.x, normal.y, normal.z);
     activationPhiValues.push(vertex.phiActivationMs);
     repolarizationPhiValues.push(vertex.phiRepolarizationMs);
+    activationTimeValues.push(vertex.activationTimeMs);
+    repolarizationTimeValues.push(vertex.repolarizationTimeMs);
   }
 
   for (const face of field.faces) {
@@ -372,9 +376,31 @@ function makeExternalMeshGeometry(field: HeartMeshField, segment: HeartMeshSegme
   geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
   geometry.setAttribute("phiActivationMs", new THREE.Float32BufferAttribute(activationPhiValues, 1));
   geometry.setAttribute("phiRepolarizationMs", new THREE.Float32BufferAttribute(repolarizationPhiValues, 1));
+  geometry.setAttribute("activationTimeMs", new THREE.Float32BufferAttribute(activationTimeValues, 1));
+  geometry.setAttribute("repolarizationTimeMs", new THREE.Float32BufferAttribute(repolarizationTimeValues, 1));
   geometry.setIndex(indices);
   geometry.computeBoundingSphere();
   return geometry;
+}
+
+function externalMeshOutlinePoints(field: HeartMeshField, segment: HeartMeshSegment, lift = 0.012) {
+  const verticesById = new Map(field.vertices.map((vertex) => [vertex.id, vertex]));
+  const center = verticesById.get(`${segment.id}:center`);
+
+  return segment.vertexIds
+    .filter((vertexId) => !vertexId.endsWith(":center"))
+    .map((vertexId) => verticesById.get(vertexId))
+    .filter((vertex) => vertex !== undefined)
+    .map((vertex) => externalMeshPoint(vertex.position, vertex.normal, vertex.chamber, center?.position).add(new THREE.Vector3(0, 0, lift)));
+}
+
+function averagePoint(points: THREE.Vector3[]) {
+  const center = new THREE.Vector3();
+  for (const point of points) {
+    center.add(point);
+  }
+
+  return points.length === 0 ? center : center.divideScalar(points.length);
 }
 
 function surfacePatchPoints(center: Vec3, vertices: Vec3[]) {
@@ -604,12 +630,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
         mesh.renderOrder = 8;
         dynamicGroup.add(mesh);
 
-        const segmentCenter = state.heartMeshField.vertices.find((vertex) => vertex.id === `${segment.id}:center`);
-        const outlinePoints = segment.vertexIds
-          .filter((vertexId) => !vertexId.endsWith(":center"))
-          .map((vertexId) => state.heartMeshField.vertices.find((vertex) => vertex.id === vertexId))
-          .filter((vertex) => vertex !== undefined)
-          .map((vertex) => externalMeshPoint(vertex.position, vertex.normal, vertex.chamber, segmentCenter?.position).add(new THREE.Vector3(0, 0, 0.006)));
+        const outlinePoints = externalMeshOutlinePoints(state.heartMeshField, segment, 0.006);
         if (outlinePoints.length >= 3) {
           const outline = new THREE.LineLoop(
             new THREE.BufferGeometry().setFromPoints(outlinePoints),
@@ -623,6 +644,48 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
           outline.renderOrder = 9;
           dynamicGroup.add(outline);
         }
+      }
+    }
+
+    const activeIsochroneMap = state.isochroneMaps[isochroneScope];
+    const scopedRegionIds = new Set(activeIsochroneMap.bands.map((band) => band.regionId));
+    const bandsByRegion = new Map(activeIsochroneMap.bands.map((band) => [band.regionId, band]));
+
+    if (activeLayers.contours) for (const segment of state.heartMeshField.segments) {
+      if (!scopedRegionIds.has(segment.id)) continue;
+      const band = bandsByRegion.get(segment.id);
+      if (!band) continue;
+
+      const contourPoints = externalMeshOutlinePoints(state.heartMeshField, segment, band.isCurrentWavefront ? 0.028 : 0.018);
+      if (contourPoints.length < 3) continue;
+
+      const meshContour = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(contourPoints),
+        new THREE.LineBasicMaterial({
+          color: band.isCurrentWavefront ? 0x111827 : contourColor(band.bandStartMs),
+          transparent: true,
+          opacity: band.isCurrentWavefront ? 0.98 : 0.72,
+          depthTest: false
+        })
+      );
+      meshContour.name = `v3 mesh isochrone contour ${segment.id}`;
+      meshContour.renderOrder = band.isCurrentWavefront ? 32 : 30;
+      dynamicGroup.add(meshContour);
+
+      const shouldLabel = band.isCurrentWavefront || band.relativeActivationMs % 40 === 0;
+      if (shouldLabel) {
+        const label = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: createLabelTexture(`${Math.round(band.relativeActivationMs)} ms`, band.isCurrentWavefront ? "#fef3c7" : "#ffffff"),
+            transparent: true,
+            depthTest: false
+          })
+        );
+        label.name = `v3 mesh contour label ${segment.id}`;
+        label.position.copy(averagePoint(contourPoints)).add(new THREE.Vector3(0, 0.08, 0.04));
+        label.scale.set(0.2, 0.1, 1);
+        label.renderOrder = 33;
+        dynamicGroup.add(label);
       }
     }
 
@@ -838,10 +901,6 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       dynamicGroup.add(surfaceMeshLines);
     }
 
-    const activeIsochroneMap = state.isochroneMaps[isochroneScope];
-    const scopedRegionIds = new Set(activeIsochroneMap.bands.map((band) => band.regionId));
-    const bandsByRegion = new Map(activeIsochroneMap.bands.map((band) => [band.regionId, band]));
-
     if (activeLayers.contours) for (const region of state.surfaceRegions) {
       if (!scopedRegionIds.has(region.id)) continue;
       const band = bandsByRegion.get(region.id);
@@ -974,7 +1033,7 @@ export function TorsoScene3D({ state, selectedLead, selectedRegionId, onSelectRe
       </div>
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
-          Isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, shader wavefront highlighted.
+          Mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
         </div>
       )}
       <div className="surface-map-legend" aria-label="Surface state legend">
