@@ -74,6 +74,18 @@ Current behavior:
 
 This is still a coarse educational surface. Its purpose is to prove the renderer contract before importing a licensed anatomical mesh.
 
+## V4 Anatomical Reference Preview Controls
+
+V4-01 keeps the NIH whole-heart GLB as a visual reference layer, not as the source mesh for timing, ECG voltages, chamber segmentation, or region selection. The renderer exposes preview visibility and opacity controls so learners can compare:
+
+- the NIH anatomical reference silhouette
+- the authored procedural teaching mesh
+- the synchronized wavefront, isochrone, lead, and region overlays
+
+The current preview asset id is `nih-3d-3dpx-002636-whole-heart-preview`. See `docs/ANATOMICAL_ASSET_QA_V4.md` and `references/nih-heart-normal-female/manifest.preview.json` for provenance, file size, vertex count, license, and known limitations.
+
+If the GLB cannot be fetched or parsed, the scene reports the failed reference state in its caption and continues rendering the procedural teaching model. Study snapshot exports include the preview asset id, visibility, opacity, and a note that the mesh is a visual anatomical reference only.
+
 ## Shader Wavefront Rendering
 
 V3-04 adds shader-driven coloring for the external mesh surface. The renderer writes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes into each Three.js geometry. A custom `ShaderMaterial` then colors the surface from those level-set values:

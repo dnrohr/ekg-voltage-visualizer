@@ -24,7 +24,7 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 | Task | Status | Title | Depends on | File |
 |---|---|---|---|---|
 | V4-00 | Done | Roadmap and V4 task scaffold | V3 complete | `TASK_V4_00.md` |
-| V4-01 | Not started | Anatomical asset QA and preview controls | V4-00 | `TASK_V4_01.md` |
+| V4-01 | Done | Anatomical asset QA and preview controls | V4-00 | `TASK_V4_01.md` |
 | V4-02 | Not started | Mesh optimization and decimation workflow | V4-01 | `TASK_V4_02.md` |
 | V4-03 | Not started | Anatomical coordinate normalization and anchor contract | V4-01 | `TASK_V4_03.md` |
 | V4-04 | Not started | Chamber and region marker mapping on anatomical heart | V4-03 | `TASK_V4_04.md` |
@@ -36,10 +36,11 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 
 ## Current Next Task
 
-Start with `TASK_V4_01.md`.
+Continue with `TASK_V4_02.md`.
 
 ## Notes
 
 - V4 preserves the V1/V2/V3 educational safety posture and avoids diagnostic claims.
 - V4 focuses on visual credibility: anatomical reference, procedural teaching simulation, and hybrid overlays must be visibly and verbally distinct.
 - V4-00 created `ROADMAP_V4.md`, this index, and task files through V4-09.
+- V4-01 added reversible NIH anatomical preview controls, exported preview metadata, loader failure caption fallback, and V4 asset QA documentation. Verification: `npm run typecheck`, `npm test`, `npm run build`, Chrome/Playwright desktop/mobile smoke on `http://127.0.0.1:5188`, and snapshot export metadata smoke.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -40,4 +40,12 @@ Turn the current NIH anatomical preview into an explicit, inspectable, reversibl
 
 ## Verification Notes
 
-Pending.
+- Implemented UI controls for the NIH anatomical reference preview: show/hide checkbox, opacity slider, learner-facing caption state, and GLB failure caption fallback.
+- Study snapshot exports now include `anatomicalPreview.assetId`, `visible`, `opacity`, and a visual-reference role note.
+- Added V4 anatomical asset QA documentation in `docs/ANATOMICAL_ASSET_QA_V4.md` and linked the preview boundaries from `docs/ASSET_PIPELINE.md` and `docs/ANATOMICAL_MESH_MODEL.md`.
+- Ran `npm run typecheck` successfully.
+- Ran `npm test` successfully: 33 engine tests passed.
+- Ran `npm run build` successfully; Vite reported the existing large chunk warning.
+- In-app browser navigation to localhost was blocked by the browser surface (`ERR_BLOCKED_BY_CLIENT`), so browser smoke used local Chrome via Playwright against this app on `http://127.0.0.1:5188`.
+- Chrome smoke confirmed desktop controls visible, checkbox default checked, opacity default `68`, caption distinguishes the NIH reference from authored procedural simulation, 3D canvas rendered, toggle changed caption to hidden, opacity changed to `42`, and mobile 390 px layout did not overflow.
+- Snapshot export smoke confirmed anatomical preview metadata with asset id `nih-3d-3dpx-002636-whole-heart-preview` and opacity `0.55`.

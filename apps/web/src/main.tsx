@@ -22,7 +22,15 @@ import {
   type LeadName
 } from "@ekg/cardio-engine";
 import { EcgLeadGrid, HeartSchematic, SelectedLeadTrace } from "@ekg/cardio-render-2d";
-import { TorsoScene3D, type AnatomyViewMode, type CameraPreset, type SurfaceMapMode, type TorsoScene3DLayers } from "@ekg/cardio-render-3d";
+import {
+  nihAnatomicalPreviewAssetId,
+  TorsoScene3D,
+  type AnatomicalPreviewSettings,
+  type AnatomyViewMode,
+  type CameraPreset,
+  type SurfaceMapMode,
+  type TorsoScene3DLayers
+} from "@ekg/cardio-render-3d";
 import "./styles.css";
 
 const formatPotential = (value: number) =>
@@ -72,6 +80,10 @@ const cameraPresetOrder: CameraPreset[] = ["frontal", "transverse", "left-latera
 const anatomyViewModeOrder: AnatomyViewMode[] = ["external", "cutaway", "chambers"];
 const surfaceMapModeOrder: SurfaceMapMode[] = ["wavefront", "electrical-state"];
 const isochroneScopeOrder: IsochroneScope[] = ["whole-heart", "atria", "ventricles"];
+const defaultAnatomicalPreview: AnatomicalPreviewSettings = {
+  visible: true,
+  opacity: 0.68
+};
 
 const layerPresets: Record<LearnerMode, VisualLayers> = {
   "probe-to-heart": {
@@ -330,6 +342,7 @@ function App() {
     isochroneScope: "ventricles"
   });
   const [visualLayers, setVisualLayers] = React.useState<VisualLayers>(layerPresets["probe-to-heart"]);
+  const [anatomicalPreview, setAnatomicalPreview] = React.useState<AnatomicalPreviewSettings>(defaultAnatomicalPreview);
   const [selectedLessonId, setSelectedLessonId] = React.useState(lessons[0].id);
   const [quizChoiceId, setQuizChoiceId] = React.useState<string | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
@@ -413,10 +426,15 @@ function App() {
       faceCount,
       currentContourCount,
       enabled3DLayers,
+      anatomicalPreview: {
+        assetId: nihAnatomicalPreviewAssetId,
+        visible: anatomicalPreview.visible,
+        opacity: anatomicalPreview.opacity
+      },
       shaderPath: visualLayers.wavefront || visualLayers.stateMap ? "shader wavefront material with standard-material fallback" : "static overlay layers",
       devicePixelRatioCap: 2
     };
-  }, [state.heartMeshField, state.isochroneMaps, v3ViewState.isochroneScope, visualLayers]);
+  }, [anatomicalPreview, state.heartMeshField, state.isochroneMaps, v3ViewState.isochroneScope, visualLayers]);
 
   React.useEffect(() => {
     scenarioRef.current = scenario;
@@ -462,6 +480,7 @@ function App() {
         comparisonId?: string;
         highContrast?: boolean;
         reducedMotion?: boolean;
+        anatomicalPreview?: Partial<AnatomicalPreviewSettings>;
         v3ViewState?: Partial<V3ViewState>;
       };
       if (preset.selectedLead && leadOrder.includes(preset.selectedLead)) setSelectedLead(preset.selectedLead);
@@ -472,6 +491,12 @@ function App() {
       if (preset.comparisonId) setComparisonId(preset.comparisonId);
       if (typeof preset.highContrast === "boolean") setHighContrast(preset.highContrast);
       if (typeof preset.reducedMotion === "boolean") setReducedMotion(preset.reducedMotion);
+      if (preset.anatomicalPreview) {
+        setAnatomicalPreview((current) => ({
+          visible: typeof preset.anatomicalPreview?.visible === "boolean" ? preset.anatomicalPreview.visible : current.visible,
+          opacity: typeof preset.anatomicalPreview?.opacity === "number" ? Math.min(1, Math.max(0.08, preset.anatomicalPreview.opacity)) : current.opacity
+        }));
+      }
       if (preset.v3ViewState) {
         setV3ViewState((current) => ({
           cameraPreset: preset.v3ViewState?.cameraPreset && cameraPresetOrder.includes(preset.v3ViewState.cameraPreset) ? preset.v3ViewState.cameraPreset : current.cameraPreset,
@@ -569,7 +594,7 @@ function App() {
   const savePreset = () => {
     window.localStorage.setItem(
       "ekg-view-preset",
-      JSON.stringify({ selectedLead, selectedRegionId, learnerMode, visualLayers, scenarioId, comparisonId, highContrast, reducedMotion, v3ViewState })
+      JSON.stringify({ selectedLead, selectedRegionId, learnerMode, visualLayers, anatomicalPreview, scenarioId, comparisonId, highContrast, reducedMotion, v3ViewState })
     );
   };
 
@@ -618,6 +643,12 @@ function App() {
       selectedRegionId: regionInspection?.regionId,
       learnerMode,
       visualLayers,
+      anatomicalPreview: {
+        assetId: nihAnatomicalPreviewAssetId,
+        visible: anatomicalPreview.visible,
+        opacity: anatomicalPreview.opacity,
+        role: "visual anatomical reference only; electrical simulation uses the authored teaching mesh"
+      },
       v3ViewState,
       accessibility: {
         highContrast,
@@ -911,6 +942,30 @@ function App() {
             </fieldset>
           ))}
         </div>
+        <fieldset className="anatomy-preview-controls">
+          <legend>Anatomical reference</legend>
+          <label>
+            <input
+              type="checkbox"
+              checked={anatomicalPreview.visible}
+              onChange={() => setAnatomicalPreview((current) => ({ ...current, visible: !current.visible }))}
+            />
+            <span>NIH heart preview</span>
+          </label>
+          <label className="opacity-control">
+            <span>Opacity {Math.round(anatomicalPreview.opacity * 100)}%</span>
+            <input
+              type="range"
+              min="8"
+              max="100"
+              step="1"
+              value={Math.round(anatomicalPreview.opacity * 100)}
+              onChange={(event) => setAnatomicalPreview((current) => ({ ...current, opacity: Number(event.target.value) / 100 }))}
+              aria-label="NIH anatomical preview opacity"
+            />
+          </label>
+          <p>Reference mesh only; wavefront timing and ECG voltages stay on the authored teaching model.</p>
+        </fieldset>
       </section>
 
       <section className="lesson-panel" aria-label="Guided lessons and quizzes">
@@ -1025,6 +1080,7 @@ function App() {
           selectedRegionId={regionInspection?.regionId}
           onSelectRegion={setSelectedRegionId}
           layers={visualLayers}
+          anatomicalPreview={anatomicalPreview}
           cameraPreset={v3ViewState.cameraPreset}
           anatomyViewMode={v3ViewState.anatomyViewMode}
           surfaceMapMode={v3ViewState.surfaceMapMode}

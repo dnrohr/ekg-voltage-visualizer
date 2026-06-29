@@ -28,6 +28,7 @@ type TorsoScene3DProps = {
   selectedRegionId?: string;
   onSelectRegion?: (regionId: string) => void;
   layers?: Partial<TorsoScene3DLayers>;
+  anatomicalPreview?: Partial<AnatomicalPreviewSettings>;
   cameraPreset?: CameraPreset;
   anatomyViewMode?: AnatomyViewMode;
   surfaceMapMode?: SurfaceMapMode;
@@ -38,6 +39,11 @@ type TorsoScene3DProps = {
   onAnatomyViewModeChange?: (mode: AnatomyViewMode) => void;
   onSurfaceMapModeChange?: (mode: SurfaceMapMode) => void;
   onIsochroneScopeChange?: (scope: IsochroneScope) => void;
+};
+
+export type AnatomicalPreviewSettings = {
+  visible: boolean;
+  opacity: number;
 };
 
 export type TorsoScene3DLayers = {
@@ -97,7 +103,12 @@ const anatomyViewModes: Record<AnatomyViewMode, string> = {
 
 const wavefrontBandWidthMs = 18;
 const repolarizationBandWidthMs = 26;
-const nihAnatomicalPreviewPath = "/assets/nih-heart/ALM0006_Whole_NIH3D.glb";
+export const nihAnatomicalPreviewAssetId = "nih-3d-3dpx-002636-whole-heart-preview";
+export const nihAnatomicalPreviewPath = "/assets/nih-heart/ALM0006_Whole_NIH3D.glb";
+const defaultAnatomicalPreview: AnatomicalPreviewSettings = {
+  visible: true,
+  opacity: 0.68
+};
 
 const chamberSurfaceColors: Record<HeartChamber, number> = {
   RA: 0x6bc4bb,
@@ -216,7 +227,7 @@ function makeChamber(
   return mesh;
 }
 
-function prepareAnatomicalPreview(root: THREE.Object3D) {
+function prepareAnatomicalPreview(root: THREE.Object3D, opacity: number) {
   let meshCount = 0;
   root.name = "nih anatomical heart preview";
   root.traverse((child) => {
@@ -232,7 +243,7 @@ function prepareAnatomicalPreview(root: THREE.Object3D) {
       roughness: 0.64,
       metalness: 0.02,
       transparent: true,
-      opacity: 0.68,
+      opacity,
       side: THREE.DoubleSide,
       depthWrite: false
     });
@@ -255,6 +266,21 @@ function prepareAnatomicalPreview(root: THREE.Object3D) {
     scale,
     position: root.position.toArray()
   };
+}
+
+function applyAnatomicalPreviewState(root: THREE.Object3D, settings: AnatomicalPreviewSettings) {
+  root.visible = settings.visible;
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    const material = child.material;
+    const materials = Array.isArray(material) ? material : [material];
+    materials.forEach((item) => {
+      item.transparent = true;
+      item.opacity = settings.opacity;
+      item.depthWrite = false;
+      item.needsUpdate = true;
+    });
+  });
 }
 
 function surfaceRegionColor(stateName: TissueState, mode: SurfaceMapMode): number {
@@ -546,6 +572,7 @@ export function TorsoScene3D({
   selectedRegionId,
   onSelectRegion,
   layers,
+  anatomicalPreview,
   cameraPreset,
   anatomyViewMode: preferredAnatomyViewMode,
   surfaceMapMode: preferredSurfaceMapMode,
@@ -562,12 +589,23 @@ export function TorsoScene3D({
   const rendererRef = React.useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = React.useRef<THREE.PerspectiveCamera | null>(null);
   const dynamicGroupRef = React.useRef<THREE.Group | null>(null);
+  const anatomicalPreviewGroupRef = React.useRef<THREE.Group | null>(null);
+  const anatomicalPreviewSettingsRef = React.useRef<AnatomicalPreviewSettings>(defaultAnatomicalPreview);
   const onSelectRegionRef = React.useRef<TorsoScene3DProps["onSelectRegion"]>(onSelectRegion);
   const [preset, setPreset] = React.useState<CameraPreset>("frontal");
   const [anatomyViewMode, setAnatomyViewMode] = React.useState<AnatomyViewMode>("external");
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
   const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
+  const [previewStatus, setPreviewStatus] = React.useState<"loading" | "loaded" | "failed">("loading");
   const activeLayers = React.useMemo(() => ({ ...defaultLayers, ...layers }), [layers]);
+  const activeAnatomicalPreview = React.useMemo(
+    () => ({
+      ...defaultAnatomicalPreview,
+      ...anatomicalPreview,
+      opacity: THREE.MathUtils.clamp(anatomicalPreview?.opacity ?? defaultAnatomicalPreview.opacity, 0.08, 1)
+    }),
+    [anatomicalPreview]
+  );
 
   React.useEffect(() => {
     onSelectRegionRef.current = onSelectRegion;
@@ -608,6 +646,16 @@ export function TorsoScene3D({
     setIsochroneScope(value);
     onIsochroneScopeChange?.(value);
   };
+
+  React.useEffect(() => {
+    const group = anatomicalPreviewGroupRef.current;
+    anatomicalPreviewSettingsRef.current = activeAnatomicalPreview;
+    if (!group) return;
+    applyAnatomicalPreviewState(group, activeAnatomicalPreview);
+    if (rendererRef.current && sceneRef.current && cameraRef.current) {
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+  }, [activeAnatomicalPreview]);
 
   React.useEffect(() => {
     if (!mountRef.current) return;
@@ -660,6 +708,7 @@ export function TorsoScene3D({
 
     const anatomicalPreviewGroup = new THREE.Group();
     anatomicalPreviewGroup.name = "nih anatomical heart preview group";
+    applyAnatomicalPreviewState(anatomicalPreviewGroup, activeAnatomicalPreview);
     scene.add(anatomicalPreviewGroup);
     const loader = new GLTFLoader();
     let previewDisposed = false;
@@ -670,14 +719,18 @@ export function TorsoScene3D({
           disposeObject(gltf.scene);
           return;
         }
-        prepareAnatomicalPreview(gltf.scene);
+        const currentPreviewSettings = anatomicalPreviewSettingsRef.current;
+        prepareAnatomicalPreview(gltf.scene, currentPreviewSettings.opacity);
         anatomicalPreviewGroup.add(gltf.scene);
+        applyAnatomicalPreviewState(anatomicalPreviewGroup, currentPreviewSettings);
         (window as unknown as { __nihAnatomicalPreview?: unknown }).__nihAnatomicalPreview = gltf.scene.userData.previewDebug;
+        setPreviewStatus("loaded");
         renderer.render(scene, camera);
       },
       undefined,
       (error) => {
         console.warn("Unable to load NIH anatomical heart preview", error);
+        setPreviewStatus("failed");
       }
     );
 
@@ -706,6 +759,7 @@ export function TorsoScene3D({
     rendererRef.current = renderer;
     cameraRef.current = camera;
     dynamicGroupRef.current = dynamicGroup;
+    anatomicalPreviewGroupRef.current = anatomicalPreviewGroup;
 
     const resize = () => {
       const { width, height } = mount.getBoundingClientRect();
@@ -737,6 +791,7 @@ export function TorsoScene3D({
       rendererRef.current = null;
       cameraRef.current = null;
       dynamicGroupRef.current = null;
+      anatomicalPreviewGroupRef.current = null;
     };
   }, []);
 
@@ -1334,8 +1389,9 @@ export function TorsoScene3D({
       </div>
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
-          NIH anatomical preview with {anatomyViewModes[anatomyViewMode].toLowerCase()} teaching overlays, mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
+          NIH anatomical reference mesh: {activeAnatomicalPreview.visible ? previewStatus : "hidden"} at {Math.round(activeAnatomicalPreview.opacity * 100)}% opacity. Teaching overlays remain authored from the procedural simulation; mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
           {activeLayers.leadContribution && ` ${selectedLead} contributor halos: aligned, opposed, weak.`}
+          {previewStatus === "failed" && " The procedural teaching mesh is still available because the reference GLB did not load."}
         </div>
       )}
       <div className="surface-map-legend" aria-label="Surface state legend">

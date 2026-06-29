@@ -909,7 +909,7 @@ h3 {
 .layer-panel {
   padding: 14px 16px;
   display: grid;
-  grid-template-columns: minmax(280px, auto) 1fr;
+  grid-template-columns: minmax(260px, auto) 1fr minmax(220px, 0.35fr);
   gap: 14px;
   align-items: start;
   border: 1px solid #d7dee5;
@@ -980,6 +980,58 @@ h3 {
   width: 16px;
   height: 16px;
   accent-color: #0f766e;
+}
+
+.anatomy-preview-controls {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid #d7dee5;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.anatomy-preview-controls legend {
+  padding: 0 4px;
+  color: #5f6c7b;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.anatomy-preview-controls label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: #243041;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.anatomy-preview-controls label:first-of-type {
+  min-height: 28px;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.anatomy-preview-controls input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+}
+
+.opacity-control input {
+  min-width: 0;
+}
+
+.anatomy-preview-controls p {
+  margin: 0;
+  color: #667085;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .lesson-panel {

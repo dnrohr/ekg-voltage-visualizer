@@ -72,8 +72,11 @@ The app includes one visual-only anatomical preview asset:
 - Runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
 - Provenance: `references/nih-heart-normal-female/manifest.preview.json`
 - License shown on NIH entry: Public Domain / CC0
+- V4 QA notes: `docs/ANATOMICAL_ASSET_QA_V4.md`
 
 This preview is intentionally not treated as a validated V3 simulation mesh. It is not chamber-labeled, not region-mapped, and exceeds the recommended vertex target. The renderer uses it as a translucent anatomical reference while the procedural educational mesh remains the source of wavefront timing, lead overlays, and selectable regions.
+
+V4-01 makes the preview reversible in the learner UI. The anatomical reference can be hidden or faded independently, and study snapshot exports record the preview asset id plus visibility/opacity settings. A failed GLB load must leave the procedural teaching scene usable.
 
 ### Accepted Runtime Formats
 
