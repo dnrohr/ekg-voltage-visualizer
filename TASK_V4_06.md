@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,13 @@ Replace the top 2D diagram with an anatomically honest orientation sketch that r
 
 ## Verification Notes
 
-Pending.
+- Redesigned `HeartSchematic` as a 2D orientation sketch with LV as the dominant apex-forming chamber and RV as an anterior/right-sided wrap.
+- Reduced symmetric side-by-side ventricular geometry and curved the septum toward the LV apex.
+- Preserved electrodes, selected-lead vector, tissue nodes, activation/recovery overlays, valve/flow cues, and timing readout.
+- Added orientation cue labels for RV anterior wrap, LV apex-forming chamber, apex, and great vessels.
+- Added visible UI label: "Orientation sketch, not a literal chamber slice" and updated SVG aria label.
+- Documented the V4 2D sketch boundary in `docs/ANATOMICAL_MESH_MODEL.md`.
+- Ran `npm run typecheck` successfully.
+- Ran `npm test` successfully: 34 engine tests passed.
+- Ran `npm run build` successfully; Vite reported the existing large chunk warning.
+- Chrome/Playwright smoke on fresh dev server `http://127.0.0.1:5191` confirmed desktop/mobile SVG bounds, orientation labels present, no horizontal overflow at 390 px, and orientation label text stays within viewport.

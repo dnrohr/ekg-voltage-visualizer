@@ -44,7 +44,7 @@ export function HeartSchematic({ state, selectedLead }: HeartSchematicProps) {
   const phaseHeadline = state.phaseLabel.split(":")[0];
 
   return (
-    <svg className="heart-schematic" viewBox="0 0 360 340" role="img" aria-label="2D heart activation schematic">
+    <svg className="heart-schematic" viewBox="0 0 360 340" role="img" aria-label="2D heart orientation sketch with activation timing overlays">
       <defs>
         <linearGradient id="heartWallGradient" x1="96" y1="84" x2="260" y2="286" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#f3aaa1" />
@@ -106,20 +106,27 @@ export function HeartSchematic({ state, selectedLead }: HeartSchematicProps) {
       </g>
 
       <g className="anatomical-heart" aria-hidden="true">
-        <path className="heart-shadow" d="M114 118 C104 152 100 201 123 238 C141 267 169 287 184 292 C215 280 249 250 258 205 C266 164 244 127 214 112 C198 89 163 84 144 106 C132 104 120 109 114 118 Z" />
-        <path className="great-vessel aorta" d="M177 103 C180 62 225 62 230 96 C234 121 210 131 198 145" />
-        <path className="great-vessel pulmonary" d="M168 117 C138 100 116 104 99 126" />
-        <path className="great-vessel vena-cava" d="M137 77 C141 99 143 118 142 142" />
+        <path className="heart-shadow" d="M109 122 C101 157 105 211 132 248 C153 276 181 296 198 303 C228 284 259 248 267 207 C275 164 250 127 218 112 C203 87 166 82 145 105 C128 103 114 111 109 122 Z" />
+        <path className="great-vessel aorta" d="M185 106 C188 63 229 61 235 94 C240 120 215 132 200 148" />
+        <path className="great-vessel pulmonary" d="M171 119 C145 101 119 104 99 128" />
+        <path className="great-vessel vena-cava" d="M133 78 C137 101 139 120 138 143" />
         <g transform={`translate(178 124) scale(${atrialScale}) translate(-178 -124)`}>
-          <path className="atrium right" d="M121 116 C119 88 148 78 168 96 C178 108 175 138 153 149 C135 157 122 142 121 116 Z" />
-          <path className="atrium left" d="M193 96 C217 77 249 92 251 124 C252 151 226 166 204 150 C185 136 176 111 193 96 Z" />
+          <path className="atrium right" d="M116 118 C112 91 140 78 163 94 C176 104 176 134 153 148 C132 160 118 144 116 118 Z" />
+          <path className="atrium left" d="M192 96 C219 78 251 94 253 126 C254 152 228 168 205 151 C187 137 176 112 192 96 Z" />
         </g>
         <g transform={`translate(181 214) scale(${ventricularScale}) translate(-181 -214)`}>
-          <path className="ventricle right" style={{ strokeWidth: 1.7 + wallThickening * 2.2 }} d="M137 143 C102 174 107 229 142 258 C157 271 174 282 186 288 C178 231 174 180 137 143 Z" />
-          <path className="ventricle left" style={{ strokeWidth: 1.9 + wallThickening * 2.6 }} d="M211 143 C251 168 263 222 232 260 C217 278 198 288 186 292 C192 229 187 178 211 143 Z" />
-          <path className="heart-body" d="M128 140 C112 166 104 205 119 237 C134 269 170 290 187 296 C215 282 247 253 255 211 C263 169 240 137 212 127 C198 116 177 115 164 128 C152 125 139 130 128 140 Z" />
+          <path className="ventricle left" style={{ strokeWidth: 2.2 + wallThickening * 2.8 }} d="M188 139 C229 144 262 180 260 222 C258 263 225 291 198 304 C178 271 166 229 170 184 C173 158 179 145 188 139 Z" />
+          <path className="ventricle right" style={{ strokeWidth: 1.55 + wallThickening * 1.8 }} d="M134 143 C105 164 100 207 119 235 C133 255 158 267 184 272 C173 239 162 205 166 176 C157 160 146 149 134 143 Z" />
+          <path className="heart-body" d="M126 140 C108 164 102 205 118 237 C135 270 176 296 198 304 C229 286 260 253 267 211 C275 168 248 135 214 126 C198 113 177 116 164 130 C151 126 137 130 126 140 Z" />
         </g>
-        <path className="septum" d="M176 142 C170 187 172 236 186 292" />
+        <path className="septum" d="M176 144 C168 190 173 244 198 303" />
+        <path className="apex-cue" d="M185 296 C191 303 198 306 205 300" />
+        <g className="orientation-labels">
+          <text x="111" y="184">RV anterior wrap</text>
+          <text x="218" y="232">LV apex-forming</text>
+          <text x="185" y="280">apex</text>
+          <text x="203" y="122">great vessels</text>
+        </g>
       </g>
 
       <g className="valve-layer" aria-hidden="true">

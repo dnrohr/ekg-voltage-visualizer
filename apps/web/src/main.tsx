@@ -713,6 +713,7 @@ function App() {
               </select>
             </label>
           </div>
+          <p className="sketch-label">Orientation sketch, not a literal chamber slice</p>
           <HeartSchematic state={state} selectedLead={selectedLead} />
         </div>
 

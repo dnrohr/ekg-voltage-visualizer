@@ -142,6 +142,14 @@ The anatomical projection uses existing educational timing only. For each anchor
 
 This is not a solved electrophysiology field on the NIH mesh. It is a teaching projection from authored region timing onto approximate landmarks. The overlay intentionally remains ring-based and visibly educational until a real chamber/region mesh mapping exists.
 
+## V4 2D Orientation Sketch
+
+V4-06 redraws the top 2D heart overview as an orientation sketch rather than a literal chamber slice. The LV is the dominant apex-forming chamber, while the RV is shown as a smaller anterior/right-sided structure wrapping across the front of the LV. The septal curve now runs toward the LV apex instead of splitting two symmetric ventricular blobs.
+
+The sketch preserves electrodes, selected-lead vector, tissue-state nodes, activation/recovery overlays, valve/flow cues, and the synthetic timing readout. Small labels identify RV anterior wrap, LV apex-forming chamber, apex, and great-vessel orientation cues. The UI labels the graphic as an orientation sketch, not a literal chamber slice.
+
+Remaining limitations: it is still an authored 2D teaching drawing, not a projection from the NIH mesh or a validated anatomical slice.
+
 ## Shader Wavefront Rendering
 
 V3-04 adds shader-driven coloring for the external mesh surface. The renderer writes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes into each Three.js geometry. A custom `ShaderMaterial` then colors the surface from those level-set values:

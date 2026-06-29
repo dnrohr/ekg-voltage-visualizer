@@ -168,6 +168,14 @@ h3 {
   margin-top: 10px;
 }
 
+.sketch-label {
+  margin: 10px 0 0;
+  color: #5f6c7b;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .scenario-controls {
   margin-top: 12px;
   display: grid;
@@ -274,7 +282,8 @@ h3 {
 }
 
 .septum,
-.conduction {
+.conduction,
+.apex-cue {
   fill: none;
   stroke: #263445;
   stroke-linecap: round;
@@ -294,6 +303,16 @@ h3 {
   stroke-width: 1.8;
   stroke-dasharray: 3 6;
   opacity: 0.58;
+}
+
+.orientation-labels text {
+  fill: #334155;
+  font-size: 8.5px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.86);
+  stroke-linejoin: round;
+  stroke-width: 3px;
 }
 
 .node {
