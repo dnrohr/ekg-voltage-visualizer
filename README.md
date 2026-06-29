@@ -47,7 +47,7 @@ First success condition:
 
 > A learner can scrub through a normal beat and understand why several leads go positive, negative, or flat during P, QRS, ST, and T.
 
-The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md). The anatomical V3 roadmap and release audit are in [ROADMAP_V3.md](./ROADMAP_V3.md) and [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md).
+The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md). The anatomical V3 roadmap and release audit are in [ROADMAP_V3.md](./ROADMAP_V3.md) and [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md). The V4 anatomical-fidelity roadmap and task index are in [ROADMAP_V4.md](./ROADMAP_V4.md) and [TASKS_V4.md](./TASKS_V4.md).
 
 Foundational docs for the first implementation tasks:
 
@@ -326,4 +326,4 @@ Before adding third-party anatomical models, datasets, textures, or reference me
 
 ## Current Next Step
 
-V3 is complete through [TASK_V3_12.md](./TASK_V3_12.md). Recommended follow-ups are listed in [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md): licensed anatomical mesh import, renderer bundle splitting, curated reference ECG examples, and optional animation export.
+V3 is complete through [TASK_V3_12.md](./TASK_V3_12.md). V4 is now planned in [ROADMAP_V4.md](./ROADMAP_V4.md), with [TASK_V4_01.md](./TASK_V4_01.md) as the next implementation task: anatomical asset QA and preview controls.
