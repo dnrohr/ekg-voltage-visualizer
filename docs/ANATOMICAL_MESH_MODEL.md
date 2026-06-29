@@ -110,6 +110,26 @@ scenePosition = (sourcePosition - center) * scale + sceneOffset
 
 For the current optimized NIH preview, `normalizedMaxDimension` is `1.08` and `sceneOffset` is `{ x: 0.28, y: 0.02, z: 0.52 }`, matching the renderer's anatomical preview normalization. Tests validate deterministic parsing, finite scene coordinates, known educational region ids, and required approximation notes.
 
+## V4 Anatomical Marker Layer
+
+V4-04 renders the normalized anchors as an optional 3D marker layer named `Anatomical markers`. This layer can be toggled independently from the NIH anatomical reference mesh, the procedural teaching mesh, wavefront overlays, isochrone contours, lead overlays, and contribution halos.
+
+Markers are clickable because each anchor carries one or more existing educational region ids. Clicking a marker selects its primary mapped educational region and updates the existing region inspector. When the selected region is mapped to an anchor, that marker receives a larger halo and label.
+
+Current mapping confidence:
+
+- Medium: apex and great-vessel reference preserve useful silhouette orientation.
+- Low: septal area, RV free wall, LV lateral wall, anterior wall, inferior wall, and atrial references are approximate because the source mesh has no chamber or wall segmentation.
+
+Deferred:
+
+- multiple markers per educational region when a region spans a broad wall
+- nearest-surface projection from anchor to mesh triangles
+- expert-reviewed chamber labels
+- hiding markers behind anatomy with occlusion-aware label placement
+
+The marker caption states that the layer is approximate educational mapping, not segmented chamber labels.
+
 ## Shader Wavefront Rendering
 
 V3-04 adds shader-driven coloring for the external mesh surface. The renderer writes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes into each Three.js geometry. A custom `ShaderMaterial` then colors the surface from those level-set values:

@@ -98,6 +98,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
     valveState: true,
     flow: true,
     phaseLabels: true,
+    anatomicalMarkers: true,
     ecgGrid: true,
     enlargedLead: true,
     ecgLabels: true,
@@ -116,6 +117,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
     valveState: true,
     flow: false,
     phaseLabels: true,
+    anatomicalMarkers: true,
     ecgGrid: true,
     enlargedLead: false,
     ecgLabels: true,
@@ -134,6 +136,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
     valveState: true,
     flow: true,
     phaseLabels: true,
+    anatomicalMarkers: true,
     ecgGrid: true,
     enlargedLead: true,
     ecgLabels: true,
@@ -142,7 +145,7 @@ const layerPresets: Record<LearnerMode, VisualLayers> = {
   }
 };
 
-const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Electrical" | "Mechanical" | "ECG" }> = [
+const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Electrical" | "Mechanical" | "Anatomy" | "ECG" }> = [
   { key: "wavefront", label: "Wavefront", group: "Electrical" },
   { key: "contours", label: "Contours", group: "Electrical" },
   { key: "stateMap", label: "State map", group: "Electrical" },
@@ -154,6 +157,7 @@ const layerLabels: Array<{ key: keyof VisualLayers; label: string; group: "Elect
   { key: "valveState", label: "Valves", group: "Mechanical" },
   { key: "flow", label: "Flow", group: "Mechanical" },
   { key: "phaseLabels", label: "Phase labels", group: "Mechanical" },
+  { key: "anatomicalMarkers", label: "Anatomical markers", group: "Anatomy" },
   { key: "ecgGrid", label: "12-lead grid", group: "ECG" },
   { key: "enlargedLead", label: "Enlarged lead", group: "ECG" },
   { key: "ecgLabels", label: "Labels", group: "ECG" },
@@ -172,7 +176,8 @@ const v3LayerKeys: Array<keyof TorsoScene3DLayers> = [
   "chamberVolume",
   "valveState",
   "flow",
-  "phaseLabels"
+  "phaseLabels",
+  "anatomicalMarkers"
 ];
 
 type Lesson = {
@@ -921,7 +926,7 @@ function App() {
           ))}
         </div>
         <div className="layer-groups">
-          {(["Electrical", "Mechanical", "ECG"] as const).map((group) => (
+          {(["Electrical", "Mechanical", "Anatomy", "ECG"] as const).map((group) => (
             <fieldset className="layer-group" key={group}>
               <legend>{group}</legend>
               {layerLabels.filter((item) => item.group === group).map((item) => (

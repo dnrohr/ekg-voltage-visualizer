@@ -6,6 +6,7 @@ import {
   electrodeDefinitions,
   electrodeOrder,
   leadDefinitions,
+  normalizedNihAnatomicalAnchors,
   type ElectrodeName,
   type HeartChamber,
   type HeartMeshField,
@@ -58,6 +59,7 @@ export type TorsoScene3DLayers = {
   valveState: boolean;
   flow: boolean;
   phaseLabels: boolean;
+  anatomicalMarkers: boolean;
 };
 
 const defaultLayers: TorsoScene3DLayers = {
@@ -71,7 +73,8 @@ const defaultLayers: TorsoScene3DLayers = {
   chamberVolume: false,
   valveState: true,
   flow: true,
-  phaseLabels: true
+  phaseLabels: true,
+  anatomicalMarkers: true
 };
 
 const tissueColors: Record<TissueState, number> = {
@@ -128,6 +131,12 @@ const leadContributionLabels: Record<LeadContributionClass, string> = {
   opposed: "opposed",
   weak: "weak"
 };
+
+const anchorConfidenceColors = {
+  low: 0xf59e0b,
+  medium: 0x0f766e,
+  high: 0x2563eb
+} as const;
 
 const cameraPresets: Record<CameraPreset, { label: string; position: THREE.Vector3; target: THREE.Vector3 }> = {
   frontal: {
@@ -835,6 +844,78 @@ export function TorsoScene3D({
       child.scale.copy(baseScale).multiplyScalar(chamberScale);
     });
 
+    if (activeLayers.anatomicalMarkers) {
+      const markerDebug = {
+        count: normalizedNihAnatomicalAnchors.length,
+        selectedRegionId,
+        selectedAnchorIds: normalizedNihAnatomicalAnchors
+          .filter((anchor) => selectedRegionId && anchor.educationalRegionIds.includes(selectedRegionId))
+          .map((anchor) => anchor.id)
+      };
+      (window as unknown as { __nihAnatomicalMarkers?: unknown }).__nihAnatomicalMarkers = markerDebug;
+
+      for (const anchor of normalizedNihAnatomicalAnchors) {
+        const primaryRegionId = anchor.educationalRegionIds.includes(selectedRegionId ?? "")
+          ? selectedRegionId
+          : anchor.educationalRegionIds[0];
+        const region = primaryRegionId ? regionsById.get(primaryRegionId) : undefined;
+        const isSelectedAnchor = selectedRegionId ? anchor.educationalRegionIds.includes(selectedRegionId) : false;
+        const markerColor = anchor.chamberHint ? chamberSurfaceColors[anchor.chamberHint] : anchorConfidenceColors[anchor.confidence];
+        const position = new THREE.Vector3(anchor.scenePosition.x, anchor.scenePosition.y, anchor.scenePosition.z);
+        const marker = new THREE.Mesh(
+          new THREE.SphereGeometry(isSelectedAnchor ? 0.046 : 0.032, 24, 16),
+          new THREE.MeshStandardMaterial({
+            color: markerColor,
+            emissive: isSelectedAnchor ? markerColor : 0x000000,
+            emissiveIntensity: isSelectedAnchor ? 0.42 : 0.08,
+            roughness: 0.36,
+            transparent: true,
+            opacity: isSelectedAnchor ? 0.98 : 0.82
+          })
+        );
+        marker.name = `approximate anatomical anchor ${anchor.id}`;
+        marker.position.copy(position);
+        marker.renderOrder = isSelectedAnchor ? 45 : 33;
+        marker.userData.regionId = primaryRegionId;
+        marker.userData.anchorId = anchor.id;
+        dynamicGroup.add(marker);
+
+        const halo = new THREE.Mesh(
+          new THREE.TorusGeometry(isSelectedAnchor ? 0.09 : 0.062, isSelectedAnchor ? 0.006 : 0.0035, 8, 36),
+          new THREE.MeshBasicMaterial({
+            color: isSelectedAnchor ? 0x111827 : markerColor,
+            transparent: true,
+            opacity: isSelectedAnchor ? 0.95 : 0.46,
+            depthTest: false
+          })
+        );
+        halo.name = `approximate anatomical anchor halo ${anchor.id}`;
+        halo.position.copy(position);
+        halo.rotation.x = Math.PI / 2;
+        halo.renderOrder = isSelectedAnchor ? 46 : 34;
+        dynamicGroup.add(halo);
+
+        const label = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: createLabelTexture(region?.label ?? anchor.label, isSelectedAnchor ? "#fef3c7" : "#ffffff"),
+            transparent: true,
+            depthTest: false
+          })
+        );
+        label.name = `approximate anatomical anchor label ${anchor.id}`;
+        label.position.copy(position).add(new THREE.Vector3(0, isSelectedAnchor ? 0.09 : 0.065, 0.03));
+        label.scale.set(isSelectedAnchor ? 0.36 : 0.28, isSelectedAnchor ? 0.16 : 0.12, 1);
+        label.renderOrder = isSelectedAnchor ? 47 : 35;
+        dynamicGroup.add(label);
+      }
+    } else {
+      (window as unknown as { __nihAnatomicalMarkers?: unknown }).__nihAnatomicalMarkers = {
+        count: 0,
+        selectedRegionId,
+        selectedAnchorIds: []
+      };
+    }
+
     if (activeLayers.wavefront || activeLayers.stateMap) {
       for (const segment of state.heartMeshField.segments) {
         const region = regionsById.get(segment.id);
@@ -1391,6 +1472,7 @@ export function TorsoScene3D({
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
           NIH anatomical reference mesh: {activeAnatomicalPreview.visible ? previewStatus : "hidden"} at {Math.round(activeAnatomicalPreview.opacity * 100)}% opacity. Teaching overlays remain authored from the procedural simulation; mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
           {activeLayers.leadContribution && ` ${selectedLead} contributor halos: aligned, opposed, weak.`}
+          {activeLayers.anatomicalMarkers && " Anatomical markers are approximate educational anchor mappings, not segmented chamber labels."}
           {previewStatus === "failed" && " The procedural teaching mesh is still available because the reference GLB did not load."}
         </div>
       )}
