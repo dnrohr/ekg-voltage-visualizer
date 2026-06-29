@@ -26,7 +26,7 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 | V4-00 | Done | Roadmap and V4 task scaffold | V3 complete | `TASK_V4_00.md` |
 | V4-01 | Done | Anatomical asset QA and preview controls | V4-00 | `TASK_V4_01.md` |
 | V4-02 | Done | Mesh optimization and decimation workflow | V4-01 | `TASK_V4_02.md` |
-| V4-03 | Not started | Anatomical coordinate normalization and anchor contract | V4-01 | `TASK_V4_03.md` |
+| V4-03 | Done | Anatomical coordinate normalization and anchor contract | V4-01 | `TASK_V4_03.md` |
 | V4-04 | Not started | Chamber and region marker mapping on anatomical heart | V4-03 | `TASK_V4_04.md` |
 | V4-05 | Not started | Anatomical wavefront and isochrone projection prototype | V4-04 | `TASK_V4_05.md` |
 | V4-06 | Not started | 2D orientation sketch anatomical redesign | V4-03 | `TASK_V4_06.md` |
@@ -36,7 +36,7 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 
 ## Current Next Task
 
-Continue with `TASK_V4_03.md`.
+Continue with `TASK_V4_04.md`.
 
 ## Notes
 
@@ -45,3 +45,4 @@ Continue with `TASK_V4_03.md`.
 - V4-00 created `ROADMAP_V4.md`, this index, and task files through V4-09.
 - V4-01 added reversible NIH anatomical preview controls, exported preview metadata, loader failure caption fallback, and V4 asset QA documentation. Verification: `npm run typecheck`, `npm test`, `npm run build`, Chrome/Playwright desktop/mobile smoke on `http://127.0.0.1:5188`, and snapshot export metadata smoke.
 - V4-02 added optimized runtime GLB `ALM0006_Whole_NIH3D.optimized.glb` at 78,749 uploaded vertices / 2,835,780 bytes, repeatable `npm run optimize:nih-heart` workflow, renderer switch to optimized asset id `nih-3d-3dpx-002636-whole-heart-optimized-v1`, and source/optimized manifest plus docs. Verification: `npm run optimize:nih-heart`, `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright optimized-asset load smoke.
+- V4-03 added the approximate anatomical anchor contract, NIH anchor metadata, deterministic normalization utilities, tests, and docs for source-to-scene coordinate mapping. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright app-load smoke.

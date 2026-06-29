@@ -18,7 +18,10 @@ import {
   generateSyntheticReferenceTrace,
   hasBlockingAssetManifestIssues,
   millisecondStepMs,
+  nihAnatomicalAnchorSet,
   normalizedToCycleMs,
+  normalizeAnatomicalAnchors,
+  normalizeAnatomicalPoint,
   playbackSpeeds,
   scenarioLibrary,
   stepClock,
@@ -28,6 +31,7 @@ import {
   normalSinusRhythmScenario,
   normalizeCycleTime,
   validateAnatomicalAssetManifest,
+  validateAnatomicalAnchorSet,
   validateScenario,
   validateScenarioSchema
 } from "../src";
@@ -320,6 +324,26 @@ describe("cardio-engine simulation", () => {
     expect(basal?.phiActivationMs ?? 0).toBeLessThan(0);
     expect(apex?.state).toBe("depolarizing");
     expect(apex?.phiRepolarizationMs ?? 0).toBeLessThan(0);
+  });
+
+  it("validates and normalizes approximate NIH anatomical anchors deterministically", () => {
+    const issues = validateAnatomicalAnchorSet(nihAnatomicalAnchorSet);
+    const first = normalizeAnatomicalAnchors(nihAnatomicalAnchorSet);
+    const second = normalizeAnatomicalAnchors(nihAnatomicalAnchorSet);
+    const apex = first.find((anchor) => anchor.id === "apex");
+    const septum = first.find((anchor) => anchor.id === "septal-area");
+
+    expect(issues).toEqual([]);
+    expect(first).toEqual(second);
+    expect(first.length).toBeGreaterThanOrEqual(10);
+    expect(first.every((anchor) => anchor.approximationNote.length > 20)).toBe(true);
+    expect(first.every((anchor) => ["low", "medium", "high"].includes(anchor.confidence))).toBe(true);
+    expect(apex?.educationalRegionIds).toContain("apical-ventricles");
+    expect(septum?.educationalRegionIds).toEqual(["septal-right-facing"]);
+    expect(apex?.scenePosition).toEqual(normalizeAnatomicalPoint(apex!.sourcePosition, nihAnatomicalAnchorSet.coordinateNormalization));
+    expect(Math.abs(apex?.scenePosition.x ?? 99)).toBeLessThan(0.7);
+    expect(Math.abs(apex?.scenePosition.y ?? 99)).toBeLessThan(0.7);
+    expect(Math.abs(apex?.scenePosition.z ?? 99)).toBeLessThan(0.7);
   });
 
   it("accepts a complete anatomical mesh asset manifest", () => {

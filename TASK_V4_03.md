@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -37,4 +37,13 @@ Define a stable coordinate and anchor contract that lets educational regions map
 
 ## Verification Notes
 
-Pending.
+- Added anatomical anchor contract types for anchor kind, chamber hints, educational region ids, confidence, approximation notes, coordinate normalization, and normalized scene positions.
+- Added `references/nih-heart-normal-female/anchors.v1.json` with approximate landmarks for apex, base, septal area, RV free wall, LV lateral wall, anterior wall, inferior wall, atrial references, and great-vessel reference.
+- Added `packages/cardio-engine/src/anatomicalAnchors.ts` with deterministic `normalizeAnatomicalPoint`, `normalizeAnatomicalAnchors`, `validateAnatomicalAnchorSet`, and NIH anchor exports.
+- Normalization mirrors renderer placement: source-bounds center, max-dimension scale to `1.08`, then scene offset `{ x: 0.28, y: 0.02, z: 0.52 }`.
+- Updated anatomical mesh, asset pipeline, and V4 QA docs with the anchor coordinate contract and visual-honesty boundary.
+- Added tests for deterministic anchor validation and normalization against known educational region ids and required approximation notes.
+- Ran `npm run typecheck` successfully.
+- Ran `npm test` successfully: 34 engine tests passed.
+- Ran `npm run build` successfully; Vite reported the existing large chunk warning.
+- Chrome/Playwright smoke on `http://127.0.0.1:5188` confirmed the app still loads, the optimized NIH preview reports loaded, and one 3D canvas renders.

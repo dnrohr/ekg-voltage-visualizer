@@ -86,6 +86,30 @@ The current runtime preview asset id is `nih-3d-3dpx-002636-whole-heart-optimize
 
 If the GLB cannot be fetched or parsed, the scene reports the failed reference state in its caption and continues rendering the procedural teaching model. Study snapshot exports include the preview asset id, visibility, opacity, and a note that the mesh is a visual anatomical reference only.
 
+## V4 Anchor Coordinate Contract
+
+V4-03 adds approximate anatomical anchors for the optimized NIH preview in `references/nih-heart-normal-female/anchors.v1.json`. These anchors are landmarks for orienting authored educational regions on the visual reference mesh. They are not chamber segmentation, clinical labels, or patient-specific coordinates.
+
+Each anchor includes:
+
+- stable anchor id and label
+- landmark kind such as apex, septum, ventricular wall, atrial reference, or great-vessel reference
+- optional chamber hint
+- mapped educational surface region ids
+- GLB source-space point
+- confidence value
+- approximation note
+
+The engine normalizes anchors with `normalizeAnatomicalPoint` in `packages/cardio-engine/src/anatomicalAnchors.ts`. The transform mirrors the 3D renderer preview placement:
+
+```text
+center = (sourceBounds.min + sourceBounds.max) / 2
+scale = normalizedMaxDimension / max(sourceBounds size)
+scenePosition = (sourcePosition - center) * scale + sceneOffset
+```
+
+For the current optimized NIH preview, `normalizedMaxDimension` is `1.08` and `sceneOffset` is `{ x: 0.28, y: 0.02, z: 0.52 }`, matching the renderer's anatomical preview normalization. Tests validate deterministic parsing, finite scene coordinates, known educational region ids, and required approximation notes.
+
 ## Shader Wavefront Rendering
 
 V3-04 adds shader-driven coloring for the external mesh surface. The renderer writes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes into each Three.js geometry. A custom `ShaderMaterial` then colors the surface from those level-set values:

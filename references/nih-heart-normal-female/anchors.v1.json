@@ -1,0 +1,114 @@
+{
+  "id": "nih-3d-3dpx-002636-anchors-v1",
+  "assetId": "nih-3d-3dpx-002636-whole-heart-optimized-v1",
+  "version": 1,
+  "label": "Approximate NIH whole-heart preview anchors",
+  "coordinateNormalization": {
+    "assetId": "nih-3d-3dpx-002636-whole-heart-optimized-v1",
+    "sourceCoordinateSystem": "GLB native coordinates after V4-02 optimization; not patient-scale",
+    "sourceBounds": {
+      "min": { "x": -41.8377, "y": -50.028, "z": -192.399 },
+      "max": { "x": 75.3053, "y": 52.2416, "z": -47.473 }
+    },
+    "normalizedMaxDimension": 1.08,
+    "sceneOffset": { "x": 0.28, "y": 0.02, "z": 0.52 }
+  },
+  "anchors": [
+    {
+      "id": "apex",
+      "label": "Apex-forming ventricular tip",
+      "kind": "apex",
+      "chamberHint": "LV",
+      "educationalRegionIds": ["apical-ventricles"],
+      "sourcePosition": { "x": 31.5, "y": -24.0, "z": -188.0 },
+      "confidence": "medium",
+      "approximationNote": "Approximate lowest ventricular tip on the whole-heart silhouette; not a segmented LV apex label."
+    },
+    {
+      "id": "base",
+      "label": "Basal ventricular / outflow reference",
+      "kind": "base",
+      "educationalRegionIds": ["basal-lv-rv"],
+      "sourcePosition": { "x": 12.0, "y": 17.0, "z": -73.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate superior/base region near great-vessel origins; exact valves and annuli are not labeled."
+    },
+    {
+      "id": "septal-area",
+      "label": "Septal area reference",
+      "kind": "septum",
+      "educationalRegionIds": ["septal-right-facing"],
+      "sourcePosition": { "x": 18.0, "y": -4.0, "z": -130.0 },
+      "confidence": "low",
+      "approximationNote": "Interior septal course is inferred from external form and educational model orientation, not source segmentation."
+    },
+    {
+      "id": "rv-free-wall",
+      "label": "RV free-wall reference",
+      "kind": "ventricular-wall",
+      "chamberHint": "RV",
+      "educationalRegionIds": ["rv-free-wall"],
+      "sourcePosition": { "x": -18.0, "y": 22.0, "z": -128.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate anterior/right-sided ventricular surface; no source RV chamber label is present."
+    },
+    {
+      "id": "lv-lateral-wall",
+      "label": "LV lateral wall reference",
+      "kind": "ventricular-wall",
+      "chamberHint": "LV",
+      "educationalRegionIds": ["lv-lateral"],
+      "sourcePosition": { "x": 55.0, "y": -4.0, "z": -132.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate left/lateral ventricular silhouette; not validated against chamber segmentation."
+    },
+    {
+      "id": "anterior-wall",
+      "label": "Anterior ventricular wall reference",
+      "kind": "ventricular-wall",
+      "educationalRegionIds": ["rv-free-wall", "lv-anterior"],
+      "sourcePosition": { "x": 9.0, "y": 40.0, "z": -124.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate anterior surface point for orientation only; source mesh has no anterior-wall region id."
+    },
+    {
+      "id": "inferior-wall",
+      "label": "Inferior ventricular wall reference",
+      "kind": "ventricular-wall",
+      "educationalRegionIds": ["apical-ventricles", "lv-lateral"],
+      "sourcePosition": { "x": 21.0, "y": -34.0, "z": -152.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate inferior surface point from silhouette only; not a clinical inferior-wall localization."
+    },
+    {
+      "id": "right-atrial-reference",
+      "label": "Right atrial reference",
+      "kind": "atrial-reference",
+      "chamberHint": "RA",
+      "educationalRegionIds": ["ra-high-lateral", "ra-free-wall", "av-junction"],
+      "sourcePosition": { "x": -18.0, "y": 4.0, "z": -83.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate atrial-side reference; source mesh does not label the right atrium."
+    },
+    {
+      "id": "left-atrial-reference",
+      "label": "Left atrial reference",
+      "kind": "atrial-reference",
+      "chamberHint": "LA",
+      "educationalRegionIds": ["la-lateral"],
+      "sourcePosition": { "x": 34.0, "y": -13.0, "z": -82.0 },
+      "confidence": "low",
+      "approximationNote": "Approximate atrial-side reference; source mesh does not label the left atrium."
+    },
+    {
+      "id": "great-vessels-reference",
+      "label": "Great-vessel outlet reference",
+      "kind": "great-vessel-reference",
+      "educationalRegionIds": ["basal-lv-rv"],
+      "sourcePosition": { "x": 20.0, "y": 16.0, "z": -55.0 },
+      "confidence": "medium",
+      "approximationNote": "Approximate superior vessel cluster used for orientation; individual vessels are not labeled."
+    }
+  ],
+  "educationalUseNotes": "Anchors are approximate orientation landmarks for mapping authored educational regions onto the visual reference mesh. They are not clinically validated segmentation, measurement, or diagnostic labels."
+}

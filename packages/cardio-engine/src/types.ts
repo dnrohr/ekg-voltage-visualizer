@@ -333,6 +333,53 @@ export type HeartMeshField = {
 
 export type AnatomicalAssetFormat = "glb" | "gltf" | "obj";
 
+export type AnatomicalAnchorConfidence = "low" | "medium" | "high";
+
+export type AnatomicalAnchorKind =
+  | "apex"
+  | "base"
+  | "septum"
+  | "ventricular-wall"
+  | "atrial-reference"
+  | "great-vessel-reference"
+  | "orientation-reference";
+
+export type AnatomicalCoordinateNormalization = {
+  assetId: string;
+  sourceCoordinateSystem: string;
+  sourceBounds: {
+    min: Vec3;
+    max: Vec3;
+  };
+  normalizedMaxDimension: number;
+  sceneOffset: Vec3;
+};
+
+export type AnatomicalAnchor = {
+  id: string;
+  label: string;
+  kind: AnatomicalAnchorKind;
+  chamberHint?: HeartChamber;
+  educationalRegionIds: string[];
+  sourcePosition: Vec3;
+  confidence: AnatomicalAnchorConfidence;
+  approximationNote: string;
+};
+
+export type NormalizedAnatomicalAnchor = AnatomicalAnchor & {
+  scenePosition: Vec3;
+};
+
+export type AnatomicalAnchorSet = {
+  id: string;
+  assetId: string;
+  version: number;
+  label: string;
+  coordinateNormalization: AnatomicalCoordinateNormalization;
+  anchors: AnatomicalAnchor[];
+  educationalUseNotes: string;
+};
+
 export type AnatomicalAssetManifest = {
   id: string;
   label: string;

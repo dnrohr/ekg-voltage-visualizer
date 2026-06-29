@@ -9,6 +9,7 @@
 - Source preview file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
 - Optimized runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb`
 - Provenance manifest: `references/nih-heart-normal-female/manifest.preview.json`
+- Approximate anchor metadata: `references/nih-heart-normal-female/anchors.v1.json`
 - Retrieved: 2026-06-28
 - Listed license: Public Domain / CC0
 - Attribution required: no, but the app documentation keeps the NIH entry title and id for provenance.
@@ -78,6 +79,8 @@ Not supported:
 - diagnostic ECG interpretation
 - electrophysiology simulation on the NIH mesh
 - exact activation or recovery timing on the NIH geometry
+
+The V4 anchor metadata provides approximate orientation points only. Anchor confidence and approximation notes are required because the mesh has no validated chamber or wall segmentation.
 
 If the GLB fails to load, the app must keep the procedural teaching mesh, ECG traces, lead vectors, region picker, and guided lessons available.
 

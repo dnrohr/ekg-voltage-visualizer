@@ -93,6 +93,10 @@ The script inspects the original NIH GLB, welds it into a temporary GLB, simplif
 
 The original source preview file must stay bundled unchanged until an external download/cache policy replaces it. Optimization derivatives must keep the NIH entry id, license, and modification notes in the manifest.
 
+### Anchor Metadata
+
+The first approximate anchor file is `references/nih-heart-normal-female/anchors.v1.json`. It uses the optimized GLB source bounds from `gltf-transform inspect` and the same center/scale/offset normalization as the renderer. Anchors include confidence and approximation notes because the NIH preview is not chamber-segmented. Downstream overlays may use these points for orientation, but must continue to label them as approximate educational mapping.
+
 ### Accepted Runtime Formats
 
 - Source/original formats: `.glb`, `.gltf`, or `.obj`.

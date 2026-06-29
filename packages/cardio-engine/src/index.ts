@@ -1,5 +1,6 @@
 export * from "./clock";
 export * from "./anatomicalMesh";
+export * from "./anatomicalAnchors";
 export * from "./assetManifest";
 export * from "./leads";
 export * from "./mechanics";
