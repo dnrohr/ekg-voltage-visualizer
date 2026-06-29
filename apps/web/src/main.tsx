@@ -13,6 +13,7 @@ import {
   getScenarioById,
   leadOrder,
   millisecondStepMs,
+  normalizedNihAnatomicalAnchors,
   playbackSpeeds,
   scenarioLibrary,
   stepClock,
@@ -86,6 +87,7 @@ const anatomyViewModeOrder: AnatomyViewMode[] = ["external", "cutaway", "chamber
 const surfaceMapModeOrder: SurfaceMapMode[] = ["wavefront", "electrical-state"];
 const anatomicalOverlayModeOrder: AnatomicalOverlayMode[] = ["procedural", "anatomical", "hybrid"];
 const isochroneScopeOrder: IsochroneScope[] = ["whole-heart", "atria", "ventricles"];
+const anatomicalMarkerRegionOrder = Array.from(new Set(normalizedNihAnatomicalAnchors.flatMap((anchor) => anchor.educationalRegionIds)));
 const defaultAnatomicalPreview: AnatomicalPreviewSettings = {
   visible: true,
   opacity: 0.68
@@ -452,9 +454,18 @@ function App() {
       anatomicalPreview: {
         assetId: nihAnatomicalPreviewAssetId,
         visible: anatomicalPreview.visible,
-        opacity: anatomicalPreview.opacity
+        opacity: anatomicalPreview.opacity,
+        optimizedUploadedVertices: 78749,
+        optimizedTriangles: 157486,
+        optimizedFileSizeBytes: 2835780
       },
       anatomicalOverlayMode: v3ViewState.anatomicalOverlayMode,
+      anatomyPerformancePolicy: {
+        desktopPixelRatioCap: 2,
+        mobilePixelRatioCap: 1,
+        reducedMotionPixelRatioCap: 1,
+        mobileBreakpointPx: 640
+      },
       shaderPath: visualLayers.wavefront || visualLayers.stateMap ? "shader wavefront material with standard-material fallback" : "static overlay layers",
       devicePixelRatioCap: 2
     };
@@ -579,6 +590,19 @@ function App() {
           ...current,
           anatomicalOverlayMode: anatomicalOverlayModeOrder[(anatomicalOverlayModeOrder.indexOf(current.anatomicalOverlayMode) + 1) % anatomicalOverlayModeOrder.length]
         }));
+      } else if (event.key.toLowerCase() === "p") {
+        setAnatomicalPreview((current) => ({ ...current, visible: !current.visible }));
+      } else if (event.key === "[" || event.key === "]") {
+        setAnatomicalPreview((current) => ({
+          ...current,
+          opacity: Math.min(1, Math.max(0.08, current.opacity + (event.key === "]" ? 0.08 : -0.08)))
+        }));
+      } else if (event.key.toLowerCase() === "k") {
+        setSelectedRegionId((current) => {
+          const currentIndex = Math.max(0, anatomicalMarkerRegionOrder.indexOf(current));
+          const step = event.shiftKey ? -1 : 1;
+          return anatomicalMarkerRegionOrder[(currentIndex + step + anatomicalMarkerRegionOrder.length) % anatomicalMarkerRegionOrder.length] ?? current;
+        });
       } else if (event.key.toLowerCase() === "i") {
         setV3ViewState((current) => ({
           ...current,
@@ -658,7 +682,7 @@ function App() {
     if (!canvas) return;
 
     const link = document.createElement("a");
-    link.download = `ekg-visualizer-${scenario.id}-${selectedLead}-${v3ViewState.cameraPreset}-${v3ViewState.anatomyViewMode}.png`;
+    link.download = `ekg-visualizer-${scenario.id}-${selectedLead}-${v3ViewState.cameraPreset}-${v3ViewState.anatomyViewMode}-${v3ViewState.anatomicalOverlayMode}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
@@ -677,7 +701,10 @@ function App() {
         assetId: nihAnatomicalPreviewAssetId,
         visible: anatomicalPreview.visible,
         opacity: anatomicalPreview.opacity,
-        role: "visual anatomical reference only; electrical simulation uses the authored teaching mesh"
+        role: "visual anatomical reference only; electrical simulation uses the authored teaching mesh",
+        optimizedUploadedVertices: 78749,
+        optimizedTriangles: 157486,
+        optimizedFileSizeBytes: 2835780
       },
       v3ViewState,
       accessibility: {
@@ -980,6 +1007,7 @@ function App() {
               type="checkbox"
               checked={anatomicalPreview.visible}
               onChange={() => setAnatomicalPreview((current) => ({ ...current, visible: !current.visible }))}
+              aria-keyshortcuts="P"
             />
             <span>NIH heart preview</span>
           </label>
@@ -993,6 +1021,7 @@ function App() {
               value={Math.round(anatomicalPreview.opacity * 100)}
               onChange={(event) => setAnatomicalPreview((current) => ({ ...current, opacity: Number(event.target.value) / 100 }))}
               aria-label="NIH anatomical preview opacity"
+              aria-keyshortcuts="[ ]"
             />
           </label>
           <p>Reference mesh only; wavefront timing and ECG voltages stay on the authored teaching model.</p>

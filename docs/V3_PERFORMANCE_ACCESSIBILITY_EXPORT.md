@@ -47,3 +47,39 @@
 ## Remaining Limits
 
 The screenshot export captures the current 3D canvas only. The JSON study snapshot is the reproducible artifact for the full V3 learning state, including non-canvas panels and accessibility settings.
+
+## V4 Anatomy Performance, Accessibility, And Export
+
+V4 adds an optimized NIH runtime GLB and anatomical overlay layers:
+
+- Optimized preview asset: `ALM0006_Whole_NIH3D.optimized.glb`.
+- Runtime size: 2,835,780 bytes.
+- Uploaded vertices: 78,749.
+- Triangles: 157,486.
+- Hybrid overlay mode adds anchor-projected rings on top of procedural overlays; procedural mode remains the fallback/debug path.
+
+Renderer budget policy:
+
+- Desktop pixel ratio cap: 2.
+- Medium-width pixel ratio cap: 1.5.
+- Mobile under 640 px: 1.
+- Reduced motion: 1 regardless of viewport width.
+
+Additional keyboard shortcuts:
+
+- O: cycle procedural, anatomical, and hybrid overlay mode.
+- P: show/hide NIH anatomical preview.
+- [ / ]: decrease/increase anatomical preview opacity.
+- K / Shift+K: cycle mapped anatomical marker regions.
+
+V4 controls remain native buttons, checkboxes, or range inputs. Overlay mode exposes `aria-pressed`; preview visibility and opacity expose shortcut metadata.
+
+Study snapshot JSON records:
+
+- optimized anatomical asset id
+- anatomical preview visibility and opacity
+- optimized asset vertex, triangle, and byte counts
+- V4 overlay mode through `v3ViewState.anatomicalOverlayMode`
+- performance policy in `renderProfile.anatomyPerformancePolicy`
+
+Screenshot filenames now include anatomy overlay mode. JSON snapshots remain the reproducible export for reconstructing the full V4 anatomy state.

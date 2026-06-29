@@ -115,3 +115,10 @@ V4 anatomical overlay checks verify synchronization and visual honesty, not clin
 - captions and docs state that anatomical timing rings are educational projections, not a solved field on the NIH mesh
 
 These checks do not validate patient-specific conduction, chamber segmentation, local activation times on real myocardium, or diagnostic ECG interpretation.
+
+V4 performance/accessibility smoke additionally checks:
+
+- overlay, preview visibility, preview opacity, and mapped-marker keyboard paths
+- reduced-motion pixel-ratio cap for the 3D scene
+- snapshot JSON containing optimized asset metadata and anatomy overlay state
+- high-contrast/reduced-motion classes reaching the V4 anatomy controls

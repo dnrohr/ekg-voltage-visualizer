@@ -122,6 +122,13 @@ const defaultAnatomicalPreview: AnatomicalPreviewSettings = {
   opacity: 0.68
 };
 
+function scenePixelRatioCap(width: number, reducedMotion: boolean) {
+  if (reducedMotion) return 1;
+  if (width < 640) return 1;
+  if (width < 900) return 1.5;
+  return 2;
+}
+
 const chamberSurfaceColors: Record<HeartChamber, number> = {
   RA: 0x6bc4bb,
   LA: 0xee9f93,
@@ -688,6 +695,23 @@ export function TorsoScene3D({
   }, [activeAnatomicalPreview]);
 
   React.useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount || !rendererRef.current || !sceneRef.current || !cameraRef.current) return;
+    const { width, height } = mount.getBoundingClientRect();
+    const pixelRatioCap = scenePixelRatioCap(width, reducedMotion);
+    rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
+    rendererRef.current.setSize(Math.max(1, width), Math.max(1, height), false);
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+    (window as unknown as { __scene3dRenderBudget?: unknown }).__scene3dRenderBudget = {
+      width: Math.round(width),
+      height: Math.round(height),
+      devicePixelRatio: window.devicePixelRatio,
+      pixelRatioCap,
+      reducedMotion
+    };
+  }, [reducedMotion]);
+
+  React.useEffect(() => {
     if (!mountRef.current) return;
 
     const mount = mountRef.current;
@@ -695,7 +719,6 @@ export function TorsoScene3D({
     scene.background = new THREE.Color(0xf8fafc);
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
     const ambient = new THREE.HemisphereLight(0xffffff, 0xcbd5e1, 2.1);
@@ -793,9 +816,18 @@ export function TorsoScene3D({
 
     const resize = () => {
       const { width, height } = mount.getBoundingClientRect();
+      const pixelRatioCap = scenePixelRatioCap(width, reducedMotion);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
       renderer.setSize(Math.max(1, width), Math.max(1, height), false);
       camera.aspect = Math.max(1, width) / Math.max(1, height);
       camera.updateProjectionMatrix();
+      (window as unknown as { __scene3dRenderBudget?: unknown }).__scene3dRenderBudget = {
+        width: Math.round(width),
+        height: Math.round(height),
+        devicePixelRatio: window.devicePixelRatio,
+        pixelRatioCap,
+        reducedMotion
+      };
     };
 
     const render = () => {
@@ -1575,6 +1607,7 @@ export function TorsoScene3D({
               className={anatomicalOverlayMode === key ? "active" : ""}
               onClick={() => chooseAnatomicalOverlayMode(key as AnatomicalOverlayMode)}
               aria-pressed={anatomicalOverlayMode === key}
+              aria-keyshortcuts="O"
             >
               {label}
             </button>
