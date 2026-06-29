@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -38,4 +38,11 @@ Audit V4 against the roadmap, task files, visual-honesty principles, safety boun
 
 ## Verification Notes
 
-Pending.
+Completed in `docs/V4_RELEASE_AUDIT.md`.
+
+Verification performed:
+
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- Chrome/Playwright final anatomy smoke on `http://127.0.0.1:5194`, covering anatomical preview load, hybrid projection debug state, 2D orientation sketch labels, and mobile layout.

@@ -32,11 +32,11 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 | V4-06 | Done | 2D orientation sketch anatomical redesign | V4-03 | `TASK_V4_06.md` |
 | V4-07 | Done | Med-student anatomy explanations and lesson updates | V4-05, V4-06 | `TASK_V4_07.md` |
 | V4-08 | Done | Performance, accessibility, and export update for anatomy modes | V4-05, V4-07 | `TASK_V4_08.md` |
-| V4-09 | Not started | V4 validation audit and release handoff | V4-08 | `TASK_V4_09.md` |
+| V4-09 | Done | V4 validation audit and release handoff | V4-08 | `TASK_V4_09.md` |
 
 ## Current Next Task
 
-Continue with `TASK_V4_09.md`.
+V4 is complete. Continue with a new roadmap or the deferred expert-review/runtime-polish work in `docs/V4_RELEASE_AUDIT.md`.
 
 ## Notes
 
@@ -51,3 +51,4 @@ Continue with `TASK_V4_09.md`.
 - V4-06 redesigned the 2D top heart as an orientation sketch with apex-forming LV, anterior RV wrap, orientation labels, preserved lead/timing overlays, and explicit non-slice UI label. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright desktop/mobile sketch smoke on `http://127.0.0.1:5191`.
 - V4-07 added learner-facing anatomy notes, selected-lead viewpoint explanation, V4 lesson copy, glossary terms, and safety/guided-lesson docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright lesson/anatomy-notes smoke on `http://127.0.0.1:5192`.
 - V4-08 added anatomy render budget policy, keyboard shortcuts, accessibility metadata, snapshot/screenshot anatomy metadata, reduced-motion/mobile pixel caps, and performance/export docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright keyboard/export/reduced-motion/mobile smoke on `http://127.0.0.1:5193`.
+- V4-09 added the release audit and handoff, mapped roadmap requirements to implementation evidence, documented known limitations and expert-review needs, updated README/status docs, and ran final V4 verification. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright final anatomy smoke on `http://127.0.0.1:5194`.

@@ -122,3 +122,6 @@ V4 performance/accessibility smoke additionally checks:
 - reduced-motion pixel-ratio cap for the 3D scene
 - snapshot JSON containing optimized asset metadata and anatomy overlay state
 - high-contrast/reduced-motion classes reaching the V4 anatomy controls
+- final release-audit smoke coverage for anatomical 3D preview load, hybrid projection status, 2D orientation sketch labels, and mobile layout
+
+V4 release verification is summarized in `docs/V4_RELEASE_AUDIT.md`.

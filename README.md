@@ -4,7 +4,7 @@ An educational cardiac-cycle visualizer for making 12-lead EKG/ECG voltages feel
 
 The goal is to help learners connect **myocardial depolarization and repolarization** to the changing voltage measurements seen in a 12-lead EKG. Rather than treating the tracing as an abstract waveform, the app shows what is happening in the heart, how that activity creates body-surface potentials, and why each lead deflects upward, downward, or remains nearly flat during the cardiac cycle.
 
-> **Status:** V3 educational anatomical-heart and wavefront simulator
+> **Status:** V4 educational anatomical-heart and visual-honesty simulator
 > **Scope:** educational physiology and signal-formation simulator  
 > **Non-goal:** diagnostic interpretation or clinical decision support
 
@@ -47,7 +47,7 @@ First success condition:
 
 > A learner can scrub through a normal beat and understand why several leads go positive, negative, or flat during P, QRS, ST, and T.
 
-The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md). The anatomical V3 roadmap and release audit are in [ROADMAP_V3.md](./ROADMAP_V3.md) and [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md). The V4 anatomical-fidelity roadmap and task index are in [ROADMAP_V4.md](./ROADMAP_V4.md) and [TASKS_V4.md](./TASKS_V4.md).
+The original roadmap is in [ROADMAP.md](./ROADMAP.md). The heart-first V2 roadmap and audit are in [ROADMAP_V2.md](./ROADMAP_V2.md) and [docs/V2_RELEASE_AUDIT.md](./docs/V2_RELEASE_AUDIT.md). The anatomical V3 roadmap and release audit are in [ROADMAP_V3.md](./ROADMAP_V3.md) and [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md). The V4 anatomical-fidelity roadmap, task index, and release audit are in [ROADMAP_V4.md](./ROADMAP_V4.md), [TASKS_V4.md](./TASKS_V4.md), and [docs/V4_RELEASE_AUDIT.md](./docs/V4_RELEASE_AUDIT.md).
 
 Foundational docs for the first implementation tasks:
 
@@ -68,6 +68,7 @@ Foundational docs for the first implementation tasks:
 - [docs/V3_GUIDED_LESSONS.md](./docs/V3_GUIDED_LESSONS.md) - V3 mesh/wavefront guided lesson structure
 - [docs/V3_PERFORMANCE_ACCESSIBILITY_EXPORT.md](./docs/V3_PERFORMANCE_ACCESSIBILITY_EXPORT.md) - V3 keyboard, accessibility, render budget, and export notes
 - [docs/V3_RELEASE_AUDIT.md](./docs/V3_RELEASE_AUDIT.md) - V3 completion evidence, verification, limitations, and handoff
+- [docs/V4_RELEASE_AUDIT.md](./docs/V4_RELEASE_AUDIT.md) - V4 anatomical-fidelity evidence, verification, limitations, and handoff
 
 ## Running the App
 
@@ -326,4 +327,4 @@ Before adding third-party anatomical models, datasets, textures, or reference me
 
 ## Current Next Step
 
-V3 is complete through [TASK_V3_12.md](./TASK_V3_12.md). V4 is now planned in [ROADMAP_V4.md](./ROADMAP_V4.md), with [TASK_V4_01.md](./TASK_V4_01.md) as the next implementation task: anatomical asset QA and preview controls.
+V4 is complete through [TASK_V4_09.md](./TASK_V4_09.md). The current handoff is in [docs/V4_RELEASE_AUDIT.md](./docs/V4_RELEASE_AUDIT.md): future work should prioritize expert-reviewed anatomical anchors, stronger mesh projection methods, and runtime polish for large 3D assets.
