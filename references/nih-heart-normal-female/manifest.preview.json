@@ -22,17 +22,24 @@
     "attributionText": "17 yo Female, Normal Heart, NIH 3D entry 3DPX-002636."
   },
   "files": {
-    "runtimePath": "apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb",
-    "runtimeUrl": "/assets/nih-heart/ALM0006_Whole_NIH3D.glb",
+    "sourcePreviewPath": "apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb",
+    "sourcePreviewUrl": "/assets/nih-heart/ALM0006_Whole_NIH3D.glb",
+    "runtimePath": "apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb",
+    "runtimeUrl": "/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb",
     "originalFormat": "glb",
     "optimizedFormat": "glb",
     "texturePaths": []
   },
   "geometry": {
-    "vertexCount": 315366,
-    "faceCount": 630640,
-    "fileSizeBytes": 11353016,
-    "hasNormals": true,
+    "vertexCount": 78749,
+    "faceCount": 157486,
+    "fileSizeBytes": 2835780,
+    "sourceVertexCount": 315366,
+    "sourceFaceCount": 630640,
+    "sourceFileSizeBytes": 11353016,
+    "renderVertexCount": 472458,
+    "sourceRenderVertexCount": 1891920,
+    "hasNormals": false,
     "hasUvCoordinates": false,
     "scaleUnit": "normalized-by-renderer",
     "coordinateSystem": "source GLB, normalized at runtime"
@@ -47,15 +54,18 @@
   },
   "modifications": [
     "Bundled the NIH GLB output unchanged.",
+    "Created optimized runtime derivative with glTF Transform v4.4.0: weld, then simplify --ratio 0.25 --error 0.01.",
     "Renderer normalizes, centers, scales, and applies a translucent teaching material at runtime."
   ],
   "optimization": {
     "targetMaxVertices": 60000,
-    "currentVertexCountExceedsTarget": true,
+    "acceptablePreviewMaxVertices": 100000,
+    "currentVertexCountExceedsTarget": false,
     "targetMaxTextureSize": 2048,
     "dracoCompressed": false,
     "meshoptCompressed": false,
-    "notes": "This is intentionally a visual spike. A production anatomical mesh should be decimated or replaced with a lower-poly validated derivative."
+    "toolchain": "npm run optimize:nih-heart",
+    "notes": "Optimized derivative is within the 60k-100k V4 preview range but still lacks chamber labels and region mapping. It is a visual reference only."
   },
   "redistribution": {
     "bundledInRepository": true,

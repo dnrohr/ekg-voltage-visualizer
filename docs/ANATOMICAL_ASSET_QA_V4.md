@@ -2,10 +2,12 @@
 
 ## NIH Whole-Heart Preview
 
-- Asset id: `nih-3d-3dpx-002636-whole-heart-preview`
+- Source preview id: `nih-3d-3dpx-002636-whole-heart-preview`
+- Runtime asset id: `nih-3d-3dpx-002636-whole-heart-optimized-v1`
 - Source: NIH 3D entry `3DPX-002636`, "17 yo Female, Normal Heart"
 - Source URL: `https://3d.nih.gov/entries/3DPX-002636`
-- Runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
+- Source preview file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
+- Optimized runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb`
 - Provenance manifest: `references/nih-heart-normal-female/manifest.preview.json`
 - Retrieved: 2026-06-28
 - Listed license: Public Domain / CC0
@@ -13,16 +15,40 @@
 
 ## File And Geometry QA
 
-- File size: 11,353,016 bytes.
-- Vertex count: 315,366.
-- Face count: 630,640.
+- Source file size: 11,353,016 bytes.
+- Source uploaded vertex count: 315,366.
+- Source triangle count: 630,640.
+- Optimized file size: 2,835,780 bytes.
+- Optimized uploaded vertex count: 78,749.
+- Optimized triangle count: 157,486.
+- Optimized render vertex count: 472,458.
 - Runtime format: GLB.
-- Normals: present according to the preview manifest; the renderer recomputes normals if a mesh child lacks them.
+- Normals: not stored in the inspected GLBs; the renderer computes normals if a mesh child lacks them.
 - UV coordinates: not present in the preview manifest.
 - Textures: none bundled for this asset.
 - Runtime transform: the renderer centers, scales, and offsets the source mesh into the teaching scene.
 
-The current mesh is above the V4 recommended interactive target of 60,000 to 100,000 vertices. It is acceptable only as a preview/reference layer while V4-02 defines and records an optimization path.
+The optimized mesh is within the V4 acceptable preview range of 60,000 to 100,000 uploaded vertices. It is still a preview/reference layer, not a validated simulation mesh.
+
+## Optimization Workflow
+
+Run the repeatable local workflow with:
+
+```bash
+npm run optimize:nih-heart
+```
+
+The script uses glTF Transform v4.4.0 through `npx`:
+
+1. inspect the unchanged NIH source preview GLB
+2. weld duplicate/split vertices into a temporary GLB
+3. simplify with `--ratio 0.25 --error 0.01`
+4. remove the temporary welded file
+5. inspect the optimized runtime GLB
+
+The optimized derivative keeps the original source GLB in place and writes `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb`.
+
+Visual comparison note: the optimized preview preserves the overall whole-heart silhouette and major surface folds needed for orientation, while fine trabecular/surface detail is softened. That tradeoff is acceptable for the translucent anatomical-reference role and should be revisited before any chamber segmentation work.
 
 ## Visual Review
 
@@ -63,5 +89,5 @@ Manual browser checks for V4-01 should confirm:
 - mobile width stacks the anatomical reference controls without text overlap
 - toggling the preview off leaves the procedural teaching mesh and overlays visible
 - opacity changes affect only the anatomical reference mesh
-- study snapshot JSON includes `anatomicalPreview.assetId`, `visible`, `opacity`, and the visual-reference role note
+- study snapshot JSON includes optimized `anatomicalPreview.assetId`, `visible`, `opacity`, and the visual-reference role note
 - failed GLB load displays the caption fallback state while preserving the procedural scene

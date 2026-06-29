@@ -82,7 +82,7 @@ V4-01 keeps the NIH whole-heart GLB as a visual reference layer, not as the sour
 - the authored procedural teaching mesh
 - the synchronized wavefront, isochrone, lead, and region overlays
 
-The current preview asset id is `nih-3d-3dpx-002636-whole-heart-preview`. See `docs/ANATOMICAL_ASSET_QA_V4.md` and `references/nih-heart-normal-female/manifest.preview.json` for provenance, file size, vertex count, license, and known limitations.
+The current runtime preview asset id is `nih-3d-3dpx-002636-whole-heart-optimized-v1`, derived from source preview `nih-3d-3dpx-002636-whole-heart-preview`. See `docs/ANATOMICAL_ASSET_QA_V4.md` and `references/nih-heart-normal-female/manifest.preview.json` for provenance, file size, vertex count, license, optimization workflow, and known limitations.
 
 If the GLB cannot be fetched or parsed, the scene reports the failed reference state in its caption and continues rendering the procedural teaching model. Study snapshot exports include the preview asset id, visibility, opacity, and a note that the mesh is a visual anatomical reference only.
 

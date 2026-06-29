@@ -103,8 +103,8 @@ const anatomyViewModes: Record<AnatomyViewMode, string> = {
 
 const wavefrontBandWidthMs = 18;
 const repolarizationBandWidthMs = 26;
-export const nihAnatomicalPreviewAssetId = "nih-3d-3dpx-002636-whole-heart-preview";
-export const nihAnatomicalPreviewPath = "/assets/nih-heart/ALM0006_Whole_NIH3D.glb";
+export const nihAnatomicalPreviewAssetId = "nih-3d-3dpx-002636-whole-heart-optimized-v1";
+export const nihAnatomicalPreviewPath = "/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb";
 const defaultAnatomicalPreview: AnatomicalPreviewSettings = {
   visible: true,
   opacity: 0.68

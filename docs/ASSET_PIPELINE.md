@@ -69,14 +69,29 @@ The intake gate exists so the app does not accidentally bundle unclear or restri
 The app includes one visual-only anatomical preview asset:
 
 - Source: NIH 3D entry `3DPX-002636`, "17 yo Female, Normal Heart"
-- Runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
+- Source preview file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
+- Optimized runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.optimized.glb`
 - Provenance: `references/nih-heart-normal-female/manifest.preview.json`
 - License shown on NIH entry: Public Domain / CC0
 - V4 QA notes: `docs/ANATOMICAL_ASSET_QA_V4.md`
 
-This preview is intentionally not treated as a validated V3 simulation mesh. It is not chamber-labeled, not region-mapped, and exceeds the recommended vertex target. The renderer uses it as a translucent anatomical reference while the procedural educational mesh remains the source of wavefront timing, lead overlays, and selectable regions.
+This preview is intentionally not treated as a validated V3 simulation mesh. It is not chamber-labeled and not region-mapped. The renderer uses the optimized derivative as a translucent anatomical reference while the procedural educational mesh remains the source of wavefront timing, lead overlays, and selectable regions.
 
 V4-01 makes the preview reversible in the learner UI. The anatomical reference can be hidden or faded independently, and study snapshot exports record the preview asset id plus visibility/opacity settings. A failed GLB load must leave the procedural teaching scene usable.
+
+V4-02 adds a repeatable optimization path:
+
+```bash
+npm run optimize:nih-heart
+```
+
+The script inspects the original NIH GLB, welds it into a temporary GLB, simplifies it with glTF Transform `simplify --ratio 0.25 --error 0.01`, removes the temporary file, and inspects the optimized output. Current before/after:
+
+- source: 315,366 uploaded vertices, 630,640 triangles, 11,353,016 bytes
+- optimized runtime: 78,749 uploaded vertices, 157,486 triangles, 2,835,780 bytes
+- materials/textures: none in either GLB; the renderer applies the translucent preview material and computes normals when needed
+
+The original source preview file must stay bundled unchanged until an external download/cache policy replaces it. Optimization derivatives must keep the NIH entry id, license, and modification notes in the manifest.
 
 ### Accepted Runtime Formats
 
