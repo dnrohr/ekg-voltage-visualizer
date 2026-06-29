@@ -104,3 +104,14 @@ The final V3 browser smoke covers:
 - Desktop and 390 px mobile layouts without horizontal overflow.
 
 The V3 release remains educational only. The validation evidence proves deterministic teaching behavior, synchronized UI state, accessibility/export coverage, and absence of obvious runtime/layout failures in smoke checks. It does not prove clinical diagnostic accuracy.
+
+## V4 Anatomical Overlay Validation Boundary
+
+V4 anatomical overlay checks verify synchronization and visual honesty, not clinical electrophysiology. The V4-05 anatomical overlay projects existing authored region timing onto approximate NIH anchor points and confirms:
+
+- overlay mode can switch between procedural, anatomical, and hybrid views
+- projected anchor-ring counts update with the cardiac-cycle time
+- procedural overlays remain available as fallback/debug comparison
+- captions and docs state that anatomical timing rings are educational projections, not a solved field on the NIH mesh
+
+These checks do not validate patient-specific conduction, chamber segmentation, local activation times on real myocardium, or diagnostic ECG interpretation.

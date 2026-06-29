@@ -22,6 +22,7 @@ import {
 export type CameraPreset = "frontal" | "transverse" | "left-lateral" | "heart-close";
 export type SurfaceMapMode = "wavefront" | "electrical-state";
 export type AnatomyViewMode = "external" | "cutaway" | "chambers";
+export type AnatomicalOverlayMode = "procedural" | "anatomical" | "hybrid";
 
 type TorsoScene3DProps = {
   state: SimulationState;
@@ -33,12 +34,14 @@ type TorsoScene3DProps = {
   cameraPreset?: CameraPreset;
   anatomyViewMode?: AnatomyViewMode;
   surfaceMapMode?: SurfaceMapMode;
+  anatomicalOverlayMode?: AnatomicalOverlayMode;
   isochroneScope?: IsochroneScope;
   highContrast?: boolean;
   reducedMotion?: boolean;
   onCameraPresetChange?: (preset: CameraPreset) => void;
   onAnatomyViewModeChange?: (mode: AnatomyViewMode) => void;
   onSurfaceMapModeChange?: (mode: SurfaceMapMode) => void;
+  onAnatomicalOverlayModeChange?: (mode: AnatomicalOverlayMode) => void;
   onIsochroneScopeChange?: (scope: IsochroneScope) => void;
 };
 
@@ -96,6 +99,12 @@ const surfaceStateColors: Record<TissueState, number> = {
 const surfaceMapModes: Record<SurfaceMapMode, string> = {
   wavefront: "Activation wave",
   "electrical-state": "Electrical state"
+};
+
+const anatomicalOverlayModes: Record<AnatomicalOverlayMode, string> = {
+  procedural: "Procedural",
+  anatomical: "Anatomical",
+  hybrid: "Hybrid"
 };
 
 const anatomyViewModes: Record<AnatomyViewMode, string> = {
@@ -585,12 +594,14 @@ export function TorsoScene3D({
   cameraPreset,
   anatomyViewMode: preferredAnatomyViewMode,
   surfaceMapMode: preferredSurfaceMapMode,
+  anatomicalOverlayMode: preferredAnatomicalOverlayMode,
   isochroneScope: preferredIsochroneScope,
   highContrast = false,
   reducedMotion = false,
   onCameraPresetChange,
   onAnatomyViewModeChange,
   onSurfaceMapModeChange,
+  onAnatomicalOverlayModeChange,
   onIsochroneScopeChange
 }: TorsoScene3DProps) {
   const mountRef = React.useRef<HTMLDivElement | null>(null);
@@ -604,6 +615,7 @@ export function TorsoScene3D({
   const [preset, setPreset] = React.useState<CameraPreset>("frontal");
   const [anatomyViewMode, setAnatomyViewMode] = React.useState<AnatomyViewMode>("external");
   const [surfaceMapMode, setSurfaceMapMode] = React.useState<SurfaceMapMode>("wavefront");
+  const [anatomicalOverlayMode, setAnatomicalOverlayMode] = React.useState<AnatomicalOverlayMode>("hybrid");
   const [isochroneScope, setIsochroneScope] = React.useState<IsochroneScope>("ventricles");
   const [previewStatus, setPreviewStatus] = React.useState<"loading" | "loaded" | "failed">("loading");
   const activeLayers = React.useMemo(() => ({ ...defaultLayers, ...layers }), [layers]);
@@ -633,6 +645,10 @@ export function TorsoScene3D({
   }, [preferredSurfaceMapMode]);
 
   React.useEffect(() => {
+    if (preferredAnatomicalOverlayMode) setAnatomicalOverlayMode(preferredAnatomicalOverlayMode);
+  }, [preferredAnatomicalOverlayMode]);
+
+  React.useEffect(() => {
     if (preferredIsochroneScope) setIsochroneScope(preferredIsochroneScope);
   }, [preferredIsochroneScope]);
 
@@ -649,6 +665,11 @@ export function TorsoScene3D({
   const chooseSurfaceMapMode = (value: SurfaceMapMode) => {
     setSurfaceMapMode(value);
     onSurfaceMapModeChange?.(value);
+  };
+
+  const chooseAnatomicalOverlayMode = (value: AnatomicalOverlayMode) => {
+    setAnatomicalOverlayMode(value);
+    onAnatomicalOverlayModeChange?.(value);
   };
 
   const chooseIsochroneScope = (value: IsochroneScope) => {
@@ -831,6 +852,8 @@ export function TorsoScene3D({
     const regionsById = new Map(state.surfaceRegions.map((region) => [region.id, region]));
     const internalAnatomyMode = anatomyViewMode !== "external";
     const surfaceOpacity = anatomyViewMode === "external" ? 0.92 : anatomyViewMode === "cutaway" ? 0.46 : 0.24;
+    const showProceduralPatchOverlay = anatomicalOverlayMode !== "anatomical";
+    const showAnatomicalProjectionOverlay = anatomicalOverlayMode !== "procedural";
     const heart = scene.getObjectByName("procedural heart");
     heart?.children.forEach((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -956,6 +979,97 @@ export function TorsoScene3D({
     const activeIsochroneMap = state.isochroneMaps[isochroneScope];
     const scopedRegionIds = new Set(activeIsochroneMap.bands.map((band) => band.regionId));
     const bandsByRegion = new Map(activeIsochroneMap.bands.map((band) => [band.regionId, band]));
+
+    if (showAnatomicalProjectionOverlay && (activeLayers.wavefront || activeLayers.stateMap || activeLayers.contours)) {
+      const projectedAnchorIds: string[] = [];
+
+      for (const anchor of normalizedNihAnatomicalAnchors) {
+        const anchorRegions = anchor.educationalRegionIds
+          .map((regionId) => regionsById.get(regionId))
+          .filter((region) => region !== undefined);
+        const currentRegion =
+          anchorRegions.find((region) => region.state === "depolarizing" || region.state === "repolarizing") ??
+          anchorRegions.find((region) => region.id === selectedRegionId) ??
+          anchorRegions[0];
+        if (!currentRegion) continue;
+
+        const anchorBand =
+          anchor.educationalRegionIds.map((regionId) => bandsByRegion.get(regionId)).find((band) => band?.isCurrentWavefront) ??
+          anchor.educationalRegionIds.map((regionId) => bandsByRegion.get(regionId)).find((band) => band !== undefined);
+        const position = new THREE.Vector3(anchor.scenePosition.x, anchor.scenePosition.y, anchor.scenePosition.z).add(new THREE.Vector3(0, 0, 0.052));
+        const isCurrentWave = currentRegion.state === "depolarizing" || currentRegion.state === "repolarizing";
+        const isSelectedAnchor = selectedRegionId ? anchor.educationalRegionIds.includes(selectedRegionId) : false;
+        const projectionMode = activeLayers.stateMap ? "electrical-state" : surfaceMapMode;
+        const color = surfaceRegionColor(currentRegion.state, projectionMode);
+
+        if (activeLayers.wavefront || activeLayers.stateMap) {
+          if (activeLayers.stateMap || isCurrentWave || currentRegion.state === "active" || isSelectedAnchor) {
+            const waveRing = new THREE.Mesh(
+              new THREE.TorusGeometry(isCurrentWave ? 0.132 : isSelectedAnchor ? 0.116 : 0.086, isCurrentWave ? 0.011 : 0.006, 10, 56),
+              new THREE.MeshBasicMaterial({
+                color: isSelectedAnchor ? 0x0f766e : color,
+                transparent: true,
+                opacity: isCurrentWave ? 0.96 : currentRegion.state === "active" ? 0.5 : 0.34,
+                depthTest: false
+              })
+            );
+            waveRing.name = `anatomical projected ${currentRegion.state} band ${anchor.id}`;
+            waveRing.position.copy(position);
+            waveRing.rotation.x = Math.PI / 2;
+            waveRing.renderOrder = isCurrentWave ? 52 : 42;
+            dynamicGroup.add(waveRing);
+            projectedAnchorIds.push(anchor.id);
+          }
+        }
+
+        if (activeLayers.contours && anchorBand) {
+          const contourRing = new THREE.Mesh(
+            new THREE.TorusGeometry(anchorBand.isCurrentWavefront ? 0.158 : 0.122, anchorBand.isCurrentWavefront ? 0.006 : 0.0035, 8, 48),
+            new THREE.MeshBasicMaterial({
+              color: contourColor(anchorBand.bandStartMs),
+              transparent: true,
+              opacity: anchorBand.isCurrentWavefront ? 0.94 : 0.42,
+              depthTest: false
+            })
+          );
+          contourRing.name = `anatomical projected isochrone ${anchor.id}`;
+          contourRing.position.copy(position).add(new THREE.Vector3(0, 0.006, 0));
+          contourRing.rotation.x = Math.PI / 2;
+          contourRing.renderOrder = anchorBand.isCurrentWavefront ? 53 : 43;
+          dynamicGroup.add(contourRing);
+          projectedAnchorIds.push(anchor.id);
+
+          if (anchorBand.isCurrentWavefront) {
+            const label = new THREE.Sprite(
+              new THREE.SpriteMaterial({
+                map: createLabelTexture(`${Math.round(anchorBand.relativeActivationMs)} ms`, "#fef3c7"),
+                transparent: true,
+                depthTest: false
+              })
+            );
+            label.name = `anatomical projected isochrone label ${anchor.id}`;
+            label.position.copy(position).add(new THREE.Vector3(0, 0.13, 0.05));
+            label.scale.set(0.22, 0.11, 1);
+            label.renderOrder = 54;
+            dynamicGroup.add(label);
+          }
+        }
+      }
+
+      (window as unknown as { __nihAnatomicalProjection?: unknown }).__nihAnatomicalProjection = {
+        mode: anatomicalOverlayMode,
+        projectedAnchorCount: new Set(projectedAnchorIds).size,
+        timeMs: state.timeMs,
+        scope: isochroneScope
+      };
+    } else {
+      (window as unknown as { __nihAnatomicalProjection?: unknown }).__nihAnatomicalProjection = {
+        mode: anatomicalOverlayMode,
+        projectedAnchorCount: 0,
+        timeMs: state.timeMs,
+        scope: isochroneScope
+      };
+    }
 
     if (activeLayers.contours) for (const segment of state.heartMeshField.segments) {
       if (!scopedRegionIds.has(segment.id)) continue;
@@ -1219,7 +1333,7 @@ export function TorsoScene3D({
       dynamicGroup.add(tissue);
     }
 
-    if (activeLayers.wavefront || activeLayers.stateMap) for (const region of state.surfaceRegions) {
+    if (showProceduralPatchOverlay && (activeLayers.wavefront || activeLayers.stateMap)) for (const region of state.surfaceRegions) {
       const position = toScene(region.center).add(new THREE.Vector3(0, 0, 0.18));
       const color = surfaceRegionColor(region.state, activeLayers.stateMap ? "electrical-state" : surfaceMapMode);
       const isCurrentWave = region.state === "depolarizing" || region.state === "repolarizing";
@@ -1286,7 +1400,7 @@ export function TorsoScene3D({
       }
     }
 
-    if (activeLayers.wavefront || activeLayers.stateMap) {
+    if (showProceduralPatchOverlay && (activeLayers.wavefront || activeLayers.stateMap)) {
       const surfaceLinePoints: THREE.Vector3[] = [];
       for (let index = 0; index < state.surfaceRegions.length - 1; index += 1) {
         surfaceLinePoints.push(
@@ -1321,7 +1435,7 @@ export function TorsoScene3D({
       dynamicGroup.add(surfaceMeshLines);
     }
 
-    if (activeLayers.contours) for (const region of state.surfaceRegions) {
+    if (showProceduralPatchOverlay && activeLayers.contours) for (const region of state.surfaceRegions) {
       if (!scopedRegionIds.has(region.id)) continue;
       const band = bandsByRegion.get(region.id);
       if (!band) continue;
@@ -1408,7 +1522,7 @@ export function TorsoScene3D({
     }
 
     renderer.render(scene, camera);
-  }, [activeLayers, anatomyViewMode, highContrast, isochroneScope, reducedMotion, selectedLead, selectedRegionId, state, surfaceMapMode]);
+  }, [activeLayers, anatomicalOverlayMode, anatomyViewMode, highContrast, isochroneScope, reducedMotion, selectedLead, selectedRegionId, state, surfaceMapMode]);
 
   return (
     <div className={`scene3d ${highContrast ? "high-contrast" : ""} ${reducedMotion ? "reduced-motion" : ""}`}>
@@ -1453,6 +1567,19 @@ export function TorsoScene3D({
             </button>
           ))}
         </div>
+        <div className="anatomical-overlay-toggle" aria-label="Anatomical overlay mode">
+          {Object.entries(anatomicalOverlayModes).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={anatomicalOverlayMode === key ? "active" : ""}
+              onClick={() => chooseAnatomicalOverlayMode(key as AnatomicalOverlayMode)}
+              aria-pressed={anatomicalOverlayMode === key}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="isochrone-scope-toggle" aria-label="Isochrone contour scope">
           {Object.entries(isochroneScopes).map(([key, label]) => (
             <button
@@ -1471,6 +1598,7 @@ export function TorsoScene3D({
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
           NIH anatomical reference mesh: {activeAnatomicalPreview.visible ? previewStatus : "hidden"} at {Math.round(activeAnatomicalPreview.opacity * 100)}% opacity. Teaching overlays remain authored from the procedural simulation; mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
+          {` Overlay comparison: ${anatomicalOverlayModes[anatomicalOverlayMode].toLowerCase()}.`}
           {activeLayers.leadContribution && ` ${selectedLead} contributor halos: aligned, opposed, weak.`}
           {activeLayers.anatomicalMarkers && " Anatomical markers are approximate educational anchor mappings, not segmented chamber labels."}
           {previewStatus === "failed" && " The procedural teaching mesh is still available because the reference GLB did not load."}

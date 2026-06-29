@@ -28,7 +28,7 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 | V4-02 | Done | Mesh optimization and decimation workflow | V4-01 | `TASK_V4_02.md` |
 | V4-03 | Done | Anatomical coordinate normalization and anchor contract | V4-01 | `TASK_V4_03.md` |
 | V4-04 | Done | Chamber and region marker mapping on anatomical heart | V4-03 | `TASK_V4_04.md` |
-| V4-05 | Not started | Anatomical wavefront and isochrone projection prototype | V4-04 | `TASK_V4_05.md` |
+| V4-05 | Done | Anatomical wavefront and isochrone projection prototype | V4-04 | `TASK_V4_05.md` |
 | V4-06 | Not started | 2D orientation sketch anatomical redesign | V4-03 | `TASK_V4_06.md` |
 | V4-07 | Not started | Med-student anatomy explanations and lesson updates | V4-05, V4-06 | `TASK_V4_07.md` |
 | V4-08 | Not started | Performance, accessibility, and export update for anatomy modes | V4-05, V4-07 | `TASK_V4_08.md` |
@@ -36,7 +36,7 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 
 ## Current Next Task
 
-Continue with `TASK_V4_05.md`.
+Continue with `TASK_V4_06.md`.
 
 ## Notes
 
@@ -47,3 +47,4 @@ Continue with `TASK_V4_05.md`.
 - V4-02 added optimized runtime GLB `ALM0006_Whole_NIH3D.optimized.glb` at 78,749 uploaded vertices / 2,835,780 bytes, repeatable `npm run optimize:nih-heart` workflow, renderer switch to optimized asset id `nih-3d-3dpx-002636-whole-heart-optimized-v1`, and source/optimized manifest plus docs. Verification: `npm run optimize:nih-heart`, `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright optimized-asset load smoke.
 - V4-03 added the approximate anatomical anchor contract, NIH anchor metadata, deterministic normalization utilities, tests, and docs for source-to-scene coordinate mapping. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright app-load smoke.
 - V4-04 added the independent anatomical marker layer, marker-region selection sync, approximate mapping caption, marker debug summary, layer-panel control, and marker confidence docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright marker toggle/selection/mobile smoke on `http://127.0.0.1:5189`.
+- V4-05 added procedural/anatomical/hybrid overlay comparison, anchor-projected wavefront and isochrone rings, projection debug summary, overlay mode state persistence, and validation docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright overlay mode/scrub/mobile smoke on `http://127.0.0.1:5190`.

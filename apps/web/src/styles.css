@@ -1234,7 +1234,8 @@ h3 {
 }
 
 .anatomy-mode-toggle,
-.surface-mode-toggle {
+.surface-mode-toggle,
+.anatomical-overlay-toggle {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;

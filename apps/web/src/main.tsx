@@ -26,6 +26,7 @@ import {
   nihAnatomicalPreviewAssetId,
   TorsoScene3D,
   type AnatomicalPreviewSettings,
+  type AnatomicalOverlayMode,
   type AnatomyViewMode,
   type CameraPreset,
   type SurfaceMapMode,
@@ -57,6 +58,7 @@ type V3ViewState = {
   cameraPreset: CameraPreset;
   anatomyViewMode: AnatomyViewMode;
   surfaceMapMode: SurfaceMapMode;
+  anatomicalOverlayMode: AnatomicalOverlayMode;
   isochroneScope: IsochroneScope;
 };
 
@@ -79,6 +81,7 @@ const learnerModeOrder = Object.keys(learnerModes) as LearnerMode[];
 const cameraPresetOrder: CameraPreset[] = ["frontal", "transverse", "left-lateral", "heart-close"];
 const anatomyViewModeOrder: AnatomyViewMode[] = ["external", "cutaway", "chambers"];
 const surfaceMapModeOrder: SurfaceMapMode[] = ["wavefront", "electrical-state"];
+const anatomicalOverlayModeOrder: AnatomicalOverlayMode[] = ["procedural", "anatomical", "hybrid"];
 const isochroneScopeOrder: IsochroneScope[] = ["whole-heart", "atria", "ventricles"];
 const defaultAnatomicalPreview: AnatomicalPreviewSettings = {
   visible: true,
@@ -344,6 +347,7 @@ function App() {
     cameraPreset: lessons[0].cameraPreset,
     anatomyViewMode: lessons[0].anatomyViewMode,
     surfaceMapMode: "wavefront",
+    anatomicalOverlayMode: "hybrid",
     isochroneScope: "ventricles"
   });
   const [visualLayers, setVisualLayers] = React.useState<VisualLayers>(layerPresets["probe-to-heart"]);
@@ -436,10 +440,11 @@ function App() {
         visible: anatomicalPreview.visible,
         opacity: anatomicalPreview.opacity
       },
+      anatomicalOverlayMode: v3ViewState.anatomicalOverlayMode,
       shaderPath: visualLayers.wavefront || visualLayers.stateMap ? "shader wavefront material with standard-material fallback" : "static overlay layers",
       devicePixelRatioCap: 2
     };
-  }, [anatomicalPreview, state.heartMeshField, state.isochroneMaps, v3ViewState.isochroneScope, visualLayers]);
+  }, [anatomicalPreview, state.heartMeshField, state.isochroneMaps, v3ViewState.anatomicalOverlayMode, v3ViewState.isochroneScope, visualLayers]);
 
   React.useEffect(() => {
     scenarioRef.current = scenario;
@@ -507,6 +512,7 @@ function App() {
           cameraPreset: preset.v3ViewState?.cameraPreset && cameraPresetOrder.includes(preset.v3ViewState.cameraPreset) ? preset.v3ViewState.cameraPreset : current.cameraPreset,
           anatomyViewMode: preset.v3ViewState?.anatomyViewMode && anatomyViewModeOrder.includes(preset.v3ViewState.anatomyViewMode) ? preset.v3ViewState.anatomyViewMode : current.anatomyViewMode,
           surfaceMapMode: preset.v3ViewState?.surfaceMapMode && surfaceMapModeOrder.includes(preset.v3ViewState.surfaceMapMode) ? preset.v3ViewState.surfaceMapMode : current.surfaceMapMode,
+          anatomicalOverlayMode: preset.v3ViewState?.anatomicalOverlayMode && anatomicalOverlayModeOrder.includes(preset.v3ViewState.anatomicalOverlayMode) ? preset.v3ViewState.anatomicalOverlayMode : current.anatomicalOverlayMode,
           isochroneScope: preset.v3ViewState?.isochroneScope && isochroneScopeOrder.includes(preset.v3ViewState.isochroneScope) ? preset.v3ViewState.isochroneScope : current.isochroneScope
         }));
       }
@@ -553,6 +559,11 @@ function App() {
         setV3ViewState((current) => ({
           ...current,
           surfaceMapMode: surfaceMapModeOrder[(surfaceMapModeOrder.indexOf(current.surfaceMapMode) + 1) % surfaceMapModeOrder.length]
+        }));
+      } else if (event.key.toLowerCase() === "o") {
+        setV3ViewState((current) => ({
+          ...current,
+          anatomicalOverlayMode: anatomicalOverlayModeOrder[(anatomicalOverlayModeOrder.indexOf(current.anatomicalOverlayMode) + 1) % anatomicalOverlayModeOrder.length]
         }));
       } else if (event.key.toLowerCase() === "i") {
         setV3ViewState((current) => ({
@@ -1089,12 +1100,14 @@ function App() {
           cameraPreset={v3ViewState.cameraPreset}
           anatomyViewMode={v3ViewState.anatomyViewMode}
           surfaceMapMode={v3ViewState.surfaceMapMode}
+          anatomicalOverlayMode={v3ViewState.anatomicalOverlayMode}
           isochroneScope={v3ViewState.isochroneScope}
           highContrast={highContrast}
           reducedMotion={reducedMotion}
           onCameraPresetChange={(cameraPreset) => setV3ViewState((current) => ({ ...current, cameraPreset }))}
           onAnatomyViewModeChange={(anatomyViewMode) => setV3ViewState((current) => ({ ...current, anatomyViewMode }))}
           onSurfaceMapModeChange={(surfaceMapMode) => setV3ViewState((current) => ({ ...current, surfaceMapMode }))}
+          onAnatomicalOverlayModeChange={(anatomicalOverlayMode) => setV3ViewState((current) => ({ ...current, anatomicalOverlayMode }))}
           onIsochroneScopeChange={(isochroneScope) => setV3ViewState((current) => ({ ...current, isochroneScope }))}
         />
         {regionInspection && (

@@ -130,6 +130,18 @@ Deferred:
 
 The marker caption states that the layer is approximate educational mapping, not segmented chamber labels.
 
+## V4 Anatomical Wavefront Projection Prototype
+
+V4-05 adds an overlay comparison mode with three choices:
+
+- Procedural: keeps the existing authored mesh, patch, and contour overlays as the fallback/debug view.
+- Anatomical: draws timing rings at normalized NIH anchor positions and suppresses the older floating patch overlay.
+- Hybrid: draws both the procedural overlays and anatomical anchor-projected timing rings for comparison.
+
+The anatomical projection uses existing educational timing only. For each anchor, the renderer looks up the mapped educational surface regions, chooses the current depolarizing/repolarizing region when present, and draws a hover ring near that anchor. Isochrone rings use the existing scoped isochrone bands, so they remain synchronized with the cardiac-cycle scrubber and selected scope.
+
+This is not a solved electrophysiology field on the NIH mesh. It is a teaching projection from authored region timing onto approximate landmarks. The overlay intentionally remains ring-based and visibly educational until a real chamber/region mesh mapping exists.
+
 ## Shader Wavefront Rendering
 
 V3-04 adds shader-driven coloring for the external mesh surface. The renderer writes per-vertex `phiActivationMs` and `phiRepolarizationMs` attributes into each Three.js geometry. A custom `ShaderMaterial` then colors the surface from those level-set values:
