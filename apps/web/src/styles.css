@@ -1205,6 +1205,31 @@ h3 {
   gap: 12px;
 }
 
+.anatomy-notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.anatomy-notes span {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #d7dee5;
+  border-radius: 6px;
+  background: #fbfcfd;
+  color: #344054;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.anatomy-notes strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #17202a;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
 .scene3d {
   display: grid;
   gap: 10px;
@@ -1863,6 +1888,7 @@ input[type="range"] {
   .change-list,
   .scenario-compare-viewer,
   .layer-groups,
+  .anatomy-notes,
   .lesson-context,
   .region-timing-grid,
   .region-lead-groups,

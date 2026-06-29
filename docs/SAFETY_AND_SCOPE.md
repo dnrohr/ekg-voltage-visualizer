@@ -54,6 +54,9 @@ Reference ECG example. Labels and signals are provided for educational compariso
 - Prefer a simpler accurate explanation over a more realistic-looking misleading one.
 - In selected-region inspection panels, frame "best-seen", "opposite", and "indirect" as educational lead relationships, not anatomical localization or diagnostic evidence.
 - When describing tissue state, distinguish depolarizing wavefront, active/refractory tissue, repolarizing tissue, and recovered tissue without implying patient-specific electrophysiology.
+- Label the 2D heart drawing as an orientation sketch, not a literal anatomical slice.
+- Describe NIH heart anatomy as a visual reference. Do not imply chamber segmentation, patient-specific geometry, or timing solved on that mesh.
+- Describe anatomical markers and hybrid overlays as approximate educational mapping from the authored model.
 
 ## Risk Notes
 

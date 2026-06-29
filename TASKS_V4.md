@@ -30,13 +30,13 @@ Status index for V4 anatomical-fidelity and visual-honesty work derived from `RO
 | V4-04 | Done | Chamber and region marker mapping on anatomical heart | V4-03 | `TASK_V4_04.md` |
 | V4-05 | Done | Anatomical wavefront and isochrone projection prototype | V4-04 | `TASK_V4_05.md` |
 | V4-06 | Done | 2D orientation sketch anatomical redesign | V4-03 | `TASK_V4_06.md` |
-| V4-07 | Not started | Med-student anatomy explanations and lesson updates | V4-05, V4-06 | `TASK_V4_07.md` |
+| V4-07 | Done | Med-student anatomy explanations and lesson updates | V4-05, V4-06 | `TASK_V4_07.md` |
 | V4-08 | Not started | Performance, accessibility, and export update for anatomy modes | V4-05, V4-07 | `TASK_V4_08.md` |
 | V4-09 | Not started | V4 validation audit and release handoff | V4-08 | `TASK_V4_09.md` |
 
 ## Current Next Task
 
-Continue with `TASK_V4_07.md`.
+Continue with `TASK_V4_08.md`.
 
 ## Notes
 
@@ -49,3 +49,4 @@ Continue with `TASK_V4_07.md`.
 - V4-04 added the independent anatomical marker layer, marker-region selection sync, approximate mapping caption, marker debug summary, layer-panel control, and marker confidence docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright marker toggle/selection/mobile smoke on `http://127.0.0.1:5189`.
 - V4-05 added procedural/anatomical/hybrid overlay comparison, anchor-projected wavefront and isochrone rings, projection debug summary, overlay mode state persistence, and validation docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright overlay mode/scrub/mobile smoke on `http://127.0.0.1:5190`.
 - V4-06 redesigned the 2D top heart as an orientation sketch with apex-forming LV, anterior RV wrap, orientation labels, preserved lead/timing overlays, and explicit non-slice UI label. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright desktop/mobile sketch smoke on `http://127.0.0.1:5191`.
+- V4-07 added learner-facing anatomy notes, selected-lead viewpoint explanation, V4 lesson copy, glossary terms, and safety/guided-lesson docs. Verification: `npm run typecheck`, `npm test`, `npm run build`, and Chrome/Playwright lesson/anatomy-notes smoke on `http://127.0.0.1:5192`.

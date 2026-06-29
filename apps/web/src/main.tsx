@@ -52,6 +52,9 @@ const activeRegionSummary = (state: ReturnType<typeof evaluateScenario>) =>
 const leadPolarityLabel = (voltage: number) =>
   voltage > 0.04 ? "positive" : voltage < -0.04 ? "negative" : "near baseline";
 
+const leadViewpointNote = (lead: LeadName, alignment: string) =>
+  `${lead} is the current viewpoint. Use the lead arrow and contributor halos as an educational viewing direction; ${alignment.toLowerCase()}.`;
+
 type LearnerMode = "probe-to-heart" | "heart-to-probe" | "advanced";
 
 type V3ViewState = {
@@ -204,7 +207,7 @@ const lessons: Lesson[] = [
   {
     id: "normal-qrs-mesh",
     title: "Normal QRS propagation",
-    focus: "Use the V3 mesh wavefront to follow septal and apical ventricular activation before later free-wall activation.",
+    focus: "Use the hybrid anatomical overlay to follow septal and apical ventricular activation before later free-wall activation.",
     lead: "II",
     regionId: "apical-ventricles",
     timeMs: 322,
@@ -213,7 +216,7 @@ const lessons: Lesson[] = [
     comparisonId: "right-bundle-branch-block",
     cameraPreset: "heart-close",
     anatomyViewMode: "external",
-    meshFocus: "Watch the orange depolarization band and current isochrone contour cross the ventricular mesh.",
+    meshFocus: "Watch the orange depolarization band move from septal/apical anchors toward later ventricular walls; the NIH mesh is reference anatomy, not the timing source.",
     prompt: "Which region should be active early in a normal teaching QRS?",
     options: [
       { id: "apex", label: "Septum/apex before later free-wall regions.", correct: true, feedback: "Yes. The authored route starts through the His/septal-apical path before later ventricular regions." },
@@ -232,7 +235,7 @@ const lessons: Lesson[] = [
     comparisonId: "left-axis-deviation",
     cameraPreset: "frontal",
     anatomyViewMode: "external",
-    meshFocus: "Use the lead probe arrow and mesh contributor halos to connect axis direction with the active ventricular regions.",
+    meshFocus: "Use the lead probe arrow, anatomical markers, and contributor halos to connect axis direction with active ventricular regions.",
     prompt: "Why is aVR often negative during this simplified QRS moment?",
     options: [
       { id: "away", label: "The main vector points away from aVR's positive side.", correct: true, feedback: "Right. aVR views from the right-arm positive side, opposite the dominant ventricular vector here." },
@@ -251,7 +254,7 @@ const lessons: Lesson[] = [
     comparisonId: "right-axis-deviation",
     cameraPreset: "left-lateral",
     anatomyViewMode: "external",
-    meshFocus: "Select the LV lateral wall and compare the best-seen/opposite lead chips with the contributor halos.",
+    meshFocus: "Select the LV lateral wall, compare it with the apex-forming LV in the orientation sketch, then read the best-seen/opposite lead chips.",
     prompt: "Which selected-region leads should notice the LV lateral wall most directly?",
     options: [
       { id: "lateral", label: "I, aVL, V5, and V6.", correct: true, feedback: "Correct. The selected region metadata marks these as best-seen leads for the LV lateral wall." },
@@ -270,7 +273,7 @@ const lessons: Lesson[] = [
     comparisonId: "left-bundle-branch-block",
     cameraPreset: "heart-close",
     anatomyViewMode: "cutaway",
-    meshFocus: "Use the comparison cards and cutaway mesh to ask what changed in activation timing before the QRS changed.",
+    meshFocus: "Use the comparison cards, cutaway anatomy, and hybrid overlay to ask what changed in authored activation timing before the QRS changed.",
     prompt: "What is the safest interpretation of the wider generated QRS here?",
     options: [
       { id: "timing", label: "Authored ventricular activation timing changed first.", correct: true, feedback: "Exactly. The lesson is heart-model timing before ECG morphology." },
@@ -289,7 +292,7 @@ const lessons: Lesson[] = [
     comparisonId: "ventricular-ectopic-focus",
     cameraPreset: "heart-close",
     anatomyViewMode: "chambers",
-    meshFocus: "The chamber view makes the early RV free-wall source easier to inspect while the ECG cursor stays synchronized.",
+    meshFocus: "The chamber view and RV anterior-wrap sketch make the early RV free-wall source easier to inspect while the ECG cursor stays synchronized.",
     prompt: "What makes this ectopic-focus lesson different from normal QRS propagation?",
     options: [
       { id: "origin", label: "The earliest ventricular activation starts away from the normal His-Purkinje route.", correct: true, feedback: "Right. The model begins ventricular activation in the RV free wall for this teaching case." },
@@ -308,7 +311,7 @@ const lessons: Lesson[] = [
     comparisonId: "left-bundle-branch-block",
     cameraPreset: "heart-close",
     anatomyViewMode: "external",
-    meshFocus: "Look for repolarizing/recovered tissue labels and remember that the recovery wave is not just depolarization running backward.",
+    meshFocus: "Look for blue recovery rings near anatomical anchors and remember that the recovery wave is authored timing, not depolarization running backward.",
     prompt: "What does the T-wave lesson emphasize in this model?",
     options: [
       { id: "recovery", label: "Regional recovery shapes the signal after depolarization.", correct: true, feedback: "Yes. The T wave comes from authored regional repolarization timing." },
@@ -411,6 +414,17 @@ function App() {
     [selectedLessonId]
   );
   const selectedQuizChoice = selectedLesson.options.find((option) => option.id === quizChoiceId);
+  const anatomyNotes = React.useMemo(
+    () => [
+      { title: "RV/LV orientation", text: "The RV sits anterior/rightward and wraps across the larger LV; the LV forms most of the apex." },
+      { title: "Septum", text: "The septum is a shared wall cue between ventricles. In this app, septal timing comes from the authored teaching model." },
+      { title: "Apex", text: "Apical activation is an early QRS teaching anchor; the 2D sketch shows the LV-dominant apex shape." },
+      { title: "Atria", text: "Atrial cues orient the P-wave pathway, but the NIH preview is not segmented into validated RA/LA chambers." },
+      { title: "Great vessels", text: "Great-vessel labels are orientation landmarks near the base, not flow measurements or valve segmentation." },
+      { title: "Selected lead view", text: leadViewpointNote(selectedLead, probeExplanation.alignmentLabel) }
+    ],
+    [probeExplanation.alignmentLabel, selectedLead]
+  );
   const tissueCounts = React.useMemo(
     () =>
       state.tissueNodes.reduce(
@@ -1090,6 +1104,14 @@ function App() {
             <h2>Heart, electrodes, and selected lead</h2>
           </div>
           <p className="safety-note">NIH anatomical preview plus procedural teaching overlays, synchronized to the same simulation as the 2D view.</p>
+        </div>
+        <div className="anatomy-notes" aria-label="Anatomy orientation notes">
+          {anatomyNotes.map((note) => (
+            <span key={note.title}>
+              <strong>{note.title}</strong>
+              {note.text}
+            </span>
+          ))}
         </div>
         <TorsoScene3D
           state={state}

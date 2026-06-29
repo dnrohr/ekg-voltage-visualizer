@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Done
 
 ## Goal
 
@@ -39,4 +39,13 @@ Make the improved anatomy pedagogically useful by adding concise explanations th
 
 ## Verification Notes
 
-Pending.
+- Added concise learner-facing anatomy notes for RV/LV orientation, septum, apex, atria, great vessels, and selected-lead viewpoint.
+- Updated guided lesson copy to reference hybrid anatomical overlay, anatomical markers, cutaway/chamber anatomy, recovery rings, and the 2D orientation sketch where relevant.
+- Copy explicitly distinguishes NIH reference anatomy from authored electrical timing and avoids diagnostic claims.
+- Updated glossary with anatomical marker, anatomical overlay, hybrid overlay, and orientation sketch terms.
+- Updated safety/scope rules for orientation sketch, NIH visual reference, anatomical markers, and hybrid overlays.
+- Added V4 anatomy addendum to guided lesson docs.
+- Ran `npm run typecheck` successfully.
+- Ran `npm test` successfully: 34 engine tests passed.
+- Ran `npm run build` successfully; Vite reported the existing large chunk warning.
+- Chrome/Playwright smoke on fresh dev server `http://127.0.0.1:5192` confirmed six anatomy notes, selected-lead viewpoint note for Lead II, updated normal-QRS lesson copy, updated precordial lesson mesh focus, and 390 px mobile notes layout without overflow.

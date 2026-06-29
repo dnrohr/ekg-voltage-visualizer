@@ -38,6 +38,15 @@ The approximate direction of a lead's positive measurement orientation. Useful f
 **Lead-region relationship**
 An educational label for whether a selected region is best seen by a lead, viewed from the opposite side, or only indirectly related in the simplified model. It is not a clinical localization claim.
 
+**Anatomical marker**
+An approximate landmark on the visual NIH heart reference. It maps an authored educational region to a nearby orientation point, not to validated segmentation.
+
+**Anatomical overlay**
+An educational projection that places authored wavefront or isochrone timing near anatomical anchors. It is not an electrophysiology solution on the NIH mesh.
+
+**Hybrid overlay**
+A comparison mode that shows both procedural teaching overlays and anatomical anchor projections.
+
 **Limb leads**  
 Leads I, II, and III. They are computed from RA, LA, and LL electrode potentials.
 
@@ -67,6 +76,9 @@ The interval after ventricular depolarization and before most ventricular repola
 
 **Synthetic teaching signal**  
 A generated ECG-like waveform created for explanation. It may look plausible but is not diagnostic.
+
+**Orientation sketch**
+An authored 2D drawing used to orient chambers, apex, septum, and lead viewpoints. It is not a literal anatomical slice.
 
 **T wave**  
 The ECG deflection associated primarily with ventricular repolarization.
