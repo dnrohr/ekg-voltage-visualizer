@@ -1,5 +1,6 @@
 import React from "react";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   classifyRegionLeadContribution,
   electrodeDefinitions,
@@ -96,6 +97,7 @@ const anatomyViewModes: Record<AnatomyViewMode, string> = {
 
 const wavefrontBandWidthMs = 18;
 const repolarizationBandWidthMs = 26;
+const nihAnatomicalPreviewPath = "/assets/nih-heart/ALM0006_Whole_NIH3D.glb";
 
 const chamberSurfaceColors: Record<HeartChamber, number> = {
   RA: 0x6bc4bb,
@@ -212,6 +214,47 @@ function makeChamber(
   mesh.userData.baseScale = scale.clone();
   mesh.rotation.z = rotationZ;
   return mesh;
+}
+
+function prepareAnatomicalPreview(root: THREE.Object3D) {
+  let meshCount = 0;
+  root.name = "nih anatomical heart preview";
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    meshCount += 1;
+    if (!child.geometry.getAttribute("normal")) {
+      child.geometry.computeVertexNormals();
+    }
+    child.material = new THREE.MeshStandardMaterial({
+      color: 0xc24135,
+      emissive: 0x4a120f,
+      emissiveIntensity: 0.12,
+      roughness: 0.64,
+      metalness: 0.02,
+      transparent: true,
+      opacity: 0.68,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    child.renderOrder = 6;
+  });
+
+  const box = new THREE.Box3().setFromObject(root);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const maxDimension = Math.max(size.x, size.y, size.z, 0.0001);
+  const scale = 1.08 / maxDimension;
+  root.scale.setScalar(scale);
+  root.position.copy(center).multiplyScalar(-scale).add(new THREE.Vector3(0.28, 0.02, 0.52));
+  root.rotation.set(0, 0, 0);
+  root.userData.previewDebug = {
+    meshCount,
+    sourceCenter: center.toArray(),
+    sourceSize: size.toArray(),
+    maxDimension,
+    scale,
+    position: root.position.toArray()
+  };
 }
 
 function surfaceRegionColor(stateName: TissueState, mode: SurfaceMapMode): number {
@@ -615,6 +658,29 @@ export function TorsoScene3D({
     heart.add(makeChamber("left ventricle", 0xe98978, new THREE.Vector3(0.18, -0.11, 0.18), new THREE.Vector3(0.3, 0.54, 0.25), 0.2));
     scene.add(heart);
 
+    const anatomicalPreviewGroup = new THREE.Group();
+    anatomicalPreviewGroup.name = "nih anatomical heart preview group";
+    scene.add(anatomicalPreviewGroup);
+    const loader = new GLTFLoader();
+    let previewDisposed = false;
+    loader.load(
+      nihAnatomicalPreviewPath,
+      (gltf) => {
+        if (previewDisposed) {
+          disposeObject(gltf.scene);
+          return;
+        }
+        prepareAnatomicalPreview(gltf.scene);
+        anatomicalPreviewGroup.add(gltf.scene);
+        (window as unknown as { __nihAnatomicalPreview?: unknown }).__nihAnatomicalPreview = gltf.scene.userData.previewDebug;
+        renderer.render(scene, camera);
+      },
+      undefined,
+      (error) => {
+        console.warn("Unable to load NIH anatomical heart preview", error);
+      }
+    );
+
     const dynamicGroup = new THREE.Group();
     scene.add(dynamicGroup);
     const raycaster = new THREE.Raycaster();
@@ -661,6 +727,7 @@ export function TorsoScene3D({
     observer.observe(mount);
 
     return () => {
+      previewDisposed = true;
       observer.disconnect();
       renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
       disposeObject(scene);
@@ -1267,7 +1334,7 @@ export function TorsoScene3D({
       </div>
       {activeLayers.phaseLabels && (
         <div className="isochrone-caption" aria-label="Isochrone contour summary">
-          {anatomyViewModes[anatomyViewMode]} anatomy, mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
+          NIH anatomical preview with {anatomyViewModes[anatomyViewMode].toLowerCase()} teaching overlays, mesh isochrone contours: {isochroneScopes[isochroneScope]}, 20 ms bands, current level-set highlighted.
           {activeLayers.leadContribution && ` ${selectedLead} contributor halos: aligned, opposed, weak.`}
         </div>
       )}

@@ -1,0 +1,66 @@
+{
+  "id": "nih-3d-3dpx-002636-whole-heart-preview",
+  "label": "NIH 3D 17 yo Female, Normal Heart - whole-heart preview",
+  "assetType": "heart-anatomy-mesh-preview",
+  "version": 1,
+  "source": {
+    "url": "https://3d.nih.gov/entries/3DPX-002636",
+    "downloadPageUrl": "https://3d.nih.gov/entries/download/2636/2",
+    "downloadApiUrl": "https://3d.nih.gov/api/submissions/3826/runs/39372da3-b286-4746-a652-639f587e895c/output-files/80211",
+    "title": "17 yo Female, Normal Heart",
+    "entryId": "3DPX-002636",
+    "author": "Matthew Bramlet",
+    "institution": "NIH 3D",
+    "retrievedAt": "2026-06-28"
+  },
+  "license": {
+    "name": "Public Domain / CC0",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "allowsRedistribution": true,
+    "allowsCommercialUse": true,
+    "attributionRequired": false,
+    "attributionText": "17 yo Female, Normal Heart, NIH 3D entry 3DPX-002636."
+  },
+  "files": {
+    "runtimePath": "apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb",
+    "runtimeUrl": "/assets/nih-heart/ALM0006_Whole_NIH3D.glb",
+    "originalFormat": "glb",
+    "optimizedFormat": "glb",
+    "texturePaths": []
+  },
+  "geometry": {
+    "vertexCount": 315366,
+    "faceCount": 630640,
+    "fileSizeBytes": 11353016,
+    "hasNormals": true,
+    "hasUvCoordinates": false,
+    "scaleUnit": "normalized-by-renderer",
+    "coordinateSystem": "source GLB, normalized at runtime"
+  },
+  "segmentation": {
+    "status": "not-segmented-for-simulation",
+    "chambers": [],
+    "regionIds": [],
+    "hasSeptum": "visible in source anatomy but not machine-labeled",
+    "hasValves": "visible in source anatomy but not machine-labeled",
+    "notes": "This preview asset is a whole-heart visual reference only. It is not yet mapped to RA/LA/RV/LV chamber labels or the app's educational region ids."
+  },
+  "modifications": [
+    "Bundled the NIH GLB output unchanged.",
+    "Renderer normalizes, centers, scales, and applies a translucent teaching material at runtime."
+  ],
+  "optimization": {
+    "targetMaxVertices": 60000,
+    "currentVertexCountExceedsTarget": true,
+    "targetMaxTextureSize": 2048,
+    "dracoCompressed": false,
+    "meshoptCompressed": false,
+    "notes": "This is intentionally a visual spike. A production anatomical mesh should be decimated or replaced with a lower-poly validated derivative."
+  },
+  "redistribution": {
+    "bundledInRepository": true,
+    "requiresSeparateDownload": false,
+    "notes": "NIH entry displays Public Domain licensing and links to CC0."
+  },
+  "educationalUseNotes": "Visual anatomy preview only. The procedural educational mesh remains the simulation source for wavefront, lead, and region overlays."
+}

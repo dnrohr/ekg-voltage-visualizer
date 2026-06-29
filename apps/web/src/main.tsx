@@ -1017,7 +1017,7 @@ function App() {
             <p className="eyebrow">Spatial anatomy view</p>
             <h2>Heart, electrodes, and selected lead</h2>
           </div>
-          <p className="safety-note">Procedural anatomy, synchronized to the same teaching simulation as the 2D view.</p>
+          <p className="safety-note">NIH anatomical preview plus procedural teaching overlays, synchronized to the same simulation as the 2D view.</p>
         </div>
         <TorsoScene3D
           state={state}

@@ -64,6 +64,17 @@ V3 may use a realistic anatomical heart mesh only after an asset manifest passes
 
 The intake gate exists so the app does not accidentally bundle unclear or restricted anatomy assets. A mesh must be rejected until blocking validation errors are resolved.
 
+## Experimental NIH Preview
+
+The app includes one visual-only anatomical preview asset:
+
+- Source: NIH 3D entry `3DPX-002636`, "17 yo Female, Normal Heart"
+- Runtime file: `apps/web/public/assets/nih-heart/ALM0006_Whole_NIH3D.glb`
+- Provenance: `references/nih-heart-normal-female/manifest.preview.json`
+- License shown on NIH entry: Public Domain / CC0
+
+This preview is intentionally not treated as a validated V3 simulation mesh. It is not chamber-labeled, not region-mapped, and exceeds the recommended vertex target. The renderer uses it as a translucent anatomical reference while the procedural educational mesh remains the source of wavefront timing, lead overlays, and selectable regions.
+
 ### Accepted Runtime Formats
 
 - Source/original formats: `.glb`, `.gltf`, or `.obj`.
